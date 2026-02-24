@@ -1,0 +1,292 @@
+$orange: #ff671f;
+$border: #dedede;
+$text: #111;
+
+.preliq {
+  width: 100%;
+  max-width: 1500px;
+  margin: 100px auto;
+  padding: 0 16px;
+}
+
+/* ==============================
+   TÍTULO SECCIÓN
+============================== */
+.preliq__title {
+  text-align: center;
+  margin-bottom: 56px;
+  font-weight: 700;
+  color: #000;
+
+  /* ✅ 48px en desktop, adaptable */
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.15;
+}
+
+/* ==============================
+   WRAP
+============================== */
+.preliq__wrap {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+/* ==============================
+   GRID DESKTOP / TABLET
+============================== */
+.preliq__grid {
+  width: min(1180px, 100%);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+/* ==============================
+   CARD
+============================== */
+.preliq-card {
+  background: #fff;
+  border: 2px solid #e5e5e5;
+  border-radius: 18px;
+  padding: 35px 30px;
+
+  height: 320px;
+  min-height: 320px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  text-decoration: none;
+  color: $text;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transform: translateY(0);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .preliq-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 26px rgba(0, 0, 0, 0.12);
+  }
+
+  .preliq-card:not(.is-active):hover {
+    border-color: $orange;
+  }
+}
+
+/* ==============================
+   CARD ACTIVA
+============================== */
+.preliq-card.is-active {
+  background: $orange;
+  border-color: $orange;
+  color: #fff;
+  box-shadow: 0 18px 26px rgba(0, 0, 0, 0.18);
+}
+
+/* ==============================
+   BLOQUE SUPERIOR
+============================== */
+.preliq-card__top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.preliq-card__icon {
+  padding: 0;
+  border: none;
+  color: currentColor;
+
+  i {
+    font-size: 2.2rem;
+    line-height: 1;
+  }
+}
+
+.preliq-card__titles {
+  text-align: left;
+}
+
+.preliq-card__title {
+  margin: 0 0 10px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-size: clamp(22px, 2vw, 30px);
+  white-space: pre-line;
+}
+
+.preliq-card__subtitle {
+  margin: 0;
+  color: #555;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.3;
+}
+
+.preliq-card__desc {
+  margin: 0;
+  color: #555;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.3;
+  flex-grow: 1;
+}
+
+.preliq-card.is-active .preliq-card__subtitle,
+.preliq-card.is-active .preliq-card__desc {
+  color: #fff;
+}
+
+/* ==============================
+   BOTÓN
+============================== */
+.preliq-card__btn {
+  align-self: flex-start;
+  margin-top: auto;
+  background: $orange;
+  color: #fff;
+  border-radius: 10px;
+  padding: 12px 30px;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.preliq-card.is-active .preliq-card__btn {
+  background: #fff;
+  color: $orange;
+}
+
+/* ==============================
+   CONTROLES (OCULTOS POR DEFECTO)
+============================== */
+.preliq-arrow,
+.preliq-dots {
+  display: none;
+}
+
+/* ==============================
+   TABLET
+============================== */
+@media (max-width: 992px) {
+  .preliq__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+}
+
+/* ==============================
+   MOBILE — SLIDER
+============================== */
+@media (max-width: 576px) {
+  .preliq__wrap {
+    justify-content: flex-start;
+    padding-bottom: 32px;
+  }
+
+  .preliq__grid {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 0 14px 10px;
+
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+
+    scrollbar-width: none;
+  }
+
+  .preliq__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .preliq-card {
+    flex: 0 0 88%;
+    scroll-snap-align: start;
+  }
+
+  /* Flechas */
+  .preliq-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .preliq-arrow--left {
+    left: 6px;
+  }
+
+  .preliq-arrow--right {
+    right: 6px;
+  }
+
+  /* Dots */
+  .preliq-dots {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .preliq-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+  }
+
+  .preliq-dot.is-active {
+    background: $orange;
+    width: 20px;
+    border-radius: 12px;
+  }
+}
+
+
+.preliq-card__btn {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #FF671F 0%, #FF671F 100%);
+  color: white;
+  border: none; // ✅ Agregado
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+  font-family: inherit; // ✅ Agregado
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+}

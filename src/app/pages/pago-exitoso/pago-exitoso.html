@@ -1,0 +1,74 @@
+<!-- ===================== PAGO EXITOSO ===================== -->
+<section class="pago-resultado-section">
+  <div class="contenedor-principal">
+    <div class="pago-contenido">
+      <h2 class="pago-titulo">Resumen de tu agendamiento</h2>
+
+      <!-- Estado del pago -->
+      <div class="estado-box estado-exitoso">
+        <div class="icono-check">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <span>Pago recibido</span>
+      </div>
+
+      <!-- Información del agendamiento -->
+      <div class="info-box" *ngIf="codigoReserva()">
+        <div class="info-fila">
+          <span class="info-label">ID de tu agendamiento:</span>
+          <span class="info-valor">#{{ codigoReserva() }}</span>
+        </div>
+      </div>
+
+      <!-- Tabla de servicios -->
+      <div class="tabla-servicios">
+        <div class="tabla-header">
+          <div>Nombre</div>
+          <div>Precio</div>
+          <div>Cantidad</div>
+        </div>
+        <div class="tabla-fila">
+          <div>
+            {{ nombreServicio() }}<br>
+            <small *ngIf="sedeNombre()">{{ sedeNombre() }}</small><br>
+            <small *ngIf="fechaCita()">{{ fechaCita() }}</small>
+          </div>
+          <div>${{ precioServicio() | number }}</div>
+          <div>{{ cantidad() }}</div>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div class="linea-total">
+        <span>Cantidad total:</span>
+        <strong>${{ cantidadTotal() | number }}</strong>
+      </div>
+
+      <p class="nota-texto">
+        Todas las fechas y horas aquí están en la zona horaria de la empresa (America/Bogota).
+      </p>
+
+      <!-- Botones -->
+      <div class="botones-grupo">
+        <button class="boton boton-outline" (click)="imprimirFactura()">
+          Imprimir Soporte
+        </button>
+        <button class="boton boton-outline" (click)="reservarOtraCita()">
+          Realizar otro Agendamiento
+        </button>
+      </div>
+
+      <!-- Info de regreso -->
+      <div class="regreso-box">
+        <h4>Regreso al sitio web</h4>
+        <p>Serás redirigido automáticamente en {{ segundosRestantes() }} segundos.</p>
+        <button class="boton boton-principal" (click)="volverAlSitio()">
+          Volver al sitio web
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

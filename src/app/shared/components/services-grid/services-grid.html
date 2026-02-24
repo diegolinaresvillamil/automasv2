@@ -1,0 +1,55 @@
+<section class="services">
+  <h2 class="section-title services__title">{{ title }}</h2>
+
+  @if (cards?.length) {
+    <div class="services__grid">
+      @for (c of cards; track $index) {
+
+        <!-- 🔗 Card clickeable -->
+        @if (c.href) {
+          <a
+            class="service-card service-card--link"
+            [href]="c.href"
+            aria-label="{{ c.title }}"
+          >
+            <ng-container
+              [ngTemplateOutlet]="cardContent"
+              [ngTemplateOutletContext]="{ c: c }"
+            ></ng-container>
+          </a>
+        }
+        <!-- Card normal -->
+        @else {
+          <article class="service-card">
+            <ng-container
+              [ngTemplateOutlet]="cardContent"
+              [ngTemplateOutletContext]="{ c: c }"
+            ></ng-container>
+          </article>
+        }
+
+      }
+    </div>
+  }
+
+  <ng-template #cardContent let-c="c">
+    <h3 class="service-card__title">{{ c.title }}</h3>
+
+    <div class="service-card__media">
+      <img
+        class="service-card__img service-card__img--normal"
+        [src]="c.imgNormal"
+        [alt]="c.title"
+      />
+      <img
+        class="service-card__img service-card__img--hover"
+        [src]="c.imgHover"
+        [alt]="c.title"
+      />
+    </div>
+
+    <span class="service-card__arrow" aria-hidden="true">
+      <i class="bi bi-arrow-up-right"></i>
+    </span>
+  </ng-template>
+</section>

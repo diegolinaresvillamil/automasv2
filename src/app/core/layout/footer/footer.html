@@ -1,0 +1,88 @@
+<footer class="footer">
+  <div class="footer__container">
+    <div class="footer__grid">
+      <div class="footer__col">
+        <h3 class="footer__title">Información Legal</h3>
+        <ul class="footer__list">
+          @for (l of legalLinks; track $index) {
+            <li><a class="footer__link" [href]="l.href">{{ l.label }}</a></li>
+          }
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h3 class="footer__title">Nosotros</h3>
+        <ul class="footer__list">
+          @for (l of nosotrosLinks; track $index) {
+            <li><a class="footer__link" [href]="l.href">{{ l.label }}</a></li>
+          }
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h3 class="footer__title">Intranet</h3>
+        <ul class="footer__list">
+          @for (l of intranetLinks; track $index) {
+            <li><a class="footer__link" [href]="l.href">{{ l.label }}</a></li>
+          }
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h3 class="footer__title">Contáctanos</h3>
+        <ul class="footer__list">
+          @for (l of contactLinks; track $index) {
+            <li><a class="footer__link" [href]="l.href">{{ l.label }}</a></li>
+          }
+        </ul>
+      </div>
+
+      <div class="footer__col footer__col--right">
+        <h3 class="footer__title">Síguenos</h3>
+
+        <div class="footer__socials">
+          @for (s of socials; track $index) {
+            <a
+              class="footer__social"
+              [href]="s.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              [attr.aria-label]="s.aria"
+              title="{{ s.name }}"
+            >
+              <i class="bi" [ngClass]="s.icon" aria-hidden="true"></i>
+            </a>
+          }
+        </div>
+
+        <h3 class="footer__title footer__title--apps">Descarga nuestra App</h3>
+
+        <div class="footer__stores">
+          <a
+            class="footer__store"
+            [href]="googlePlay.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Descargar en Google Play"
+          >
+            <img [src]="googlePlay.img" [alt]="googlePlay.alt" />
+          </a>
+
+          <a
+            class="footer__store"
+            [href]="appStore.href"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Descargar en App Store"
+          >
+            <img [src]="appStore.img" [alt]="appStore.alt" />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <span>©{{ year }} AutoMás. Todos los derechos reservados.</span>
+    </div>
+  </div>
+</footer>

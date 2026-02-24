@@ -1,0 +1,23 @@
+<a *ngIf="href; else noLink" class="ad-banner" [href]="href" target="_blank" rel="noopener">
+  <ng-container [ngTemplateOutlet]="banner"></ng-container>
+</a>
+
+<ng-template #noLink>
+  <div class="ad-banner">
+    <ng-container [ngTemplateOutlet]="banner"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #banner>
+  <picture class="ad-banner__picture">
+    <!-- Desktop -->
+    <source media="(min-width: 993px)" [srcset]="desktopSrc" />
+    <!-- Tablet -->
+    <source media="(min-width: 577px) and (max-width: 992px)" [srcset]="tabletSrc" />
+    <!-- Mobile -->
+    <source media="(max-width: 576px)" [srcset]="mobileSrc" />
+
+    <!-- Fallback -->
+    <img class="ad-banner__img" [src]="desktopSrc" [alt]="alt" loading="lazy" />
+  </picture>
+</ng-template>

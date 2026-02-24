@@ -1,0 +1,26 @@
+<section class="comp">
+  <div class="comp__container">
+    <h2 class="comp__title">{{ title }}</h2>
+
+    <div class="comp__grid">
+      @for (c of cards; track $index) {
+        <a class="comp-card" [href]="c.href || '#'" aria-label="{{ c.title }}">
+          <h3 class="comp-card__title">{{ c.title }}</h3>
+
+          <div class="comp-card__imageWrap">
+            <img
+              class="comp-card__image"
+              [src]="c.imageSrc"
+              [alt]="c.imageAlt || c.title"
+              loading="lazy"
+            />
+          </div>
+
+          <span class="comp-card__arrow" aria-hidden="true">
+            <span class="comp-card__arrowIcon">↗</span>
+          </span>
+        </a>
+      }
+    </div>
+  </div>
+</section>

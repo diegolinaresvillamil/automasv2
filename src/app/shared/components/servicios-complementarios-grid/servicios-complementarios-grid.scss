@@ -1,0 +1,208 @@
+$orange: #ff671f;
+
+.comp {
+  width: 100%;
+  max-width: 1500px;
+  margin: 100px auto;
+  padding: 0 16px;
+}
+
+.comp__container {
+  width: 100%;
+}
+
+.comp__title {
+  text-align: center;
+  margin: 0 0 56px;
+  color: #000;
+  font-weight: 800;
+  font-size: clamp(28px, 3vw, 48px);
+  line-height: 1.1;
+}
+
+.comp__grid {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+
+/* ✅ Tablet / pantallas medianas: 2 por fila */
+@media (max-width: 1100px) {
+  .comp__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+}
+
+/* ✅ Móvil: 2 por fila (reduce scroll) */
+@media (max-width: 576px) {
+  .comp {
+    margin: 70px auto;
+  }
+
+  .comp__title {
+    margin-bottom: 34px;
+  }
+
+  .comp__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* ✅ Extra small (muy pequeños): 1 por fila para no romper */
+@media (max-width: 360px) {
+  .comp__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   CARD
+========================= */
+.comp-card {
+  position: relative;
+  display: block;
+
+  background: $orange;
+  color: #fff;
+  text-decoration: none;
+
+  border-radius: 22px;
+  padding: 34px 28px 28px;
+
+  /* más “rectangular” en PC */
+  min-height: 340px;
+
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.10);
+  transform: translateY(0);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  overflow: hidden;
+}
+
+.comp-card__title {
+  margin: 0 0 18px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-size: clamp(20px, 1.6vw, 28px);
+  white-space: pre-line;
+}
+
+.comp-card__imageWrap {
+  width: 100%;
+  height: 185px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* para que se vea como flotando en medio */
+  margin-top: 6px;
+}
+
+.comp-card__image {
+  max-width: 68%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.18));
+}
+
+.comp-card__arrow {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+
+  width: 62px;
+  height: 62px;
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.92);
+  display: grid;
+  place-items: center;
+
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.14);
+  transform: translate(0, 0);
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.comp-card__arrowIcon {
+  color: $orange;
+  font-size: 28px;
+  line-height: 1;
+  transform: translate(0, 0);
+  transition: transform 180ms ease;
+}
+
+/* Hover solo en desktop con cursor */
+@media (hover: hover) and (pointer: fine) {
+  .comp-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.14);
+  }
+
+  .comp-card:hover .comp-card__arrow {
+    transform: translate(4px, -4px);
+    background: #fff;
+  }
+
+  .comp-card:hover .comp-card__arrowIcon {
+    transform: translate(2px, -2px);
+  }
+}
+
+/* Tablet/móvil: tamaños un poco más compactos */
+@media (max-width: 768px) {
+  .comp-card {
+    min-height: 320px;
+    padding: 30px 24px 24px;
+  }
+
+  .comp-card__imageWrap {
+    height: 170px;
+  }
+
+  .comp-card__arrow {
+    width: 56px;
+    height: 56px;
+  }
+
+  .comp-card__arrowIcon {
+    font-size: 26px;
+  }
+}
+
+/* ✅ Ajuste extra en móvil para que 2 por fila se vean bien */
+@media (max-width: 576px) {
+  .comp-card {
+    min-height: 290px;
+    padding: 22px 18px 18px;
+    border-radius: 20px;
+  }
+
+  .comp-card__title {
+    margin-bottom: 14px;
+    font-size: clamp(16px, 4.2vw, 20px);
+  }
+
+  .comp-card__imageWrap {
+    height: 140px;
+  }
+
+  .comp-card__image {
+    max-width: 78%;
+  }
+
+  .comp-card__arrow {
+    right: 14px;
+    bottom: 14px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .comp-card__arrowIcon {
+    font-size: 22px;
+  }
+}

@@ -1,0 +1,81 @@
+<section class="news">
+  <h2 class="news__title">{{ title }}</h2>
+
+  <!-- Destacada -->
+  <a class="news-feature" [href]="featured?.href || '#'">
+    <div class="news-feature__img">
+      <img
+        [src]="featured?.imageSrc"
+        [alt]="featured?.imageAlt || featured?.title"
+      />
+    </div>
+
+    <div class="news-feature__content">
+      @if (featured?.badge) {
+        <span class="news-feature__badge">{{ featured.badge }}</span>
+      }
+
+      <h3 class="news-feature__headline">{{ featured?.title }}</h3>
+
+      @if (featured?.description) {
+        <p class="news-feature__desc">{{ featured.description }}</p>
+      }
+
+      <span class="news-feature__btn">{{ getCtaText(featured) }}</span>
+    </div>
+  </a>
+
+  <!-- Mini cards -->
+  <div class="news-miniWrap">
+    <!-- Flechas SOLO móvil -->
+    @if (mobileCarousel) {
+      <button
+        type="button"
+        class="news-arrow news-arrow--left"
+        (click)="prev()"
+        aria-label="Anterior"
+      >
+        ‹
+      </button>
+
+      <button
+        type="button"
+        class="news-arrow news-arrow--right"
+        (click)="next()"
+        aria-label="Siguiente"
+      >
+        ›
+      </button>
+    }
+
+    <div class="news-miniGrid" #track>
+      @for (c of cards; track $index) {
+        <a class="news-mini" [href]="c.href || '#'">
+          <div class="news-mini__img">
+            <img [src]="c.imageSrc" [alt]="c.imageAlt || c.title" />
+          </div>
+
+          <div class="news-mini__bar">
+            <h4 class="news-mini__title">{{ c.title }}</h4>
+            <span class="news-mini__btn">{{ getCtaText(c) }}</span>
+          </div>
+        </a>
+      }
+    </div>
+
+    <!-- Dots SOLO móvil (opcional visual) -->
+    @if (mobileCarousel) {
+      <div class="news-dots" aria-label="Indicador">
+        @for (_ of cards; track $index) {
+          <button
+            type="button"
+            class="news-dot"
+            [class.is-active]="$index === activeIndex"
+            (click)="scrollToIndex($index)"
+            [attr.aria-label]="'Ir a noticia ' + ($index + 1)"
+          ></button>
+        }
+      </div>
+    }
+  </div>
+</section>

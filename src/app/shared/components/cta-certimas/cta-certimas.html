@@ -1,0 +1,66 @@
+<section class="cta-certimas">
+  <div class="cta-certimas__container">
+    <!-- Logo arriba -->
+    <div class="cta-certimas__logo">
+      <img [src]="logoSrc" [alt]="logoAlt" />
+    </div>
+
+    <!-- Card -->
+    <div class="cta-certimas__card">
+      <div class="cta-certimas__content">
+        <h2 class="cta-certimas__title">{{ title }}</h2>
+        <p class="cta-certimas__desc">{{ description }}</p>
+
+        <div class="cta-certimas__actions">
+          <!-- Play independiente -->
+          <button
+            type="button"
+            class="cta-certimas__play"
+            (click)="openVideo()"
+            aria-label="Ver video"
+          >
+            <span class="cta-certimas__playIcon" aria-hidden="true"></span>
+          </button>
+
+          <!-- CTA -->
+          <a class="cta-certimas__cta" [href]="ctaHref">
+            {{ ctaText }}
+          </a>
+        </div>
+      </div>
+
+      <!-- Imagen (se “sale” del naranja desde CSS) -->
+      <div class="cta-certimas__image" aria-hidden="true">
+        <img [src]="imageSrc" [alt]="imageAlt" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  @if (isOpen) {
+    <div class="cta-certimas__modal" (click)="onBackdropClick($event)">
+      <div class="cta-certimas__modalContent" role="dialog" aria-modal="true">
+        <button
+          type="button"
+          class="cta-certimas__close"
+          (click)="closeVideo()"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
+
+        <div class="cta-certimas__videoWrap">
+          @if (safeEmbedUrl) {
+            <iframe
+              [src]="safeEmbedUrl"
+              title="Video CertiMás"
+              frameborder="0"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</section>

@@ -1,0 +1,55 @@
+<section class="cta-rtm">
+  <div class="cta-rtm__inner">
+    <!-- Columna izquierda -->
+    <div class="cta-rtm__content">
+      <span class="cta-rtm__pill">¿Listo para tu revisión?</span>
+
+      <h2 class="cta-rtm__title">Evita Filas</h2>
+
+      <p class="cta-rtm__desc">
+        Programa tu Revisión Técnico Mecánica.
+      </p>
+
+      <div class="cta-rtm__actions">
+        <!-- ✅ Este row abre modal SEDES-TARIFAS -->
+        <div class="cta-row">
+          <a class="cta-main cta-main--primary" [href]="linkConsultar" (click)="openSedesTarifasModal($event)">
+            Consulta sedes y tarifas
+          </a>
+          <a class="cta-icon cta-icon--primary" [href]="linkConsultar" (click)="openSedesTarifasModal($event)" aria-label="Buscar">
+            <i class="bi bi-search"></i>
+          </a>
+        </div>
+
+        <!-- ✅ Este row abre modal AGENDAR RTM -->
+        <div class="cta-row">
+          <a class="cta-main cta-main--secondary" [href]="linkAgendar" (click)="openModal($event)">
+            Agendar tu cita hoy
+          </a>
+          <a class="cta-icon cta-icon--secondary" [href]="linkAgendar" (click)="openModal($event)" aria-label="Calendario">
+            <i class="bi bi-calendar3"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha -->
+    <div class="cta-rtm__media" aria-hidden="true">
+      <img class="cta-rtm__img" [src]="imageSrc" alt="Servicio RTM" />
+    </div>
+  </div>
+</section>
+
+<!-- ✅ Modal AGENDAR RTM -->
+<app-agendar-rtm
+  [isOpen]="openRtm"
+  (close)="closeModal()"
+  [imageSrc]="imageSrc"
+></app-agendar-rtm>
+
+<!-- ✅ Modal SEDES Y TARIFAS RTM -->
+<app-sedes-tarifas-rtm
+  [isOpen]="openSedesTarifas"
+  (close)="closeSedesTarifasModal()"
+  [imageSrc]="imageSrc"
+></app-sedes-tarifas-rtm>

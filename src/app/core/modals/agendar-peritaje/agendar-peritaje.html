@@ -1,0 +1,1429 @@
+@if (isOpen) {
+  <div class="peritaje-modal" (click)="onBackdropClick($event)">
+    <div class="peritaje-modal__dialog">
+      <div class="peritaje-modal__card">
+        
+        <!-- Botón cerrar -->
+        <button 
+          type="button" 
+          class="peritaje-modal__close"
+          (click)="onClose()"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
+
+        <!-- ========== PASO 1: FORMULARIO INICIAL ========== -->
+        @if (currentStep === 1) {
+          <div class="peritaje-step1">
+            <div class="peritaje-step1__layout">
+              
+              <!-- COLUMNA IZQUIERDA: Formulario -->
+              <div class="peritaje-step1__form-wrapper">
+                <h2 class="peritaje-step1__title">Consulta y agenda</h2>
+                <h3 class="peritaje-step1__subtitle">tu Peritaje & Avalúo</h3>
+                <p class="peritaje-step1__description">
+                  Con tu placa y documento verificaremos qué planes de peritaje están disponibles para tu vehículo. 
+                  Así podrás comparar beneficios, precios y elegir fácilmente el que mejor se adapte a tu necesidad.
+                </p>
+
+                <form [formGroup]="form" (ngSubmit)="submit()" class="peritaje-step1__form">
+                  
+                  <!-- Fila 1: Placa, Nombre, Teléfono -->
+                  <div class="peritaje-step1__field-row">
+                    <div class="peritaje-step1__field">
+                      <label class="peritaje-step1__label">
+                        Número de placa <span class="peritaje-step1__required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="peritaje-step1__input"
+                        formControlName="placa"
+                        placeholder="ABC123"
+                        maxlength="6"
+                        (input)="transformarPlacaMayusculas($event)"
+                        style="text-transform: uppercase;"
+                      />
+                      @if (f['placa'].touched && f['placa'].errors) {
+                        @if (f['placa'].errors['required']) {
+                          <span class="peritaje-step1__error">La placa es obligatoria</span>
+                        }
+                        @if (f['placa'].errors['placaLongitud']) {
+                          <span class="peritaje-step1__error">Placa debe tener 6 caracteres</span>
+                        }
+                        @if (f['placa'].errors['placaFormato']) {
+                          <span class="peritaje-step1__error">Formato inválido (AAA000 o AAA00A)</span>
+                        }
+                      }
+                    </div>
+
+                    <div class="peritaje-step1__field">
+                      <label class="peritaje-step1__label">
+                        Nombre <span class="peritaje-step1__required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="peritaje-step1__input"
+                        formControlName="nombre"
+                        placeholder="Nombre completo"
+                      />
+                      @if (f['nombre'].touched && f['nombre'].errors) {
+                        <span class="peritaje-step1__error">El nombre es obligatorio</span>
+                      }
+                    </div>
+
+                    <div class="peritaje-step1__field">
+                      <label class="peritaje-step1__label">
+                        Teléfono <span class="peritaje-step1__required">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        class="peritaje-step1__input"
+                        formControlName="telefono"
+                        placeholder="321 321 3214"
+                        inputmode="numeric"
+                        maxlength="10"
+                      />
+                      @if (f['telefono'].touched && f['telefono'].errors) {
+                        @if (f['telefono'].errors['required']) {
+                          <span class="peritaje-step1__error">El teléfono es obligatorio</span>
+                        }
+                        @if (f['telefono'].errors['pattern']) {
+                          <span class="peritaje-step1__error">Debe tener 10 dígitos</span>
+                        }
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Fila 2: Tipo Doc y Número Doc -->
+                  <div class="peritaje-step1__field-row peritaje-step1__field-row--half">
+                    <div class="peritaje-step1__field">
+                      <label class="peritaje-step1__label">
+                        Tipo de Documento del propietario <span class="peritaje-step1__required">*</span>
+                      </label>
+                      <select class="peritaje-step1__input" formControlName="tipoDocumento">
+                        @for (tipo of docTypes; track tipo.value) {
+                          <option [value]="tipo.value">{{ tipo.label }}</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="peritaje-step1__field">
+                      <label class="peritaje-step1__label">
+                        Número de Documento del propietario <span class="peritaje-step1__required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="peritaje-step1__input"
+                        formControlName="numeroDocumento"
+                        [placeholder]="docPlaceholder"
+                      />
+                      <span class="peritaje-step1__helper">{{ docHelper }}</span>
+                      @if (f['numeroDocumento'].touched && f['numeroDocumento'].errors) {
+                        <span class="peritaje-step1__error">El documento es obligatorio</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Checkbox -->
+                  <label class="peritaje-step1__checkbox">
+                    <input type="checkbox" formControlName="aceptaDatos" />
+                    <span>
+                      He leído y acepto la 
+                      <a href="#" target="_blank" class="peritaje-step1__link">
+                        autorización para tratamiento de datos personales
+                      </a>.
+                    </span>
+                  </label>
+                  @if (f['aceptaDatos'].touched && f['aceptaDatos'].errors) {
+                    <span class="peritaje-step1__error peritaje-step1__error--center">
+                      Debes aceptar los términos
+                    </span>
+                  }
+
+                  <!-- Botón Consultar -->
+                  <button
+                    type="submit"
+                    class="peritaje-step1__btn-submit"
+                    [disabled]="form.invalid || isLoading"
+                  >
+                    @if (isLoading) {
+                      <span class="peritaje-step1__spinner"></span>
+                      Consultando...
+                    } @else {
+                      Consultar
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                      </svg>
+                    }
+                  </button>
+                </form>
+              </div>
+
+              <!-- COLUMNA DERECHA: Imagen (DESKTOP ONLY) -->
+              <div class="peritaje-step1__image-wrapper">
+                <img 
+                  src="assets/peritaje.png" 
+                  alt="Peritaje y Avalúo" 
+                  class="peritaje-step1__image"
+                />
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 2: SELECCIÓN DE COMBO ========== -->
+        @if (currentStep === 2) {
+          <div class="peritaje-step2">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="peritaje-step2__desktop-layout">
+              
+              <!-- COLUMNA IZQUIERDA -->
+              <div class="peritaje-step2__left">
+                <h2 class="peritaje-step2__title">Peritaje & Avalúo</h2>
+
+                <!-- Info del vehículo (texto plano) -->
+                <div class="peritaje-step2__info-grid">
+                  <div class="peritaje-step2__info-item">
+                    <span class="peritaje-step2__info-label">Número de placa</span>
+                    <span class="peritaje-step2__info-value">{{ vehiculoData.placa }}</span>
+                  </div>
+                  <div class="peritaje-step2__info-item">
+                    <span class="peritaje-step2__info-label">Número de identidad</span>
+                    <span class="peritaje-step2__info-value">{{ form.get('numeroDocumento')?.value }}</span>
+                  </div>
+                </div>
+
+                <!-- Verificación -->
+                <p class="peritaje-step2__verification">
+                  Verificamos que el vehículo 
+                  <strong>{{ vehiculoData.marca }} {{ vehiculoData.linea }} {{ vehiculoData.modelo }}</strong>, 
+                  placa <strong>[{{ vehiculoData.placa }}]</strong>, 
+                  clasificado como <strong>{{ vehiculoData.clase_vehiculo }} {{ vehiculoData.tipo_servicio }}</strong> 
+                  puede realizar estos servicios.
+                </p>
+
+                <p class="peritaje-step2__subtitle">Consulta los diferentes precios:</p>
+
+                <!-- Tabs DINÁMICAS -->
+                <div class="peritaje-step2__tabs">
+                  @for (tab of tabsDisponibles; track tab) {
+                    <button
+                      type="button"
+                      class="peritaje-step2__tab"
+                      [class.is-cyan]="selectedTab === tab"
+                      [class.is-active]="selectedTab === tab"
+                      (click)="selectTab(tab)"
+                    >
+                      {{ tab.charAt(0).toUpperCase() + tab.slice(1) }}
+                    </button>
+                  }
+                </div>
+
+                <!-- Precio -->
+                <div class="peritaje-step2__price">
+                  <span class="peritaje-step2__price-label">Total:</span>
+                  <span class="peritaje-step2__price-amount">COP{{ getPrecioActual() | number:'1.0-0' }}</span>
+                </div>
+
+                <!-- Imagen -->
+                <div class="peritaje-step2__image-wrapper">
+                  <img [src]="getImagenActual()" alt="Peritaje" class="peritaje-step2__image" />
+                </div>
+              </div>
+
+              <!-- COLUMNA DERECHA -->
+              <div class="peritaje-step2__right">
+                <h3 class="peritaje-step2__details-type">{{ vehiculoData.clase_vehiculo }}</h3>
+                <p class="peritaje-step2__details-desc">{{ getComboDescription().descripcion }}</p>
+
+                <h4 class="peritaje-step2__details-title">{{ getComboDescription().titulo }}</h4>
+
+                <ul class="peritaje-step2__details-list">
+                  @for (item of getComboDescription().items; track item) {
+                    <li>{{ item }}</li>
+                  }
+                </ul>
+
+                <button
+                  type="button"
+                  class="peritaje-step2__btn-agendar"
+                  (click)="agendarPeritaje()"
+                >
+                  Agendar mi peritaje
+                </button>
+              </div>
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="peritaje-step2__mobile-layout">
+              
+              @if (step2SubStep === 1) {
+                <!-- SUB-PASO 1: Selección -->
+                <div class="peritaje-step2__mobile-step1">
+                  <h2 class="peritaje-step2__title">Peritaje & Avalúo</h2>
+
+                  <div class="peritaje-step2__info-grid">
+                    <div class="peritaje-step2__info-item">
+                      <span class="peritaje-step2__info-label">Número de placa</span>
+                      <span class="peritaje-step2__info-value">{{ vehiculoData.placa }}</span>
+                    </div>
+                    <div class="peritaje-step2__info-item">
+                      <span class="peritaje-step2__info-label">Número de identidad</span>
+                      <span class="peritaje-step2__info-value">{{ form.get('numeroDocumento')?.value }}</span>
+                    </div>
+                  </div>
+
+                  <p class="peritaje-step2__verification">
+                    Verificamos que el vehículo 
+                    <strong>{{ vehiculoData.marca }} {{ vehiculoData.linea }} {{ vehiculoData.modelo }}</strong>, 
+                    placa <strong>[{{ vehiculoData.placa }}]</strong>, 
+                    clasificado como <strong>{{ vehiculoData.clase_vehiculo }} {{ vehiculoData.tipo_servicio }}</strong> 
+                    puede realizar estos servicios.
+                  </p>
+
+                  <p class="peritaje-step2__subtitle">Consulta los diferentes precios:</p>
+
+                  <!-- Tabs DINÁMICAS -->
+                  <div class="peritaje-step2__tabs">
+                    @for (tab of tabsDisponibles; track tab) {
+                      <button
+                        type="button"
+                        class="peritaje-step2__tab"
+                        [class.is-cyan]="selectedTab === tab"
+                        [class.is-active]="selectedTab === tab"
+                        (click)="selectTab(tab)"
+                      >
+                        {{ tab.charAt(0).toUpperCase() + tab.slice(1) }}
+                      </button>
+                    }
+                  </div>
+
+                  <div class="peritaje-step2__price">
+                    <span class="peritaje-step2__price-label">Total:</span>
+                    <span class="peritaje-step2__price-amount">COP{{ getPrecioActual() | number:'1.0-0' }}</span>
+                  </div>
+
+                  <div class="peritaje-step2__image-wrapper">
+                    <img [src]="getImagenActual()" alt="Peritaje" class="peritaje-step2__image" />
+                  </div>
+
+                  <button
+                    type="button"
+                    class="peritaje-step2__btn-next"
+                    (click)="advanceToStep2_2()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              @if (step2SubStep === 2) {
+                <!-- SUB-PASO 2: Detalles -->
+                <div class="peritaje-step2__mobile-step2">
+                  <h3 class="peritaje-step2__details-type">{{ vehiculoData.clase_vehiculo }}</h3>
+                  <p class="peritaje-step2__details-desc">{{ getComboDescription().descripcion }}</p>
+
+                  <h4 class="peritaje-step2__details-title">{{ getComboDescription().titulo }}</h4>
+
+                  <ul class="peritaje-step2__details-list">
+                    @for (item of getComboDescription().items; track item) {
+                      <li>{{ item }}</li>
+                    }
+                  </ul>
+
+                  <button
+                    type="button"
+                    class="peritaje-step2__btn-agendar"
+                    (click)="agendarPeritaje()"
+                  >
+                    Agendar mi peritaje
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Botón volver -->
+            <button
+              type="button"
+              class="peritaje-step2__btn-back"
+              (click)="goBackStep2()"
+            >
+              ← Volver
+            </button>
+          </div>
+        }
+
+        <!-- ========== PASO 3: PREGUNTA DE UBICACIÓN ========== -->
+        @if (currentStep === 3) {
+          <div class="peritaje-step3">
+            <h2 class="peritaje-step3__title">
+              ¿Quieres ver las Sedes Cercanas a ti?
+            </h2>
+
+            <p class="peritaje-step3__subtitle">
+              Usa tu ubicación actual para sugerencias automáticas.
+            </p>
+
+            <div class="peritaje-step3__alert">
+              <span class="peritaje-step3__alert-icon">⚠️</span>
+              <span>Tu información no será almacenada y puedes cambiarla en cualquier momento.</span>
+            </div>
+
+            <div class="peritaje-step3__actions">
+              <button 
+                type="button" 
+                class="peritaje-step3__btn peritaje-step3__btn--secondary"
+                (click)="selectManually()"
+                [disabled]="isActivatingLocation"
+              >
+                No, seleccionar manualmente
+              </button>
+
+              <button 
+                type="button" 
+                class="peritaje-step3__btn peritaje-step3__btn--primary"
+                [class.peritaje-step3__btn--loading]="isActivatingLocation"
+                (click)="activateLocation()"
+                [disabled]="isActivatingLocation"
+              >
+                @if (isActivatingLocation) {
+                  <span class="peritaje-step3__spinner"></span>
+                  <span>Activando ubicación...</span>
+                } @else {
+                  <span>Sí, activar ubicación</span>
+                }
+              </button>
+            </div>
+
+            <button 
+              type="button" 
+              class="peritaje-step3__back"
+              (click)="goBack()"
+            >
+              ← Volver al paso anterior
+            </button>
+          </div>
+        }
+
+        <!-- ========== PASO 4: SELECCIÓN DE CIUDAD Y SEDES ========== -->
+        @if (currentStep === 4) {
+          <div class="peritaje-step4">
+            
+            <!-- SUB-PASO 1: SOLO CIUDAD -->
+            @if (step4SubStep === 1) {
+              <h2 class="peritaje-step4__title">
+                Selecciona la ciudad donde deseas el peritaje
+              </h2>
+
+              <p class="peritaje-step4__subtitle">
+                Al seleccionar la ciudad y la sede de tu preferencia te mostraremos el valor del servicio.
+              </p>
+
+              <!-- CIUDAD -->
+              <div class="peritaje-step4__section">
+                <label class="peritaje-step4__label">Ciudad</label>
+                <select 
+                  class="peritaje-step4__select"
+                  [(ngModel)]="selectedCiudad"
+                >
+                  @for (ciudad of ciudades; track ciudad.id) {
+                    <option [value]="ciudad.nombre">{{ ciudad.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- BOTÓN CONTINUAR -->
+              <div class="peritaje-step4__actions">
+                <button
+                  type="button"
+                  class="peritaje-step4__btn-next"
+                  (click)="advanceToStep4_2()"
+                >
+                  Continuar
+                </button>
+              </div>
+
+              <button 
+                type="button" 
+                class="peritaje-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+
+            <!-- SUB-PASO 2: SELECCIÓN DE SEDE -->
+            @if (step4SubStep === 2) {
+              <h2 class="peritaje-step4__title">Selecciona una sede</h2>
+
+              <p class="peritaje-step4__location-info">
+                <span class="peritaje-step4__location-icon">📍</span>
+                <span>{{ selectedCiudad }}</span>
+              </p>
+
+              <!-- LOADER DE SEDES -->
+              @if (isLoadingSedes) {
+                <div class="loading-sedes">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando sedes...</span>
+                  </div>
+                  <p class="mt-3 text-muted">Buscando sedes cercanas...</p>
+                </div>
+              }
+
+              <!-- CONTENIDO DE SEDES (cuando ya cargaron) -->
+              @if (!isLoadingSedes) {
+                @if (sedes.length === 0) {
+                  <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    No se encontraron sedes disponibles en {{ selectedCiudad }} para este servicio.
+                  </div>
+                  <button type="button" class="btn btn-outline-secondary" (click)="step4SubStep = 1">
+                    ← Volver a seleccionar ciudad
+                  </button>
+                } @else {
+                  <div class="peritaje-step4__sedes">
+                    @for (sede of sedesPaginadas; track sede.id) {
+                      <div class="peritaje-step4__sede-card">
+                        <!-- MAPA (SOLO DESKTOP) -->
+                        <div class="peritaje-step4__sede-map">
+                          @if (getSedeMapEmbedUrl(sede)) {
+                            <iframe
+                              [src]="getSedeMapEmbedUrl(sede)!"
+                              frameborder="0"
+                              allowfullscreen
+                            ></iframe>
+                          } @else {
+                            @if (sede.fotoUrl) {
+                              <img
+                                [src]="sede.fotoUrl"
+                                [alt]="sede.nombre"
+                                style="width:100%; height:100%; object-fit:cover; border-radius: 12px;"
+                              />
+                            } @else {
+                              <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; border-radius: 12px; background:#f2f2f2; color:#666; font-size: 13px;">
+                                Vista previa no disponible
+                              </div>
+                            }
+                          }
+                        </div>
+
+                        <!-- INFO -->
+                        <div class="peritaje-step4__sede-info">
+                          <h3 class="peritaje-step4__sede-name">{{ sede.nombre }}</h3>
+                          <p class="peritaje-step4__sede-address">{{ sede.direccion }}</p>
+                          <p class="peritaje-step4__sede-hours">
+                            <strong>Horarios de atención:</strong><br>
+                            {{ sede.horario }}
+                          </p>
+
+                          <!-- BOTÓN VER UBICACIÓN (SOLO MOBILE) -->
+                          <button
+                            type="button"
+                            class="peritaje-step4__sede-map-btn"
+                            (click)="openGoogleMaps(sede)"
+                          >
+                            📍 Ver ubicación
+                          </button>
+
+                          <!-- BOTÓN SELECCIONAR -->
+                          <button
+                            type="button"
+                            class="peritaje-step4__sede-select"
+                            (click)="selectSede(sede)"
+                          >
+                            Selecciona esta sede para continuar
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- PAGINADOR (DESKTOP Y MOBILE) -->
+                  @if (totalSedesPages > 1) {
+                    <div class="peritaje-step4__pagination">
+                      <button
+                        type="button"
+                        class="peritaje-step4__pagination-btn"
+                        [disabled]="sedesCurrentPage === 1"
+                        (click)="prevSedesPage()"
+                      >
+                        ← Anterior
+                      </button>
+
+                      <span class="peritaje-step4__pagination-info">
+                        Página {{ sedesCurrentPage }} de {{ totalSedesPages }}
+                      </span>
+
+                      <button
+                        type="button"
+                        class="peritaje-step4__pagination-btn"
+                        [disabled]="sedesCurrentPage === totalSedesPages"
+                        (click)="nextSedesPage()"
+                      >
+                        Siguiente →
+                      </button>
+                    </div>
+                  }
+                }
+              }
+
+              <button 
+                type="button" 
+                class="peritaje-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+          </div>
+        }
+
+        <!-- ========== PASO 5: CONFIRMACIÓN Y FORMULARIO ========== -->
+        @if (currentStep === 5) {
+          <div class="peritaje-step5">
+            <h2 class="peritaje-step5__title">¡Todo listo!</h2>
+            <p class="peritaje-step5__subtitle">Este es el valor de tu peritaje</p>
+            <p class="peritaje-step5__intro">Completa tus datos y agenda tu peritaje.</p>
+
+            <div class="peritaje-step5__layout">
+              
+              <!-- COLUMNA DERECHA: Resumen (DESKTOP ONLY) -->
+              <div class="peritaje-step5__summary-card peritaje-step5__summary-card--desktop">
+                <h3 class="peritaje-step5__summary-title">
+                  {{ selectedSede?.nombre || 'Sede seleccionada' }}
+                </h3>
+                <p class="peritaje-step5__summary-vehicle">
+                  {{ vehiculoData.marca }} {{ vehiculoData.linea }} - {{ vehiculoData.modelo }}
+                </p>
+                
+                <div class="peritaje-step5__summary-price">
+                  <span class="peritaje-step5__summary-price-label">Valor total (estimado)</span>
+                  <span class="peritaje-step5__summary-price-amount">
+                    COP{{ getPrecioActual() | number:'1.0-0' }}
+                  </span>
+                </div>
+
+                <p class="peritaje-step5__summary-note">
+                  Este es el total estimado para tu peritaje {{ getComboNombre() }}.
+                </p>
+
+                <button
+                  type="button"
+                  class="peritaje-step5__btn-conditions"
+                  (click)="openConditions()"
+                >
+                  Condiciones del Servicio
+                </button>
+
+                <div class="peritaje-step5__vehicles-img">
+                  <img [src]="getImagenActual()" alt="Peritaje" />
+                </div>
+              </div>
+
+              <!-- COLUMNA IZQUIERDA: Formulario -->
+              <div class="peritaje-step5__form-wrapper">
+                <form [formGroup]="step5Form" class="peritaje-step5__form">
+                  
+                  <!-- ========== MOBILE: SUB-PASO 1 - Fecha y Hora ========== -->
+                  @if (step5SubStep === 1) {
+                    <div class="peritaje-step5__mobile-only">
+                      <h3 class="peritaje-step5__section-title">Selecciona fecha y hora</h3>
+                      
+                      <div class="peritaje-step5__field-row">
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Fecha del peritaje</label>
+                          <input
+                            type="date"
+                            class="peritaje-step5__input"
+                            formControlName="fechaRevision"
+                            [min]="getTodayDate()"
+                            (change)="onFechaChange($event)"
+                          />
+                          @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                            <span class="peritaje-step5__error">Selecciona una fecha</span>
+                          }
+                        </div>
+
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Horario disponible</label>
+                          
+                          @if (mensajeHorarios) {
+                            <p class="peritaje-step5__mensaje">{{ mensajeHorarios }}</p>
+                          }
+                          
+                          @if (isLoadingHorarios) {
+                            <p class="peritaje-step5__loading">⏳ Cargando horarios...</p>
+                          }
+                          
+                          @if (horariosDisponibles.length > 0) {
+                            <select 
+                              class="peritaje-step5__input"
+                              formControlName="horaRevision"
+                            >
+                              <option value="">Selecciona una hora</option>
+                              @for (hora of horariosDisponibles; track hora) {
+                                <option [value]="hora">{{ hora }}</option>
+                              }
+                            </select>
+                          }
+                          
+                          @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                            <span class="peritaje-step5__error">Selecciona un horario</span>
+                          }
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="peritaje-step5__btn-next"
+                        [disabled]="!canAdvanceToStep5_2()"
+                        (click)="advanceToStep5_2()"
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                  }
+
+                  <!-- ========== MOBILE: SUB-PASO 2 - Datos Personales Básicos ========== -->
+                  @if (step5SubStep === 2) {
+                    <div class="peritaje-step5__mobile-only">
+                      <h3 class="peritaje-step5__section-title">Tus datos personales</h3>
+
+                      <div class="peritaje-step5__field-row">
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Número de placa</label>
+                          <input
+                            type="text"
+                            class="peritaje-step5__input"
+                            formControlName="placa"
+                          />
+                        </div>
+
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Nombre</label>
+                          <input
+                            type="text"
+                            class="peritaje-step5__input"
+                            formControlName="nombre"
+                          />
+                          @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                            <span class="peritaje-step5__error">El nombre es obligatorio</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="peritaje-step5__field-row">
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Teléfono</label>
+                          <input
+                            type="tel"
+                            class="peritaje-step5__input"
+                            formControlName="telefono"
+                            inputmode="numeric"
+                          />
+                          @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                            <span class="peritaje-step5__error">Teléfono inválido (10 dígitos)</span>
+                          }
+                        </div>
+
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Correo</label>
+                          <input
+                            type="email"
+                            class="peritaje-step5__input"
+                            formControlName="correo"
+                            placeholder="correo@gmail.com"
+                          />
+                          @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                            <span class="peritaje-step5__error">Correo inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="peritaje-step5__field-row">
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Tipo de documento</label>
+                          <select class="peritaje-step5__input" formControlName="tipoDocumento">
+                            @for (t of docTypes; track t.value) {
+                              <option [value]="t.value">{{ t.label }}</option>
+                            }
+                          </select>
+                        </div>
+
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Documento</label>
+                          <input
+                            type="text"
+                            class="peritaje-step5__input"
+                            formControlName="numeroDocumento"
+                          />
+                          @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                            <span class="peritaje-step5__error">Documento inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="peritaje-step5__btn-next"
+                        [disabled]="step5Form.get('nombre')?.invalid || step5Form.get('telefono')?.invalid || step5Form.get('correo')?.invalid || step5Form.get('numeroDocumento')?.invalid"
+                        (click)="advanceToStep5_3()"
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                  }
+
+                  <!-- ========== MOBILE: SUB-PASO 3 - Datos Adicionales ========== -->
+                  @if (step5SubStep === 3) {
+                    <div class="peritaje-step5__mobile-only">
+                      <h3 class="peritaje-step5__section-title">Información de entrega</h3>
+
+                      <div class="peritaje-step5__field-row">
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Correo donde enviaremos el resultado</label>
+                          <input
+                            type="email"
+                            class="peritaje-step5__input"
+                            formControlName="correoResultado"
+                            placeholder="correo@gmail.com"
+                          />
+                          @if (step5Form.get('correoResultado')?.touched && step5Form.get('correoResultado')?.invalid) {
+                            <span class="peritaje-step5__error">Correo inválido</span>
+                          }
+                        </div>
+
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Nombre para entrega del resultado físico</label>
+                          <input
+                            type="text"
+                            class="peritaje-step5__input"
+                            formControlName="nombreResultado"
+                            placeholder="Nombre completo"
+                          />
+                          @if (step5Form.get('nombreResultado')?.touched && step5Form.get('nombreResultado')?.invalid) {
+                            <span class="peritaje-step5__error">El nombre es obligatorio</span>
+                          }
+                        </div>
+                      </div>
+
+                      <!-- ✅ SOLO DOMICILIO -->
+                      @if (esServicioADomicilio) {
+                        <div class="peritaje-step5__field-row">
+                          <div class="peritaje-step5__field">
+                            <label class="peritaje-step5__label">Dirección del peritaje</label>
+                            <input
+                              type="text"
+                              class="peritaje-step5__input"
+                              formControlName="direccionServicio"
+                              placeholder="Ej: Calle 123 # 45-67, Apto 301"
+                            />
+                            @if (step5Form.get('direccionServicio')?.touched && step5Form.get('direccionServicio')?.invalid) {
+                              <span class="peritaje-step5__error">La dirección es obligatoria</span>
+                            }
+                          </div>
+                        </div>
+                      }
+
+                      <label class="peritaje-step5__checkbox">
+                        <input type="checkbox" formControlName="aceptaTerminos" />
+                        <span>
+                          He leído y acepto la 
+                          <a href="#" target="_blank" class="peritaje-step5__link">autorización para tratamiento de datos personales</a>.
+                        </span>
+                      </label>
+                      @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                        <span class="peritaje-step5__error peritaje-step5__error--center">
+                          Debes aceptar los términos
+                        </span>
+                      }
+
+                      <button
+                        type="button"
+                        class="peritaje-step5__btn-next"
+                        [disabled]="step5Form.get('correoResultado')?.invalid || step5Form.get('nombreResultado')?.invalid || step5Form.get('aceptaTerminos')?.invalid || (esServicioADomicilio && step5Form.get('direccionServicio')?.invalid)"
+                        (click)="advanceToStep5_4()"
+                      >
+                        Ver resumen
+                      </button>
+                    </div>
+                  }
+
+                  <!-- ========== MOBILE: SUB-PASO 4 - Resumen ========== -->
+                  @if (step5SubStep === 4) {
+                    <div class="peritaje-step5__mobile-only">
+                      <div class="peritaje-step5__summary-card peritaje-step5__summary-card--mobile">
+                        <h3 class="peritaje-step5__summary-title">
+                          {{ selectedSede?.nombre || 'Sede seleccionada' }}
+                        </h3>
+                        <p class="peritaje-step5__summary-vehicle">
+                          {{ vehiculoData.marca }} {{ vehiculoData.linea }} - {{ vehiculoData.modelo }}
+                        </p>
+                        
+                        <div class="peritaje-step5__summary-price">
+                          <span class="peritaje-step5__summary-price-label">Valor total (estimado)</span>
+                          <span class="peritaje-step5__summary-price-amount">
+                            COP{{ getPrecioActual() | number:'1.0-0' }}
+                          </span>
+                        </div>
+
+                        <p class="peritaje-step5__summary-note">
+                          Este es el total estimado para tu peritaje {{ getComboNombre() }}.
+                        </p>
+
+                        <button
+                          type="button"
+                          class="peritaje-step5__btn-conditions"
+                          (click)="openConditions()"
+                        >
+                          Condiciones del Servicio
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- ========== DESKTOP: TODO VISIBLE ========== -->
+                  <div class="peritaje-step5__desktop-always">
+                    <div class="peritaje-step5__field-row">
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Fecha del peritaje</label>
+                        <input
+                          type="date"
+                          class="peritaje-step5__input"
+                          formControlName="fechaRevision"
+                          [min]="getTodayDate()"
+                          (change)="onFechaChange($event)"
+                        />
+                        @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                          <span class="peritaje-step5__error">Selecciona una fecha</span>
+                        }
+                      </div>
+
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Horario disponible</label>
+                        
+                        @if (mensajeHorarios) {
+                          <p class="peritaje-step5__mensaje">{{ mensajeHorarios }}</p>
+                        }
+                        
+                        @if (isLoadingHorarios) {
+                          <p class="peritaje-step5__loading">⏳ Cargando horarios...</p>
+                        }
+                        
+                        @if (horariosDisponibles.length > 0) {
+                          <select 
+                            class="peritaje-step5__input"
+                            formControlName="horaRevision"
+                          >
+                            <option value="">Selecciona una hora</option>
+                            @for (hora of horariosDisponibles; track hora) {
+                              <option [value]="hora">{{ hora }}</option>
+                            }
+                          </select>
+                        }
+                        
+                        @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                          <span class="peritaje-step5__error">Selecciona un horario</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="peritaje-step5__field-row">
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Número de placa</label>
+                        <input
+                          type="text"
+                          class="peritaje-step5__input"
+                          formControlName="placa"
+                        />
+                      </div>
+
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Nombre</label>
+                        <input
+                          type="text"
+                          class="peritaje-step5__input"
+                          formControlName="nombre"
+                        />
+                        @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                          <span class="peritaje-step5__error">El nombre es obligatorio</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="peritaje-step5__field-row">
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Teléfono</label>
+                        <input
+                          type="tel"
+                          class="peritaje-step5__input"
+                          formControlName="telefono"
+                          inputmode="numeric"
+                        />
+                        @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                          <span class="peritaje-step5__error">Teléfono inválido (10 dígitos)</span>
+                        }
+                      </div>
+
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Correo</label>
+                        <input
+                          type="email"
+                          class="peritaje-step5__input"
+                          formControlName="correo"
+                          placeholder="correo@gmail.com"
+                        />
+                        @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                          <span class="peritaje-step5__error">Correo inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="peritaje-step5__field-row">
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Tipo de documento</label>
+                        <select class="peritaje-step5__input" formControlName="tipoDocumento">
+                          @for (t of docTypes; track t.value) {
+                            <option [value]="t.value">{{ t.label }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Documento</label>
+                        <input
+                          type="text"
+                          class="peritaje-step5__input"
+                          formControlName="numeroDocumento"
+                        />
+                        @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                          <span class="peritaje-step5__error">Documento inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- CAMPOS ADICIONALES PARA PERITAJE -->
+                    <div class="peritaje-step5__field-row">
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Correo donde enviaremos el resultado</label>
+                        <input
+                          type="email"
+                          class="peritaje-step5__input"
+                          formControlName="correoResultado"
+                          placeholder="correo@gmail.com"
+                        />
+                        @if (step5Form.get('correoResultado')?.touched && step5Form.get('correoResultado')?.invalid) {
+                          <span class="peritaje-step5__error">Correo inválido</span>
+                        }
+                      </div>
+
+                      <div class="peritaje-step5__field">
+                        <label class="peritaje-step5__label">Nombre para entrega del resultado físico</label>
+                        <input
+                          type="text"
+                          class="peritaje-step5__input"
+                          formControlName="nombreResultado"
+                          placeholder="Nombre completo"
+                        />
+                        @if (step5Form.get('nombreResultado')?.touched && step5Form.get('nombreResultado')?.invalid) {
+                          <span class="peritaje-step5__error">El nombre es obligatorio</span>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- ✅ SOLO DOMICILIO -->
+                    @if (esServicioADomicilio) {
+                      <div class="peritaje-step5__field-row">
+                        <div class="peritaje-step5__field">
+                          <label class="peritaje-step5__label">Dirección del peritaje</label>
+                          <input
+                            type="text"
+                            class="peritaje-step5__input"
+                            formControlName="direccionServicio"
+                            placeholder="Ej: Calle 123 # 45-67, Apto 301"
+                          />
+                          @if (step5Form.get('direccionServicio')?.touched && step5Form.get('direccionServicio')?.invalid) {
+                            <span class="peritaje-step5__error">La dirección es obligatoria</span>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    <label class="peritaje-step5__checkbox">
+                      <input type="checkbox" formControlName="aceptaTerminos" />
+                      <span>
+                        He leído y acepto la 
+                        <a href="#" target="_blank" class="peritaje-step5__link">autorización para tratamiento de datos personales</a>.
+                      </span>
+                    </label>
+                    @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                      <span class="peritaje-step5__error peritaje-step5__error--center">
+                        Debes aceptar los términos
+                      </span>
+                    }
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <div class="peritaje-step5__actions">
+              <button 
+                type="button" 
+                class="peritaje-step5__back"
+                (click)="goBackStep5()"
+              >
+                ← Volver
+              </button>
+
+              <button
+                type="button"
+                class="peritaje-step5__btn-pay"
+                [disabled]="step5Form.invalid"
+                (click)="continuarAlPago()"
+              >
+                Continuar al pago →
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 6: FINALIZA TU PAGO ========== -->
+        @if (currentStep === 6) {
+          <div class="peritaje-step6">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="peritaje-step6__layout">
+              
+              <!-- Columna izquierda: Código + Resumen -->
+              <div class="peritaje-step6__left-col">
+                <h2 class="peritaje-step6__title">Finaliza tu pago</h2>
+                
+                <!-- Código Promocional -->
+                <div class="peritaje-step6__promo-section">
+                  <h3 class="peritaje-step6__promo-title">Código Promocional</h3>
+                  <p class="peritaje-step6__promo-subtitle">
+                    ¿Dispones de un código promocional? Introdúcelo aquí
+                  </p>
+                  <div class="peritaje-step6__promo-input-group">
+                    <input
+                      type="text"
+                      class="peritaje-step6__promo-input"
+                      [(ngModel)]="codigoPromocional"
+                      placeholder="AUTOMAS10"
+                    />
+                    <button
+                      type="button"
+                      class="peritaje-step6__promo-btn"
+                      (click)="aplicarCodigo()"
+                    >
+                      Aplicar Código
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="peritaje-step6__order-summary">
+                  <h3 class="peritaje-step6__order-title">Resumen del pedido</h3>
+                  <p class="peritaje-step6__order-date">
+                    Fecha de la transacción: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <table class="peritaje-step6__order-table">
+                    <thead>
+                      <tr>
+                        <th>Servicio</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="peritaje-step6__service-name">
+                            Peritaje {{ getComboNombre() }}
+                          </div>
+                          <div class="peritaje-step6__service-detail">
+                            {{ selectedSede?.nombre }}
+                          </div>
+                          <div class="peritaje-step6__service-date">
+                            {{ getFechaTransaccion() }}
+                          </div>
+                        </td>
+                        <td>${{ getPrecioActual() | number:'1.0-0' }}</td>
+                        <td>1</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="peritaje-step6__order-total">
+                    <span class="peritaje-step6__order-total-label">
+                      Cantidad total (IVA incluido):
+                    </span>
+                    <span class="peritaje-step6__order-total-value">
+                      ${{ getPrecioActual() | number:'1.0-0' }}
+                    </span>
+                  </div>
+
+                  <label class="peritaje-step6__checkbox">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="aceptaCondicionesPago"
+                    />
+                    <span>
+                      Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    class="peritaje-step6__btn-pay"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="peritaje-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Columna derecha: Método de pago + Datos -->
+              <div class="peritaje-step6__right-col">
+                
+                <!-- Método de pago -->
+                <div class="peritaje-step6__payment-method">
+                  <h3 class="peritaje-step6__payment-title">Método de pago</h3>
+                  <p class="peritaje-step6__payment-subtitle">
+                    Elige la pasarela de pago:
+                  </p>
+                  <div class="peritaje-step6__payment-card">
+                    <img
+                      src="assets/mercadopago.png"
+                      alt="Mercado Pago"
+                      class="peritaje-step6__payment-logo"
+                    />
+                    <span class="peritaje-step6__payment-name">Mercado Pago</span>
+                  </div>
+                </div>
+
+                <!-- Datos del cliente -->
+                <div class="peritaje-step6__client-data">
+                  <h3 class="peritaje-step6__client-title">Datos del cliente</h3>
+                  
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Nombre:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Placa:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Teléfono:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Email:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="peritaje-step6__mobile">
+              
+              <!-- Sub-paso 1: Resumen del pedido -->
+              @if (step6SubStep === 1) {
+                <h2 class="peritaje-step6__title-mobile">Resumen del pedido</h2>
+
+                <div class="peritaje-step6__order-summary-mobile">
+                  <p class="peritaje-step6__order-date-mobile">
+                    Fecha: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <div class="peritaje-step6__service-card">
+                    <div class="peritaje-step6__service-name">
+                      Peritaje {{ getComboNombre() }}
+                    </div>
+                    <div class="peritaje-step6__service-detail">
+                      {{ selectedSede?.nombre }}
+                    </div>
+                    <div class="peritaje-step6__service-price">
+                      ${{ getPrecioActual() | number:'1.0-0' }}
+                    </div>
+                  </div>
+
+                  <div class="peritaje-step6__total-mobile">
+                    <span>Total (IVA incluido):</span>
+                    <strong>${{ getPrecioActual() | number:'1.0-0' }}</strong>
+                  </div>
+                </div>
+
+                <div class="peritaje-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="peritaje-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="peritaje-step6__btn-next-mobile"
+                    (click)="advanceToStep6_2()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 2: Método de pago -->
+              @if (step6SubStep === 2) {
+                <h2 class="peritaje-step6__title-mobile">Método de pago</h2>
+
+                <div class="peritaje-step6__payment-card-mobile">
+                  <img
+                    src="assets/mercadopago.png"
+                    alt="Mercado Pago"
+                    class="peritaje-step6__payment-logo-mobile"
+                  />
+                  <span class="peritaje-step6__payment-name-mobile">Mercado Pago</span>
+                </div>
+
+                <div class="peritaje-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="peritaje-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="peritaje-step6__btn-next-mobile"
+                    (click)="advanceToStep6_3()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 3: Datos del cliente + Confirmación -->
+              @if (step6SubStep === 3) {
+                <h2 class="peritaje-step6__title-mobile">Datos del cliente</h2>
+
+                <div class="peritaje-step6__client-data-mobile">
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Nombre:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Placa:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Teléfono:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="peritaje-step6__client-item">
+                    <span class="peritaje-step6__client-label">Email:</span>
+                    <span class="peritaje-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+                <label class="peritaje-step6__checkbox-mobile">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="aceptaCondicionesPago"
+                  />
+                  <span>
+                    Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                  </span>
+                </label>
+
+                <div class="peritaje-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="peritaje-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="peritaje-step6__btn-pay-mobile"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="peritaje-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              }
+
+            </div>
+
+          </div>
+        }
+
+        <!-- ========== PASO 7: CONFIRMACIÓN FINAL ========== -->
+        @if (currentStep === 7) {
+          <div class="peritaje-step7">
+            <h2 class="peritaje-step7__title">¡Pago confirmado!</h2>
+            <p class="peritaje-step7__message">
+              Tu peritaje {{ getComboNombre() }} ha sido agendado y pagado exitosamente.
+            </p>
+            <button
+              type="button"
+              class="peritaje-step7__btn-close"
+              (click)="onClose()"
+            >
+              Cerrar
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

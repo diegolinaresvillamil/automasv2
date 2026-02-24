@@ -1,0 +1,1041 @@
+@if (isOpen) {
+  <div class="sedes-modal" (click)="onBackdropClick($event)">
+    <div
+      class="sedes-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Sedes y Tarifas RTM"
+    >
+      <button
+        type="button"
+        class="sedes-modal__close"
+        (click)="onClose()"
+        aria-label="Cerrar"
+      >
+        ✕
+      </button>
+
+      <div class="sedes-modal__card">
+        
+        <!-- ========== PASO 3: PREGUNTA DE UBICACIÓN ========== -->
+        @if (currentStep === 3) {
+          <div class="sedes-step3">
+            <h2 class="sedes-step3__title">
+              ¿Quieres ver las Sedes Cercanas a ti?
+            </h2>
+
+            <p class="sedes-step3__subtitle">
+              Usa tu ubicación actual para sugerencias automáticas.
+            </p>
+
+            <div class="sedes-step3__alert">
+              <span class="sedes-step3__alert-icon">⚠️</span>
+              <span>Tu información no será almacenada y puedes cambiarla en cualquier momento.</span>
+            </div>
+
+            <div class="sedes-step3__actions">
+              <button 
+                type="button" 
+                class="sedes-step3__btn sedes-step3__btn--secondary"
+                (click)="selectManually()"
+                [disabled]="isActivatingLocation"
+              >
+                No, seleccionar manualmente
+              </button>
+
+              <button 
+                type="button" 
+                class="sedes-step3__btn sedes-step3__btn--primary"
+                [class.sedes-step3__btn--loading]="isActivatingLocation"
+                (click)="activateLocation()"
+                [disabled]="isActivatingLocation"
+              >
+                @if (isActivatingLocation) {
+                  <span class="sedes-step3__spinner"></span>
+                  <span>Activando ubicación...</span>
+                } @else {
+                  <span>Sí, activar ubicación</span>
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 4: SELECCIÓN (MULTIPASOS) ========== -->
+        @if (currentStep === 4) {
+          <div class="sedes-step4">
+            <!-- SUB-PASO 1: CIUDAD Y TIPO DE VEHÍCULO -->
+            @if (step4SubStep === 1) {
+              <h2 class="sedes-step4__title">
+                Consulta el valor de la Revisión Técnico-Mecánica
+              </h2>
+
+              <p class="sedes-step4__subtitle">
+                Al seleccionar la ciudad, el tipo de vehículo y la sede de tu preferencia te mostraremos el valor base del servicio.
+              </p>
+
+              <p class="sedes-step4__note">
+                *Recuerda que este valor no cuenta con el fondo nacional de seguridad vial. El valor de la tarifa podrá variar según la resolución 20213040063835 de 2021 o la que la modifique y/o sustituya; y el valor adicional será asumido por el consumidor.
+              </p>
+
+              <!-- CIUDAD -->
+              <div class="sedes-step4__section">
+                <label class="sedes-step4__label">Ciudad</label>
+                <select 
+                  class="sedes-step4__select"
+                  [(ngModel)]="selectedCiudad"
+                >
+                  @for (ciudad of ciudades; track ciudad.id) {
+                    <option [value]="ciudad.nombre">{{ ciudad.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- TIPO DE VEHÍCULO (VISIBLE Y REQUERIDO) -->
+              <div class="sedes-step4__section">
+                <label class="sedes-step4__label">Tipo de Vehículo</label>
+                <div class="sedes-step4__vehicle-types">
+                  @for (tipo of tiposVehiculo; track tipo.id) {
+                    <button
+                      type="button"
+                      class="sedes-step4__vehicle-btn"
+                      [class.sedes-step4__vehicle-btn--active]="selectedTipoVehiculo === tipo.id"
+                      (click)="selectTipoVehiculo(tipo.id)"
+                    >
+                      <img 
+                        [src]="'assets/' + tipo.iconSvg" 
+                        [alt]="tipo.nombre"
+                        class="sedes-step4__vehicle-icon-svg"
+                      />
+                      <span class="sedes-step4__vehicle-name">{{ tipo.nombre }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- SUBTIPOS (2 POR FILA EN MOBILE) -->
+              @if (showSubtipos) {
+                <div class="sedes-step4__section sedes-step4__section--subtipos">
+                  <div class="sedes-step4__subtypes">
+                    @for (subtipo of subtiposLivianos; track subtipo.id) {
+                      <button
+                        type="button"
+                        class="sedes-step4__subtype-btn"
+                        [class.sedes-step4__subtype-btn--active]="selectedSubtipo === subtipo.id"
+                        (click)="selectSubtipo(subtipo.id)"
+                      >
+                        {{ subtipo.nombre }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- BOTÓN CONTINUAR -->
+              <div class="sedes-step4__actions">
+                <button
+                  type="button"
+                  class="sedes-step4__btn-next"
+                  [disabled]="!canAdvanceStep4_1()"
+                  (click)="advanceToStep4_2()"
+                >
+                  Continuar
+                </button>
+              </div>
+
+              <button 
+                type="button" 
+                class="sedes-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+
+            <!-- SUB-PASO 2: SELECCIÓN DE SEDE -->
+            @if (step4SubStep === 2) {
+              <h2 class="sedes-step4__title">Selecciona una sede</h2>
+
+              <p class="sedes-step4__location-info">
+                <span class="sedes-step4__location-icon">📍</span>
+                <span>{{ selectedCiudad }}</span>
+              </p>
+
+              <div class="sedes-step4__sedes">
+                @for (sede of sedesPaginadas; track sede.id; let isFirst = $first) {
+                  <div class="sedes-step4__sede-card" [class.sedes-step4__sede-card--closest]="isFirst">
+                    <!-- MAPA (SOLO DESKTOP) -->
+                    <div class="sedes-step4__sede-map">
+                      <iframe
+                        [src]="'https://www.google.com/maps?q=' + sede.lat + ',' + sede.lng + '&output=embed' | sanitizeUrl"
+                        frameborder="0"
+                        allowfullscreen
+                      ></iframe>
+                    </div>
+
+                    <!-- INFO -->
+                    <div class="sedes-step4__sede-info">
+                      <h3 class="sedes-step4__sede-name">{{ sede.nombre }}</h3>
+                      <p class="sedes-step4__sede-address">{{ sede.direccion }}</p>
+                      <p class="sedes-step4__sede-hours">
+                        <strong>Horarios de atención:</strong><br>
+                        {{ sede.horario }}
+                      </p>
+
+                      <!-- BOTÓN VER UBICACIÓN (SOLO MOBILE) -->
+                      <button
+                        type="button"
+                        class="sedes-step4__sede-map-btn"
+                        (click)="openGoogleMaps(sede)"
+                      >
+                        📍 Ver ubicación
+                      </button>
+
+                      <!-- BOTÓN SELECCIONAR -->
+                      <button
+                        type="button"
+                        class="sedes-step4__sede-select"
+                        (click)="selectSede(sede)"
+                      >
+                        Selecciona esta sede para ver el valor estimado.
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- ✅ PAGINADOR VISUAL PARA PC (SOLO VISIBLE EN DESKTOP) -->
+              @if (totalSedesPages > 1) {
+                <div class="sedes-step4__pagination-desktop">
+                  <button
+                    type="button"
+                    class="sedes-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === 1"
+                    (click)="prevSedesPage()"
+                  >
+                    ← Anterior
+                  </button>
+
+                  <div class="sedes-step4__pagination-center">
+                    <div class="sedes-step4__page-numbers">
+                      @for (page of [].constructor(totalSedesPages); track $index) {
+                        <button 
+                          type="button"
+                          class="sedes-step4__page-number"
+                          [class.sedes-step4__page-number--active]="sedesCurrentPage === $index + 1"
+                          (click)="goToSedesPage($index + 1)"
+                        >
+                          {{ $index + 1 }}
+                        </button>
+                      }
+                    </div>
+                    <span class="sedes-step4__page-text">
+                      Página {{ sedesCurrentPage }} de {{ totalSedesPages }}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="sedes-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === totalSedesPages"
+                    (click)="nextSedesPage()"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              }
+
+              <!-- PAGINADOR SIMPLE PARA MOBILE -->
+              @if (totalSedesPages > 1) {
+                <div class="sedes-step4__pagination">
+                  <button
+                    type="button"
+                    class="sedes-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === 1"
+                    (click)="prevSedesPage()"
+                  >
+                    ← Anterior
+                  </button>
+
+                  <span class="sedes-step4__pagination-info">
+                    {{ sedesCurrentPage }} de {{ totalSedesPages }}
+                  </span>
+
+                  <button
+                    type="button"
+                    class="sedes-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === totalSedesPages"
+                    (click)="nextSedesPage()"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              }
+
+              <button 
+                type="button" 
+                class="sedes-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+
+            <!-- SUB-PASO 3: RESUMEN (PRECIO ESTIMADO) -->
+            @if (step4SubStep === 3 && selectedSede) {
+              <div class="sedes-step4__summary">
+                <h2 class="sedes-step4__summary-title">{{ selectedSede.nombre }}</h2>
+                <p class="sedes-step4__summary-type">{{ tipoVehiculoNombre }}</p>
+
+                <div class="sedes-step4__summary-price">
+                  <span class="sedes-step4__summary-price-label">COP</span>
+                  <span class="sedes-step4__summary-price-amount">{{ precioEstimado | number:'1.0-0' }}</span>
+                </div>
+
+                <p class="sedes-step4__summary-note">
+                  El valor final puede variar según el modelo y año del vehículo.
+                </p>
+
+                <div class="sedes-step4__summary-actions">
+                  <button
+                    type="button"
+                    class="sedes-step4__summary-btn sedes-step4__summary-btn--secondary"
+                    (click)="openConditions()"
+                  >
+                    Condiciones del Servicio
+                  </button>
+
+                  <button
+                    type="button"
+                    class="sedes-step4__summary-btn sedes-step4__summary-btn--primary"
+                    (click)="finalizarAgendamiento()"
+                  >
+                    Agendar mi revisión
+                  </button>
+                </div>
+
+                <button 
+                  type="button" 
+                  class="sedes-step4__back"
+                  (click)="goBack()"
+                >
+                  ← Volver al paso anterior
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ========== PASO 5: FORMULARIO (PRECIO ESTIMADO) ========== -->
+        @if (currentStep === 5) {
+          <div class="sedes-step5">
+            <h2 class="sedes-step5__title">¡Todo listo!</h2>
+            <p class="sedes-step5__subtitle">Este es el valor estimado de tu revisión</p>
+            <p class="sedes-step5__intro">Completa tus datos y agenda tu revisión.</p>
+
+            <div class="sedes-step5__layout">
+              
+              <!-- COLUMNA DERECHA: Resumen (DESKTOP ONLY) -->
+              <div class="sedes-step5__summary-card sedes-step5__summary-card--desktop">
+                <h3 class="sedes-step5__summary-title">
+                  {{ selectedSede?.nombre || 'Sede seleccionada' }}
+                </h3>
+                <p class="sedes-step5__summary-vehicle">{{ tipoVehiculoNombre }}</p>
+                
+                <div class="sedes-step5__summary-price">
+                  <span class="sedes-step5__summary-price-label">Valor total (estimado)</span>
+                  <span class="sedes-step5__summary-price-amount">
+                    COP {{ precioEstimado | number:'1.0-0' }}
+                  </span>
+                </div>
+
+                <p class="sedes-step5__summary-note">
+                  Este es el total estimado para tu revisión técnico-mecánica. El precio real se calculará con los datos de tu vehículo.
+                </p>
+
+                <button
+                  type="button"
+                  class="sedes-step5__btn-conditions"
+                  (click)="openConditions()"
+                >
+                  Condiciones del Servicio
+                </button>
+
+                <div class="sedes-step5__vehicles-img">
+                  <img [src]="imageSrc" [alt]="imageAlt" />
+                </div>
+              </div>
+
+              <!-- COLUMNA IZQUIERDA: Formulario -->
+              <div class="sedes-step5__form-wrapper">
+                <form [formGroup]="step5Form" class="sedes-step5__form">
+                  
+                  <!-- MOBILE: SUB-PASO 1 - Fecha y Hora -->
+                  @if (step5SubStep === 1) {
+                    <div class="sedes-step5__mobile-only">
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Fecha de tu revisión</label>
+                          <input
+                            type="date"
+                            class="sedes-step5__input"
+                            formControlName="fechaRevision"
+                            [min]="getTodayDate()"
+                          />
+                          @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                            <span class="sedes-step5__error">Selecciona una fecha</span>
+                          }
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Horario disponible</label>
+                          <select 
+                            class="sedes-step5__input"
+                            formControlName="horaRevision"
+                          >
+                            <option value="">Selecciona una hora</option>
+                            @for (hora of horariosDisponibles; track hora) {
+                              <option [value]="hora">{{ hora }}</option>
+                            }
+                          </select>
+                          @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                            <span class="sedes-step5__error">Selecciona un horario</span>
+                          }
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="sedes-step5__btn-next"
+                        [disabled]="!canAdvanceToStep5_2()"
+                        (click)="advanceToStep5_2()"
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                  }
+
+                  <!-- MOBILE: SUB-PASO 2 - Datos Personales -->
+                  @if (step5SubStep === 2) {
+                    <div class="sedes-step5__mobile-only">
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Número de placa</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="placa"
+                          />
+                          @if (step5Form.get('placa')?.touched && step5Form.get('placa')?.invalid) {
+                            <span class="sedes-step5__error">La placa es obligatoria</span>
+                          }
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Nombre</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="nombre"
+                          />
+                          @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                            <span class="sedes-step5__error">El nombre es obligatorio</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Teléfono</label>
+                          <input
+                            type="tel"
+                            class="sedes-step5__input"
+                            formControlName="telefono"
+                            inputmode="numeric"
+                          />
+                          @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                            <span class="sedes-step5__error">Teléfono inválido (10 dígitos)</span>
+                          }
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Correo</label>
+                          <input
+                            type="email"
+                            class="sedes-step5__input"
+                            formControlName="correo"
+                            placeholder="correo@gmail.com"
+                          />
+                          @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                            <span class="sedes-step5__error">Correo inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Tipo de documento</label>
+                          <select class="sedes-step5__input" formControlName="tipoDocumento">
+                            @for (t of docTypes; track t.value) {
+                              <option [value]="t.value">{{ t.label }}</option>
+                            }
+                          </select>
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Documento</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="numeroDocumento"
+                          />
+                          @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                            <span class="sedes-step5__error">Documento inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <label class="sedes-step5__checkbox">
+                        <input type="checkbox" formControlName="aceptaTerminos" />
+                        <span>
+                          He leído y acepto la 
+                          <a href="#" target="_blank" class="sedes-step5__link">autorización para tratamiento de datos personales</a>.
+                        </span>
+                      </label>
+                      @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                        <span class="sedes-step5__error sedes-step5__error--center">
+                          Debes aceptar los términos
+                        </span>
+                      }
+
+                      <button
+                        type="button"
+                        class="sedes-step5__btn-next"
+                        [disabled]="step5Form.get('placa')?.invalid || step5Form.get('nombre')?.invalid || step5Form.get('telefono')?.invalid || step5Form.get('correo')?.invalid || step5Form.get('numeroDocumento')?.invalid || step5Form.get('aceptaTerminos')?.invalid"
+                        (click)="advanceToStep5_3()"
+                      >
+                        Ver resumen
+                      </button>
+                    </div>
+                  }
+
+                  <!-- MOBILE: SUB-PASO 3 - Resumen -->
+                  @if (step5SubStep === 3) {
+                    <div class="sedes-step5__mobile-only">
+                      <div class="sedes-step5__summary-card sedes-step5__summary-card--mobile">
+                        <h3 class="sedes-step5__summary-title">
+                          {{ selectedSede?.nombre || 'Sede seleccionada' }}
+                        </h3>
+                        <p class="sedes-step5__summary-vehicle">{{ tipoVehiculoNombre }}</p>
+                        
+                        <div class="sedes-step5__summary-price">
+                          <span class="sedes-step5__summary-price-label">Valor total (estimado)</span>
+                          <span class="sedes-step5__summary-price-amount">
+                            COP {{ precioEstimado | number:'1.0-0' }}
+                          </span>
+                        </div>
+
+                        <p class="sedes-step5__summary-note">
+                          Este es el total estimado para tu revisión técnico-mecánica. El precio real se calculará con los datos de tu vehículo.
+                        </p>
+
+                        <button
+                          type="button"
+                          class="sedes-step5__btn-conditions"
+                          (click)="openConditions()"
+                        >
+                          Condiciones del Servicio
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- DESKTOP: TODO VISIBLE -->
+                  <div class="sedes-step5__desktop-always">
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Fecha de tu revisión</label>
+                        <input
+                          type="date"
+                          class="sedes-step5__input"
+                          formControlName="fechaRevision"
+                          [min]="getTodayDate()"
+                        />
+                        @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                          <span class="sedes-step5__error">Selecciona una fecha</span>
+                        }
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Horario disponible</label>
+                        <select 
+                          class="sedes-step5__input"
+                          formControlName="horaRevision"
+                        >
+                          <option value="">Selecciona una hora</option>
+                          @for (hora of horariosDisponibles; track hora) {
+                            <option [value]="hora">{{ hora }}</option>
+                          }
+                        </select>
+                        @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                          <span class="sedes-step5__error">Selecciona un horario</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Número de placa</label>
+                        <input
+                          type="text"
+                          class="sedes-step5__input"
+                          formControlName="placa"
+                        />
+                        @if (step5Form.get('placa')?.touched && step5Form.get('placa')?.invalid) {
+                          <span class="sedes-step5__error">La placa es obligatoria</span>
+                        }
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Nombre</label>
+                        <input
+                          type="text"
+                          class="sedes-step5__input"
+                          formControlName="nombre"
+                        />
+                        @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                          <span class="sedes-step5__error">El nombre es obligatorio</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Teléfono</label>
+                        <input
+                          type="tel"
+                          class="sedes-step5__input"
+                          formControlName="telefono"
+                          inputmode="numeric"
+                        />
+                        @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                          <span class="sedes-step5__error">Teléfono inválido (10 dígitos)</span>
+                        }
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Correo</label>
+                        <input
+                          type="email"
+                          class="sedes-step5__input"
+                          formControlName="correo"
+                          placeholder="correo@gmail.com"
+                        />
+                        @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                          <span class="sedes-step5__error">Correo inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Tipo de documento</label>
+                        <select class="sedes-step5__input" formControlName="tipoDocumento">
+                          @for (t of docTypes; track t.value) {
+                            <option [value]="t.value">{{ t.label }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Documento</label>
+                        <input
+                          type="text"
+                          class="sedes-step5__input"
+                          formControlName="numeroDocumento"
+                        />
+                        @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                          <span class="sedes-step5__error">Documento inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <label class="sedes-step5__checkbox">
+                      <input type="checkbox" formControlName="aceptaTerminos" />
+                      <span>
+                        He leído y acepto la 
+                        <a href="#" target="_blank" class="sedes-step5__link">autorización para tratamiento de datos personales</a>.
+                      </span>
+                    </label>
+                    @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                      <span class="sedes-step5__error sedes-step5__error--center">
+                        Debes aceptar los términos
+                      </span>
+                    }
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <div class="sedes-step5__actions">
+              <button 
+                type="button" 
+                class="sedes-step5__back"
+                (click)="goBackStep5()"
+              >
+                ← Volver
+              </button>
+
+              <button
+                type="button"
+                class="sedes-step5__btn-pay"
+                [disabled]="step5Form.invalid || isLoading"
+                (click)="continuarAlPago()"
+              >
+                @if (isLoading) {
+                  <span class="sedes-step5__spinner"></span>
+                  Consultando vehículo...
+                } @else {
+                  Continuar al pago →
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 6: FINALIZA TU PAGO (PRECIO REAL DEL RUNT) ========== -->
+        @if (currentStep === 6) {
+          <div class="sedes-step6">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="sedes-step6__layout">
+              
+              <!-- Columna izquierda: Código + Resumen -->
+              <div class="sedes-step6__left-col">
+                <h2 class="sedes-step6__title">Finaliza tu pago</h2>
+                
+                <!-- Código Promocional -->
+                <div class="sedes-step6__promo-section">
+                  <h3 class="sedes-step6__promo-title">Código Promocional</h3>
+                  <p class="sedes-step6__promo-subtitle">
+                    ¿Dispones de un código promocional? Introdúcelo aquí
+                  </p>
+                  <div class="sedes-step6__promo-input-group">
+                    <input
+                      type="text"
+                      class="sedes-step6__promo-input"
+                      [(ngModel)]="codigoPromocional"
+                      placeholder="AUTOMAS10"
+                    />
+                    <button
+                      type="button"
+                      class="sedes-step6__promo-btn"
+                      (click)="aplicarCodigo()"
+                    >
+                      Aplicar Código
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="sedes-step6__order-summary">
+                  <h3 class="sedes-step6__order-title">Resumen del pedido</h3>
+                  <p class="sedes-step6__order-date">
+                    Fecha de la transacción: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <table class="sedes-step6__order-table">
+                    <thead>
+                      <tr>
+                        <th>Servicio</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="sedes-step6__service-name">
+                            Revisión Técnico-Mecánica
+                          </div>
+                          <div class="sedes-step6__service-detail">
+                            {{ selectedSede?.nombre }}
+                          </div>
+                          <div class="sedes-step6__service-date">
+                            {{ getFechaTransaccion() }}
+                          </div>
+                        </td>
+                        <td>${{ precioReal | number:'1.0-0' }}</td>
+                        <td>1</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="sedes-step6__order-total">
+                    <span class="sedes-step6__order-total-label">
+                      Cantidad total (IVA incluido):
+                    </span>
+                    <span class="sedes-step6__order-total-value">
+                      ${{ precioReal | number:'1.0-0' }}
+                    </span>
+                  </div>
+
+                  <label class="sedes-step6__checkbox">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="aceptaCondicionesPago"
+                    />
+                    <span>
+                      Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-pay"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="sedes-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Columna derecha: Método de pago + Datos -->
+              <div class="sedes-step6__right-col">
+                
+                <!-- Método de pago -->
+                <div class="sedes-step6__payment-method">
+                  <h3 class="sedes-step6__payment-title">Método de pago</h3>
+                  <p class="sedes-step6__payment-subtitle">
+                    Elige la pasarela de pago:
+                  </p>
+                  <div class="sedes-step6__payment-card">
+                    <img
+                      src="assets/mercadopago.png"
+                      alt="Mercado Pago"
+                      class="sedes-step6__payment-logo"
+                    />
+                    <span class="sedes-step6__payment-name">Mercado Pago</span>
+                  </div>
+                </div>
+
+                <!-- Datos del cliente -->
+                <div class="sedes-step6__client-data">
+                  <h3 class="sedes-step6__client-title">Datos del cliente</h3>
+                  
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Nombre:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Placa:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Teléfono:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Email:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="sedes-step6__mobile">
+              
+              <!-- Sub-paso 1: Resumen del pedido -->
+              @if (step6SubStep === 1) {
+                <h2 class="sedes-step6__title-mobile">Resumen del pedido</h2>
+
+                <div class="sedes-step6__order-summary-mobile">
+                  <p class="sedes-step6__order-date-mobile">
+                    Fecha: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <div class="sedes-step6__service-card">
+                    <div class="sedes-step6__service-name">
+                      Revisión Técnico-Mecánica
+                    </div>
+                    <div class="sedes-step6__service-detail">
+                      {{ selectedSede?.nombre }}
+                    </div>
+                    <div class="sedes-step6__service-price">
+                      ${{ precioReal | number:'1.0-0' }}
+                    </div>
+                  </div>
+
+                  <div class="sedes-step6__total-mobile">
+                    <span>Total (IVA incluido):</span>
+                    <strong>${{ precioReal | number:'1.0-0' }}</strong>
+                  </div>
+                </div>
+
+                <div class="sedes-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-next-mobile"
+                    (click)="advanceToStep6_2()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 2: Método de pago -->
+              @if (step6SubStep === 2) {
+                <h2 class="sedes-step6__title-mobile">Método de pago</h2>
+
+                <div class="sedes-step6__payment-card-mobile">
+                  <img
+                    src="assets/mercadopago.png"
+                    alt="Mercado Pago"
+                    class="sedes-step6__payment-logo-mobile"
+                  />
+                  <span class="sedes-step6__payment-name-mobile">Mercado Pago</span>
+                </div>
+
+                <div class="sedes-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-next-mobile"
+                    (click)="advanceToStep6_3()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 3: Datos del cliente + Confirmación -->
+              @if (step6SubStep === 3) {
+                <h2 class="sedes-step6__title-mobile">Datos del cliente</h2>
+
+                <div class="sedes-step6__client-data-mobile">
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Nombre:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Placa:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Teléfono:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Email:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+                <label class="sedes-step6__checkbox-mobile">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="aceptaCondicionesPago"
+                  />
+                  <span>
+                    Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                  </span>
+                </label>
+
+                <div class="sedes-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-pay-mobile"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="sedes-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              }
+
+            </div>
+
+          </div>
+        }
+
+        <!-- ========== PASO 7: CONFIRMACIÓN FINAL ========== -->
+        @if (currentStep === 7) {
+          <div class="sedes-step7">
+            <h2 class="sedes-step7__title">¡Pago confirmado!</h2>
+            <p class="sedes-step7__message">
+              Tu revisión técnico-mecánica ha sido agendada y pagada exitosamente.
+            </p>
+            <button
+              type="button"
+              class="sedes-step7__btn-close"
+              (click)="onClose()"
+            >
+              Cerrar
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

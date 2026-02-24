@@ -1,0 +1,22 @@
+.ad-banner {
+  display: block;
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  background: #fff;
+  text-decoration: none;
+}
+
+.ad-banner__picture {
+  display: block;
+  width: 100%;
+}
+
+.ad-banner__img {
+  display: block;
+  width: 100%;
+  height: auto;
+}

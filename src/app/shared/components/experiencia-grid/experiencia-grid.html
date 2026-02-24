@@ -1,0 +1,21 @@
+<section class="experiencia" #sectionEl>
+  <div class="experiencia__container">
+    <h2 class="experiencia__title">{{ title }}</h2>
+
+    <div class="experiencia__grid">
+      @for (it of items; track $index) {
+        <div class="experiencia-card">
+          <div class="icon-box" aria-hidden="true">
+            <i class="bi" [ngClass]="it.icon"></i>
+          </div>
+
+          <h3 class="counter">
+            {{ prefix }}{{ animatedValues[$index] ?? 0 }}
+          </h3>
+
+          <p [innerHTML]="formatLabel(it.label)"></p>
+        </div>
+      }
+    </div>
+  </div>
+</section>

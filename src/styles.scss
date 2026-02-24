@@ -1,1 +1,52 @@
-/* You can add global styles to this file, and also import other style files */
+@import "bootstrap/scss/bootstrap";
+
+
+/* ==============================
+   Tipografía global
+============================== */
+
+/* Variables */
+$font-primary: 'Urbanist', sans-serif;
+$base-font-size: 1rem;
+$paragraph-size: 1.125rem;
+
+/* Reset tipográfico global */
+* {
+  font-family: $font-primary !important;
+}
+
+/* Texto base */
+body {
+  font-size: $base-font-size;
+}
+
+/* Párrafos */
+p {
+  font-size: $paragraph-size !important;
+}
+
+
+/* ==============================
+   Layout global
+============================== */
+
+body {
+  font-size: $base-font-size;
+  padding-top: 80px;     /* móvil / tablet: header (60px) + 20px espacio */
+  padding-bottom: 0;
+}
+
+/* Tablet y móvil: menú inferior */
+@media (max-width: 992px) {
+  body {
+    padding-bottom: 70px;
+  }
+}
+
+/* Desktop: header + nav flotante + espacio visual */
+@media (min-width: 993px) {
+  body {
+    padding-top: 190px;  /* 170px + 20px de respiro */
+    padding-bottom: 0;
+  }
+}

@@ -1,0 +1,1169 @@
+@if (isOpen) {
+  <div class="sedes-modal" (click)="onBackdropClick($event)">
+    <div class="sedes-modal__dialog">
+      <div class="sedes-modal__card">
+        
+        <button 
+          type="button" 
+          class="sedes-modal__close"
+          (click)="onClose()"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
+
+        <!-- ========== PASO 3: PREGUNTA DE UBICACIÓN ========== -->
+        @if (currentStep === 3) {
+          <div class="sedes-step3">
+            <h2 class="sedes-step3__title">
+              ¿Quieres ver las Sedes Cercanas a ti?
+            </h2>
+
+            <p class="sedes-step3__subtitle">
+              Usa tu ubicación actual para sugerencias automáticas.
+            </p>
+
+            <div class="sedes-step3__alert">
+              <span class="sedes-step3__alert-icon">⚠️</span>
+              <span>Tu información no será almacenada y puedes cambiarla en cualquier momento.</span>
+            </div>
+
+            <div class="sedes-step3__actions">
+              <button 
+                type="button" 
+                class="sedes-step3__btn sedes-step3__btn--secondary"
+                (click)="selectManually()"
+                [disabled]="isActivatingLocation"
+              >
+                No, seleccionar manualmente
+              </button>
+
+              <button 
+                type="button" 
+                class="sedes-step3__btn sedes-step3__btn--primary"
+                [class.sedes-step3__btn--loading]="isActivatingLocation"
+                (click)="activateLocation()"
+                [disabled]="isActivatingLocation"
+              >
+                @if (isActivatingLocation) {
+                  <span class="sedes-step3__spinner"></span>
+                  <span>Activando ubicación...</span>
+                } @else {
+                  <span>Sí, activar ubicación</span>
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 4: SELECCIÓN (MULTIPASOS) ========== -->
+        @if (currentStep === 4) {
+          <div class="sedes-step4">
+            
+            <!-- SUB-PASO 1: CIUDAD Y TIPO DE VEHÍCULO -->
+            @if (step4SubStep === 1) {
+              <h2 class="sedes-step4__title">
+                Selecciona tu ciudad y tipo de vehículo
+              </h2>
+
+              <p class="sedes-step4__subtitle">
+                Estos datos nos ayudarán a mostrarte los planes disponibles.
+              </p>
+
+              <!-- CIUDAD -->
+              <div class="sedes-step4__section">
+                <label class="sedes-step4__label">
+                  <span></span> Ciudad
+                </label>
+                <select 
+                  class="sedes-step4__select"
+                  [(ngModel)]="selectedCiudad"
+                >
+                  @for (ciudad of ciudades; track ciudad.id) {
+                    <option [value]="ciudad.nombre">{{ ciudad.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- TIPO DE VEHÍCULO (SIN ICONOS) -->
+              <div class="sedes-step4__section">
+                <label class="sedes-step4__label">
+                  <span></span> Tipo de vehículo
+                </label>
+
+                <div class="sedes-step4__vehicle-types">
+                  @for (tipo of tiposVehiculo; track tipo.id) {
+                    <button
+                      type="button"
+                      class="sedes-step4__vehicle-btn"
+                      [class.sedes-step4__vehicle-btn--active]="selectedTipoVehiculo === tipo.id"
+                      (click)="selectTipoVehiculo(tipo.id)"
+                    >
+                      <span class="sedes-step4__vehicle-name">{{ tipo.nombre }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- SUBTIPOS (SOLO PARA LIVIANOS) -->
+              @if (showSubtipos) {
+                <div class="sedes-step4__section sedes-step4__section--subtipos">
+                  <label class="sedes-step4__label">Subtipo</label>
+                  <div class="sedes-step4__subtypes">
+                    @for (subtipo of subtiposLivianos; track subtipo.id) {
+                      <button
+                        type="button"
+                        class="sedes-step4__subtype-btn"
+                        [class.sedes-step4__subtype-btn--active]="selectedSubtipo === subtipo.id"
+                        (click)="selectSubtipo(subtipo.id)"
+                      >
+                        {{ subtipo.nombre }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- BOTÓN CONTINUAR -->
+              <div class="sedes-step4__actions">
+                <button
+                  type="button"
+                  class="sedes-step4__btn-next"
+                  [disabled]="!canAdvanceStep4_1()"
+                  (click)="advanceToStep4_2()"
+                >
+                  Continuar
+                </button>
+              </div>
+
+              <button 
+                type="button" 
+                class="sedes-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+
+<!-- SUB-PASO 2: SELECCIÓN DE PLAN (2 COLUMNAS) - IDÉNTICO AL ORIGINAL -->
+@if (step4SubStep === 2) {
+  
+  <!-- DESKTOP: Layout 2 columnas -->
+  <div class="sedes-step2__desktop-layout">
+    
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="sedes-step2__left">
+      
+      <!-- TABS -->
+      <div class="sedes-step2__tabs">
+        @for (combo of combos; track combo.id) {
+          <button
+            type="button"
+            class="sedes-step2__tab"
+            [class.is-cyan]="selectedCombo === combo.id"
+            [class.is-active]="selectedCombo === combo.id"
+            (click)="selectCombo(combo.id)"
+          >
+            {{ combo.nombre }}
+          </button>
+        }
+      </div>
+
+      <!-- PRECIO -->
+      <div class="sedes-step2__price">
+        <span class="sedes-step2__price-label">Total:</span>
+        <span class="sedes-step2__price-amount">COP{{ getPrecioActual().toLocaleString('es-CO') }}</span>
+      </div>
+
+      <!-- IMAGEN -->
+      <div class="sedes-step2__image-wrapper">
+        <img [src]="getImagenActual()" alt="Peritaje" class="sedes-step2__image" />
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA -->
+    <div class="sedes-step2__right">
+      <h3 class="sedes-step2__details-type">{{ tipoVehiculoNombre }}</h3>
+      <p class="sedes-step2__details-desc">{{ getComboDescription().descripcion }}</p>
+
+      <h4 class="sedes-step2__details-title">{{ getComboDescription().titulo }}</h4>
+
+      <ul class="sedes-step2__details-list">
+        @for (item of getComboDescription().items; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+
+      <button
+        type="button"
+        class="sedes-step2__btn-agendar"
+        (click)="advanceToStep4_3()"
+      >
+        Seleccionar este plan
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE: Sub-pasos -->
+  <div class="sedes-step2__mobile-layout">
+    
+    @if (step4_2_SubStep === 1) {
+      <!-- SUB-PASO 1: Selección -->
+      <div class="sedes-step2__mobile-step1">
+        
+        <!-- TABS -->
+        <div class="sedes-step2__tabs">
+          @for (combo of combos; track combo.id) {
+            <button
+              type="button"
+              class="sedes-step2__tab"
+              [class.is-cyan]="selectedCombo === combo.id"
+              [class.is-active]="selectedCombo === combo.id"
+              (click)="selectCombo(combo.id)"
+            >
+              {{ combo.nombre }}
+            </button>
+          }
+        </div>
+
+        <div class="sedes-step2__price">
+          <span class="sedes-step2__price-label">Total:</span>
+          <span class="sedes-step2__price-amount">COP{{ getPrecioActual().toLocaleString('es-CO') }}</span>
+        </div>
+
+        <div class="sedes-step2__image-wrapper">
+          <img [src]="getImagenActual()" alt="Peritaje" class="sedes-step2__image" />
+        </div>
+
+        <button
+          type="button"
+          class="sedes-step2__btn-next"
+          (click)="advanceToStep4_2_2()"
+        >
+          Continuar
+        </button>
+      </div>
+    }
+
+    @if (step4_2_SubStep === 2) {
+      <!-- SUB-PASO 2: Detalles -->
+      <div class="sedes-step2__mobile-step2">
+        <h3 class="sedes-step2__details-type">{{ tipoVehiculoNombre }}</h3>
+        <p class="sedes-step2__details-desc">{{ getComboDescription().descripcion }}</p>
+
+        <h4 class="sedes-step2__details-title">{{ getComboDescription().titulo }}</h4>
+
+        <ul class="sedes-step2__details-list">
+          @for (item of getComboDescription().items; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+
+        <button
+          type="button"
+          class="sedes-step2__btn-agendar"
+          (click)="advanceToStep4_3()"
+        >
+          Seleccionar este plan
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Botón volver -->
+  <button
+    type="button"
+    class="sedes-step2__btn-back"
+    (click)="goBackStep4_2()"
+  >
+    ← Volver
+  </button>
+}
+
+            <!-- SUB-PASO 3: SELECCIÓN DE SEDE -->
+            @if (step4SubStep === 3) {
+              <h2 class="sedes-step4__title">Selecciona una sede</h2>
+
+              <p class="sedes-step4__location-info">
+                <span class="sedes-step4__location-icon">📍</span>
+                <span>{{ selectedCiudad }}</span>
+              </p>
+
+              <div class="sedes-step4__sedes">
+                @for (sede of sedesPaginadas; track sede.id) {
+                  <div class="sedes-step4__sede-card">
+                    <!-- MAPA (SOLO DESKTOP) -->
+                    <div class="sedes-step4__sede-map">
+                      <iframe
+                        [src]="'https://www.google.com/maps?q=' + sede.lat + ',' + sede.lng + '&output=embed' | sanitizeUrl"
+                        frameborder="0"
+                        allowfullscreen
+                      ></iframe>
+                    </div>
+
+                    <!-- INFO -->
+                    <div class="sedes-step4__sede-info">
+                      <h3 class="sedes-step4__sede-name">{{ sede.nombre }}</h3>
+                      <p class="sedes-step4__sede-address">{{ sede.direccion }}</p>
+                      <p class="sedes-step4__sede-hours">
+                        <strong>Horarios de atención:</strong><br>
+                        {{ sede.horario }}
+                      </p>
+
+                      <!-- BOTÓN VER UBICACIÓN (SOLO MOBILE) -->
+                      <button
+                        type="button"
+                        class="sedes-step4__sede-map-btn"
+                        (click)="openGoogleMaps(sede)"
+                      >
+                        📍 Ver ubicación
+                      </button>
+
+                      <!-- BOTÓN SELECCIONAR -->
+                      <button
+                        type="button"
+                        class="sedes-step4__sede-select"
+                        (click)="selectSede(sede)"
+                      >
+                        Selecciona esta sede para continuar
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- PAGINADOR (SOLO MOBILE) -->
+              @if (totalSedesPages > 1) {
+                <div class="sedes-step4__pagination">
+                  <button
+                    type="button"
+                    class="sedes-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === 1"
+                    (click)="prevSedesPage()"
+                  >
+                    ← Anterior
+                  </button>
+
+                  <span class="sedes-step4__pagination-info">
+                    {{ sedesCurrentPage }} de {{ totalSedesPages }}
+                  </span>
+
+                  <button
+                    type="button"
+                    class="sedes-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === totalSedesPages"
+                    (click)="nextSedesPage()"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              }
+
+              <button 
+                type="button" 
+                class="sedes-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+          </div>
+        }
+
+        <!-- ========== PASO 5: AGENDAMIENTO ========== -->
+        @if (currentStep === 5) {
+          <div class="sedes-step5">
+            <h2 class="sedes-step5__title">¡Todo listo!</h2>
+            <p class="sedes-step5__subtitle">Este es el valor de tu peritaje</p>
+            <p class="sedes-step5__intro">Completa tus datos y agenda tu peritaje.</p>
+
+            <div class="sedes-step5__layout">
+              
+              <!-- COLUMNA DERECHA: Resumen (DESKTOP ONLY) -->
+              <div class="sedes-step5__summary-card sedes-step5__summary-card--desktop">
+                <h3 class="sedes-step5__summary-title">
+                  {{ selectedSede?.nombre || 'Sede seleccionada' }}
+                </h3>
+                <p class="sedes-step5__summary-vehicle">
+                  Peritaje {{ getComboNombre() }} - {{ tipoVehiculoNombre }}
+                </p>
+                
+                <div class="sedes-step5__summary-price">
+                  <span class="sedes-step5__summary-price-label">Valor total (estimado)</span>
+                  <span class="sedes-step5__summary-price-amount">
+                    COP{{ getPrecioActual().toLocaleString('es-CO') }}
+                  </span>
+                </div>
+
+                <p class="sedes-step5__summary-note">
+                  Este es el total estimado para tu peritaje {{ getComboNombre() }}.
+                </p>
+
+                <button
+                  type="button"
+                  class="sedes-step5__btn-conditions"
+                  (click)="openConditions()"
+                >
+                  Condiciones del Servicio
+                </button>
+
+                <div class="sedes-step5__vehicles-img">
+                  <img [src]="getImagenActual()" alt="Peritaje" />
+                </div>
+              </div>
+
+              <!-- COLUMNA IZQUIERDA: Formulario -->
+              <div class="sedes-step5__form-wrapper">
+                <form [formGroup]="step5Form" class="sedes-step5__form">
+                  
+                  <!-- ========== MOBILE: SUB-PASO 1 - Fecha y Hora ========== -->
+                  @if (step5SubStep === 1) {
+                    <div class="sedes-step5__mobile-only">
+                      <h3 class="sedes-step5__section-title">Selecciona fecha y hora</h3>
+                      
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Fecha del peritaje</label>
+                          <input
+                            type="date"
+                            class="sedes-step5__input"
+                            formControlName="fechaRevision"
+                            [min]="getTodayDate()"
+                          />
+                          @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                            <span class="sedes-step5__error">Selecciona una fecha</span>
+                          }
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Horario disponible</label>
+                          <select 
+                            class="sedes-step5__input"
+                            formControlName="horaRevision"
+                          >
+                            <option value="">Selecciona una hora</option>
+                            @for (hora of horariosDisponibles; track hora) {
+                              <option [value]="hora">{{ hora }}</option>
+                            }
+                          </select>
+                          @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                            <span class="sedes-step5__error">Selecciona un horario</span>
+                          }
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="sedes-step5__btn-next"
+                        [disabled]="!canAdvanceToStep5_2()"
+                        (click)="advanceToStep5_2()"
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                  }
+
+                  <!-- ========== MOBILE: SUB-PASO 2 - Datos Personales Básicos ========== -->
+                  @if (step5SubStep === 2) {
+                    <div class="sedes-step5__mobile-only">
+                      <h3 class="sedes-step5__section-title">Tus datos personales</h3>
+
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Número de placa</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="placa"
+                            placeholder="ABC123"
+                          />
+                          @if (step5Form.get('placa')?.touched && step5Form.get('placa')?.invalid) {
+                            <span class="sedes-step5__error">Placa inválida</span>
+                          }
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Nombre</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="nombre"
+                            placeholder="Nombre completo"
+                          />
+                          @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                            <span class="sedes-step5__error">El nombre es obligatorio</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Teléfono</label>
+                          <input
+                            type="tel"
+                            class="sedes-step5__input"
+                            formControlName="telefono"
+                            inputmode="numeric"
+                            placeholder="3001234567"
+                          />
+                          @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                            <span class="sedes-step5__error">Teléfono inválido (10 dígitos)</span>
+                          }
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Correo</label>
+                          <input
+                            type="email"
+                            class="sedes-step5__input"
+                            formControlName="correo"
+                            placeholder="correo@gmail.com"
+                          />
+                          @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                            <span class="sedes-step5__error">Correo inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Tipo de documento</label>
+                          <select class="sedes-step5__input" formControlName="tipoDocumento">
+                            @for (t of docTypes; track t.value) {
+                              <option [value]="t.value">{{ t.label }}</option>
+                            }
+                          </select>
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Documento</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="numeroDocumento"
+                            placeholder="123456789"
+                          />
+                          @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                            <span class="sedes-step5__error">Documento inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="sedes-step5__btn-next"
+                        [disabled]="step5Form.get('placa')?.invalid || step5Form.get('nombre')?.invalid || step5Form.get('telefono')?.invalid || step5Form.get('correo')?.invalid || step5Form.get('numeroDocumento')?.invalid"
+                        (click)="advanceToStep5_3()"
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                  }
+
+                  <!-- ========== MOBILE: SUB-PASO 3 - Datos Adicionales ========== -->
+                  @if (step5SubStep === 3) {
+                    <div class="sedes-step5__mobile-only">
+                      <h3 class="sedes-step5__section-title">Información de entrega</h3>
+
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Correo donde enviaremos el resultado</label>
+                          <input
+                            type="email"
+                            class="sedes-step5__input"
+                            formControlName="correoResultado"
+                            placeholder="correo@gmail.com"
+                          />
+                          @if (step5Form.get('correoResultado')?.touched && step5Form.get('correoResultado')?.invalid) {
+                            <span class="sedes-step5__error">Correo inválido</span>
+                          }
+                        </div>
+
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Nombre para entrega del resultado físico</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="nombreResultado"
+                            placeholder="Nombre completo"
+                          />
+                          @if (step5Form.get('nombreResultado')?.touched && step5Form.get('nombreResultado')?.invalid) {
+                            <span class="sedes-step5__error">El nombre es obligatorio</span>
+                          }
+                        </div>
+                      </div>
+
+                      <label class="sedes-step5__checkbox">
+                        <input type="checkbox" formControlName="aceptaTerminos" />
+                        <span>
+                          He leído y acepto la 
+                          <a href="#" target="_blank" class="sedes-step5__link">autorización para tratamiento de datos personales</a>.
+                        </span>
+                      </label>
+                      @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                        <span class="sedes-step5__error sedes-step5__error--center">
+                          Debes aceptar los términos
+                        </span>
+                      }
+
+                      <button
+                        type="button"
+                        class="sedes-step5__btn-next"
+                        [disabled]="step5Form.get('correoResultado')?.invalid || step5Form.get('nombreResultado')?.invalid || step5Form.get('aceptaTerminos')?.invalid"
+                        (click)="advanceToStep5_4()"
+                      >
+                        Ver resumen
+                      </button>
+                    </div>
+                  }
+
+                  <!-- ========== MOBILE: SUB-PASO 4 - Resumen ========== -->
+                  @if (step5SubStep === 4) {
+                    <div class="sedes-step5__mobile-only">
+                      <div class="sedes-step5__summary-card sedes-step5__summary-card--mobile">
+                        <h3 class="sedes-step5__summary-title">
+                          {{ selectedSede?.nombre || 'Sede seleccionada' }}
+                        </h3>
+                        <p class="sedes-step5__summary-vehicle">
+                          Peritaje {{ getComboNombre() }} - {{ tipoVehiculoNombre }}
+                        </p>
+                        
+                        <div class="sedes-step5__summary-price">
+                          <span class="sedes-step5__summary-price-label">Valor total (estimado)</span>
+                          <span class="sedes-step5__summary-price-amount">
+                            COP{{ getPrecioActual().toLocaleString('es-CO') }}
+                          </span>
+                        </div>
+
+                        <p class="sedes-step5__summary-note">
+                          Este es el total estimado para tu peritaje {{ getComboNombre() }}.
+                        </p>
+
+                        <button
+                          type="button"
+                          class="sedes-step5__btn-conditions"
+                          (click)="openConditions()"
+                        >
+                          Condiciones del Servicio
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- ========== DESKTOP: TODO VISIBLE ========== -->
+                  <div class="sedes-step5__desktop-always">
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Fecha del peritaje</label>
+                        <input
+                          type="date"
+                          class="sedes-step5__input"
+                          formControlName="fechaRevision"
+                          [min]="getTodayDate()"
+                        />
+                        @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                          <span class="sedes-step5__error">Selecciona una fecha</span>
+                        }
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Horario disponible</label>
+                        <select 
+                          class="sedes-step5__input"
+                          formControlName="horaRevision"
+                        >
+                          <option value="">Selecciona una hora</option>
+                          @for (hora of horariosDisponibles; track hora) {
+                            <option [value]="hora">{{ hora }}</option>
+                          }
+                        </select>
+                        @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                          <span class="sedes-step5__error">Selecciona un horario</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Número de placa</label>
+                        <input
+                          type="text"
+                          class="sedes-step5__input"
+                          formControlName="placa"
+                          placeholder="ABC123"
+                        />
+                        @if (step5Form.get('placa')?.touched && step5Form.get('placa')?.invalid) {
+                          <span class="sedes-step5__error">Placa inválida</span>
+                        }
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Nombre</label>
+                        <input
+                          type="text"
+                          class="sedes-step5__input"
+                          formControlName="nombre"
+                          placeholder="Nombre completo"
+                        />
+                        @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                          <span class="sedes-step5__error">El nombre es obligatorio</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Teléfono</label>
+                        <input
+                          type="tel"
+                          class="sedes-step5__input"
+                          formControlName="telefono"
+                          inputmode="numeric"
+                          placeholder="3001234567"
+                        />
+                        @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                          <span class="sedes-step5__error">Teléfono inválido (10 dígitos)</span>
+                        }
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Correo</label>
+                        <input
+                          type="email"
+                          class="sedes-step5__input"
+                          formControlName="correo"
+                          placeholder="correo@gmail.com"
+                        />
+                        @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                          <span class="sedes-step5__error">Correo inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Tipo de documento</label>
+                        <select class="sedes-step5__input" formControlName="tipoDocumento">
+                          @for (t of docTypes; track t.value) {
+                            <option [value]="t.value">{{ t.label }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Documento</label>
+                        <input
+                          type="text"
+                          class="sedes-step5__input"
+                          formControlName="numeroDocumento"
+                          placeholder="123456789"
+                        />
+                        @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                          <span class="sedes-step5__error">Documento inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- CAMPOS ADICIONALES PARA PERITAJE -->
+                    <div class="sedes-step5__field-row">
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Correo donde enviaremos el resultado</label>
+                        <input
+                          type="email"
+                          class="sedes-step5__input"
+                          formControlName="correoResultado"
+                          placeholder="correo@gmail.com"
+                        />
+                        @if (step5Form.get('correoResultado')?.touched && step5Form.get('correoResultado')?.invalid) {
+                          <span class="sedes-step5__error">Correo inválido</span>
+                        }
+                      </div>
+
+                      <div class="sedes-step5__field">
+                        <label class="sedes-step5__label">Nombre para entrega del resultado físico</label>
+                        <input
+                          type="text"
+                          class="sedes-step5__input"
+                          formControlName="nombreResultado"
+                          placeholder="Nombre completo"
+                        />
+                        @if (step5Form.get('nombreResultado')?.touched && step5Form.get('nombreResultado')?.invalid) {
+                          <span class="sedes-step5__error">El nombre es obligatorio</span>
+                        }
+                      </div>
+                    </div>
+
+                    <label class="sedes-step5__checkbox">
+                      <input type="checkbox" formControlName="aceptaTerminos" />
+                      <span>
+                        He leído y acepto la 
+                        <a href="#" target="_blank" class="sedes-step5__link">autorización para tratamiento de datos personales</a>.
+                      </span>
+                    </label>
+                    @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                      <span class="sedes-step5__error sedes-step5__error--center">
+                        Debes aceptar los términos
+                      </span>
+                    }
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <div class="sedes-step5__actions">
+              <button 
+                type="button" 
+                class="sedes-step5__back"
+                (click)="goBackStep5()"
+              >
+                ← Volver
+              </button>
+
+              <button
+                type="button"
+                class="sedes-step5__btn-pay"
+                [disabled]="step5Form.invalid"
+                (click)="continuarAlPago()"
+              >
+                Continuar al pago →
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 6: FINALIZA TU PAGO ========== -->
+        @if (currentStep === 6) {
+          <div class="sedes-step6">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="sedes-step6__layout">
+              
+              <!-- Columna izquierda: Código + Resumen -->
+              <div class="sedes-step6__left-col">
+                <h2 class="sedes-step6__title">Finaliza tu pago</h2>
+                
+                <!-- Código Promocional -->
+                <div class="sedes-step6__promo-section">
+                  <h3 class="sedes-step6__promo-title">Código Promocional</h3>
+                  <p class="sedes-step6__promo-subtitle">
+                    ¿Dispones de un código promocional? Introdúcelo aquí
+                  </p>
+                  <div class="sedes-step6__promo-input-group">
+                    <input
+                      type="text"
+                      class="sedes-step6__promo-input"
+                      [(ngModel)]="codigoPromocional"
+                      placeholder="AUTOMAS10"
+                    />
+                    <button
+                      type="button"
+                      class="sedes-step6__promo-btn"
+                      (click)="aplicarCodigo()"
+                    >
+                      Aplicar Código
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="sedes-step6__order-summary">
+                  <h3 class="sedes-step6__order-title">Resumen del pedido</h3>
+                  <p class="sedes-step6__order-date">
+                    Fecha de la transacción: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <table class="sedes-step6__order-table">
+                    <thead>
+                      <tr>
+                        <th>Servicio</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="sedes-step6__service-name">
+                            Peritaje {{ getComboNombre() }}
+                          </div>
+                          <div class="sedes-step6__service-detail">
+                            {{ selectedSede?.nombre }}
+                          </div>
+                          <div class="sedes-step6__service-date">
+                            {{ getFechaTransaccion() }}
+                          </div>
+                        </td>
+                        <td>${{ getPrecioActual().toLocaleString('es-CO') }}</td>
+                        <td>1</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="sedes-step6__order-total">
+                    <span class="sedes-step6__order-total-label">
+                      Cantidad total (IVA incluido):
+                    </span>
+                    <span class="sedes-step6__order-total-value">
+                      ${{ getPrecioActual().toLocaleString('es-CO') }}
+                    </span>
+                  </div>
+
+                  <label class="sedes-step6__checkbox">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="aceptaCondicionesPago"
+                    />
+                    <span>
+                      Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-pay"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="sedes-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Columna derecha: Método de pago + Datos -->
+              <div class="sedes-step6__right-col">
+                
+                <!-- Método de pago -->
+                <div class="sedes-step6__payment-method">
+                  <h3 class="sedes-step6__payment-title">Método de pago</h3>
+                  <p class="sedes-step6__payment-subtitle">
+                    Elige la pasarela de pago:
+                  </p>
+                  <div class="sedes-step6__payment-card">
+                    <img
+                      src="assets/mercadopago.png"
+                      alt="Mercado Pago"
+                      class="sedes-step6__payment-logo"
+                    />
+                    <span class="sedes-step6__payment-name">Mercado Pago</span>
+                  </div>
+                </div>
+
+                <!-- Datos del cliente -->
+                <div class="sedes-step6__client-data">
+                  <h3 class="sedes-step6__client-title">Datos del cliente</h3>
+                  
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Nombre:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Placa:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Teléfono:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Email:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="sedes-step6__mobile">
+              
+              <!-- Sub-paso 1: Resumen del pedido -->
+              @if (step6SubStep === 1) {
+                <h2 class="sedes-step6__title-mobile">Resumen del pedido</h2>
+
+                <div class="sedes-step6__order-summary-mobile">
+                  <p class="sedes-step6__order-date-mobile">
+                    Fecha: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <div class="sedes-step6__service-card">
+                    <div class="sedes-step6__service-name">
+                      Peritaje {{ getComboNombre() }}
+                    </div>
+                    <div class="sedes-step6__service-detail">
+                      {{ selectedSede?.nombre }}
+                    </div>
+                    <div class="sedes-step6__service-price">
+                      ${{ getPrecioActual().toLocaleString('es-CO') }}
+                    </div>
+                  </div>
+
+                  <div class="sedes-step6__total-mobile">
+                    <span>Total (IVA incluido):</span>
+                    <strong>${{ getPrecioActual().toLocaleString('es-CO') }}</strong>
+                  </div>
+                </div>
+
+                <div class="sedes-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-next-mobile"
+                    (click)="advanceToStep6_2()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 2: Método de pago -->
+              @if (step6SubStep === 2) {
+                <h2 class="sedes-step6__title-mobile">Método de pago</h2>
+
+                <div class="sedes-step6__payment-card-mobile">
+                  <img
+                    src="assets/mercadopago.png"
+                    alt="Mercado Pago"
+                    class="sedes-step6__payment-logo-mobile"
+                  />
+                  <span class="sedes-step6__payment-name-mobile">Mercado Pago</span>
+                </div>
+
+                <div class="sedes-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-next-mobile"
+                    (click)="advanceToStep6_3()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 3: Datos del cliente + Confirmación -->
+              @if (step6SubStep === 3) {
+                <h2 class="sedes-step6__title-mobile">Datos del cliente</h2>
+
+                <div class="sedes-step6__client-data-mobile">
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Nombre:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Placa:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Teléfono:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="sedes-step6__client-item">
+                    <span class="sedes-step6__client-label">Email:</span>
+                    <span class="sedes-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+                <label class="sedes-step6__checkbox-mobile">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="aceptaCondicionesPago"
+                  />
+                  <span>
+                    Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                  </span>
+                </label>
+
+                <div class="sedes-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="sedes-step6__btn-pay-mobile"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="sedes-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              }
+
+            </div>
+
+          </div>
+        }
+
+        <!-- ========== PASO 7: CONFIRMACIÓN FINAL ========== -->
+        @if (currentStep === 7) {
+          <div class="sedes-step7">
+            <h2 class="sedes-step7__title">¡Pago confirmado!</h2>
+            <p class="sedes-step7__message">
+              Tu peritaje {{ getComboNombre() }} ha sido agendado y pagado exitosamente.
+            </p>
+            <button
+              type="button"
+              class="sedes-step7__btn-close"
+              (click)="onClose()"
+            >
+              Cerrar
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

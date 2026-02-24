@@ -1,0 +1,25 @@
+<section class="logos">
+  <div class="logos__container">
+    <h2 class="logos__title">{{ title }}</h2>
+
+    <div
+      class="logos__marquee"
+      [style.--duration.s]="durationSec"
+      aria-label="Carrusel de logos"
+    >
+      <div class="logos__track" role="list">
+        @for (logo of loopLogos; track trackByIndex($index)) {
+          <div class="logos__item" role="listitem">
+            @if (logo.href) {
+              <a class="logos__link" [href]="logo.href" target="_blank" rel="noopener">
+                <img class="logos__img" [src]="logo.src" [alt]="logo.alt" />
+              </a>
+            } @else {
+              <img class="logos__img" [src]="logo.src" [alt]="logo.alt" />
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

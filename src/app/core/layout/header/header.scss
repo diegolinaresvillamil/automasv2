@@ -1,0 +1,371 @@
+/* ==============================
+   Variables
+============================== */
+$orange: #ff671f;
+$orange-hover: #f15a24;
+$orange-accent: #fa6119;
+$black: #000;
+$white: #fff;
+$text: #333;
+
+$shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 3px 6px rgba(0, 0, 0, 0.15);
+$shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.25);
+$shadow-bottom: 0 -3px 10px rgba(0, 0, 0, 0.15);
+
+/* Layout */
+$header-height: 60px;
+
+/* Breakpoints */
+$bp-xxl: 1400px;
+$bp-xl: 1200px;
+$bp-md: 992px;
+
+/* ==============================
+   Mixins
+============================== */
+@mixin down($w) {
+  @media (max-width: $w) {
+    @content;
+  }
+}
+
+@mixin up($w) {
+  @media (min-width: ($w + 1)) {
+    @content;
+  }
+}
+
+/* ==============================
+   Header superior
+============================== */
+.top-header {
+  background-color: $orange;
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 40px;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  height: $header-height;
+  box-shadow: $shadow-sm;
+
+  /* Logo */
+  .logo {
+    img {
+      height: 42px;
+      max-height: 100%;
+      object-fit: contain;
+    }
+  }
+}
+
+/* ==============================
+   Botones superiores
+============================== */
+.top-links {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  transition: all 0.3s ease;
+
+  &.open {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background-color: $orange;
+    position: absolute;
+    top: $header-height; /* ✅ amarrado a la altura real del header */
+    left: 0;
+    width: 100%;
+    padding: 1.2rem 0;
+    gap: 1rem;
+    z-index: 999;
+    box-shadow: $shadow-lg;
+    animation: fadeInDown 0.3s ease;
+
+    .btn-sm {
+      width: 85%;
+      max-width: 280px;
+      text-align: center;
+      border-radius: 12px;
+      font-size: 1rem;
+      padding: 10px 0;
+    }
+  }
+}
+
+.btn-sm {
+  font-size: 0.9rem;
+  border-radius: 10px;
+  font-weight: 500;
+  padding: 8px 20px;
+  transition: all 0.3s ease;
+}
+
+.city-btn {
+  background-color: $white;
+  color: $text;
+  border: 1px solid #ddd;
+}
+
+.whatsapp-btn {
+  background-color: $black;
+  color: $white;
+  border: none;
+}
+
+/* ==============================
+   Nav menu
+============================== */
+.nav-menu {
+  background-color: $white;
+  border-radius: 15px;
+  box-shadow: $shadow-md;
+  padding: 10px 50px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 85%;
+  max-width: 1500px;
+  margin: 0 auto;
+
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  transition: all 0.3s ease;
+
+  &.open {
+    display: flex;
+  }
+}
+
+@include down($bp-xxl) {
+  .nav-menu {
+    width: 90%;
+    padding: 10px 30px;
+  }
+}
+
+@include down($bp-xl) {
+  .nav-menu {
+    width: 95%;
+    padding: 10px 20px;
+  }
+}
+
+/* ==============================
+   Navbar items
+============================== */
+.navbar-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  color: $black;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 1.2rem;
+
+  border-radius: 6px;
+  transition: color 0.3s ease;
+
+  white-space: nowrap;
+  padding: 8px 16px;
+
+  flex: 1;
+  text-align: center;
+
+  &.active,
+  &:hover {
+    color: $orange-hover;
+    background-color: rgba(255, 103, 31, 0.1);
+  }
+}
+
+/* ==============================
+   Hamburgers
+============================== */
+.hamburger-left,
+.hamburger-right {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  color: $white;
+  cursor: pointer;
+}
+
+/* Animación */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==============================
+   Responsive
+============================== */
+@include down($bp-md) {
+  .top-header {
+    padding: 10px 20px;
+    justify-content: space-between;
+  }
+
+  .hamburger-left,
+  .hamburger-right {
+    display: block;
+  }
+
+  .logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Ocultar menú superior por defecto */
+  .top-links {
+    display: none;
+  }
+
+  /* Menú principal móvil */
+  .nav-menu {
+    position: static;
+    transform: none;
+    width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    background: $white;
+    margin-top: 0;
+
+    display: none;
+    flex-direction: column;
+    padding: 20px 0;
+    min-width: unset;
+  }
+
+  .nav-menu.open {
+    display: flex;
+  }
+
+  .navbar-nav {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .nav-link {
+    font-size: 1rem;
+  }
+
+  /* ✅ IMPORTANTE: el padding del body ya está en styles.scss (global).
+     Aquí NO debe haber body {} */
+}
+
+@include up($bp-md) {
+  .nav-menu {
+    display: flex !important;
+  }
+
+  .navbar-nav {
+    flex-direction: row !important;
+  }
+
+  .hamburger-left,
+  .hamburger-right {
+    display: none !important;
+  }
+
+  .top-links {
+    display: flex !important;
+    position: static;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .logo {
+    position: static;
+    transform: none;
+  }
+}
+
+/* ==============================
+   Menú inferior móvil
+============================== */
+.bottom-nav {
+  display: none;
+
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: $shadow-bottom;
+
+  z-index: 999;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0;
+
+  a {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+
+    color: $text;
+    font-size: 0.85rem;
+    font-weight: 500;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+
+    transition: all 0.3s ease;
+
+    i {
+      font-size: 1.3rem;
+    }
+
+    &.active,
+    &:hover {
+      color: $orange-accent;
+    }
+  }
+}
+
+@include down($bp-md) {
+  .bottom-nav {
+    display: flex;
+  }
+}
+
+@include up($bp-md) {
+  .bottom-nav {
+    display: none !important;
+  }
+}

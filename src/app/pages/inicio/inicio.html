@@ -1,0 +1,68 @@
+<app-ad-banner
+  desktopSrc="assets/ads/banner-publicidad.jpg"
+  tabletSrc="assets/ads/publicidad-escritorio.jpg"
+  mobileSrc="assets/ads/publicidad-escritorio.jpg"
+  alt="Electrolit - Nuevo sabor"
+  href="https://electrolit.com"
+></app-ad-banner>
+
+<app-hero-carousel
+  [slides]="heroSlides"
+  [autoplay]="true"
+  [autoplayMs]="4500"
+  [showArrows]="true"
+  [showDots]="true"
+></app-hero-carousel>
+
+<app-services-grid
+  title="Nuestros Servicios"
+  [cards]="services"
+></app-services-grid>
+
+<app-cta-agendamiento-rtm
+  imageSrc="assets/servicio.png"
+  linkConsultar="#"
+  linkAgendar="#"
+></app-cta-agendamiento-rtm>
+
+<!-- ✅ ACTUALIZADO: Agregado (openModal) -->
+<app-preliquidacion-tramites
+  [cards]="preliquidacionCards"
+  [activeIndex]="0"
+></app-preliquidacion-tramites>
+
+<app-cta-agendamiento-peritaje></app-cta-agendamiento-peritaje>
+
+<app-experiencia-grid [items]="experienciaItems"></app-experiencia-grid>
+
+<app-cta-certimas
+  logoSrc="assets/logo-certimas.png"
+  title="¿Cómo Funciona?"
+  description="Solo con tu placa podrás conocer el verdadero estado del vehículo que quieres comprar."
+  videoUrl="https://www.youtube.com/watch?v=1SiC4T1kLVY&pp=ygUQY2VydGltYXMgYXV0b21hcw%3D%3D"
+  ctaText="Compra Ahora"
+  ctaHref="/certimas/compra"
+  imageSrc="assets/certimas.png"
+></app-cta-certimas>
+
+<app-servicios-complementarios-grid
+  [title]="complementariosTitle"
+  [cards]="complementariosCards"
+></app-servicios-complementarios-grid>
+
+<app-logos-carrousel
+  title="Nuestros aliados"
+  [durationSec]="18"
+  [logos]="aliadosLogos"
+></app-logos-carrousel>
+
+<app-noticias-grid
+  title="Últimas noticias"
+  [featured]="noticiaDestacada"
+  [cards]="noticiasCards"
+></app-noticias-grid>
+
+<app-ente-control
+  title="Ente de Control"
+  logoSrc="assets/vigilado.png"
+></app-ente-control>

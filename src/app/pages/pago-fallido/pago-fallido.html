@@ -1,0 +1,90 @@
+<!-- ===================== PAGO FALLIDO ===================== -->
+<section class="pago-resultado-section">
+  <div class="contenedor-principal">
+    <div class="pago-contenido">
+      <h2 class="pago-titulo">Pago no procesado</h2>
+
+      <!-- Estado del pago -->
+      <div class="estado-box estado-rechazado">
+        <div class="icono-check">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>Pago rechazado</span>
+      </div>
+
+      <!-- Información del intento -->
+      <div class="info-box">
+        <div class="info-fila">
+          <span class="info-label">Referencia:</span>
+          <span class="info-valor">#{{ facturaNumero() }}</span>
+        </div>
+        <div class="info-fila">
+          <span class="info-label">Fecha del intento:</span>
+          <span class="info-valor">{{ fechaIntento() | date:'dd-MM-yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-fila">
+          <span class="info-label">Motivo:</span>
+          <span class="info-valor">{{ motivoRechazo() }}</span>
+        </div>
+      </div>
+
+      <!-- Razones del rechazo -->
+      <div class="razones-box">
+        <h4>Posibles causas del rechazo:</h4>
+        <ul>
+          <li>Fondos insuficientes en la cuenta</li>
+          <li>Datos de la tarjeta incorrectos</li>
+          <li>Transacción rechazada por el banco</li>
+          <li>Límite de compra superado</li>
+          <li>Tarjeta expirada o bloqueada</li>
+        </ul>
+      </div>
+
+      <!-- Tabla de servicios -->
+      <div class="tabla-servicios">
+        <div class="tabla-header dos-columnas">
+          <div>Servicio</div>
+          <div>Monto</div>
+        </div>
+        <div class="tabla-fila dos-columnas">
+          <div>
+            {{ nombreServicio() }}<br>
+            <small *ngIf="sedeNombre()">{{ sedeNombre() }}</small><br>
+            <small *ngIf="fechaCita()">{{ fechaCita() }}</small>
+          </div>
+          <div>${{ montoIntentado() | number }}</div>
+        </div>
+      </div>
+
+      <p class="nota-texto">
+        💡 Tu reserva sigue activa. Puedes intentar el pago nuevamente.
+      </p>
+
+      <!-- Botones de acción -->
+      <div class="botones-grupo">
+        <button class="boton boton-rojo" (click)="intentarNuevamente()">
+          Intentar nuevamente
+        </button>
+        <button class="boton boton-outline" (click)="contactarSoporte()">
+          Contactar soporte
+        </button>
+      </div>
+
+      <!-- Info de regreso -->
+      <div class="regreso-box">
+        <h4>¿Necesitas ayuda?</h4>
+        <p>
+          Nuestro equipo de soporte está disponible para ayudarte a resolver cualquier problema con tu pago.
+        </p>
+        <p class="contador-texto">
+          Serás redirigido al sitio web en {{ segundosRestantes() }} segundos.
+        </p>
+        <button class="boton boton-principal" (click)="volverAlSitio()">
+          Volver al sitio web
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

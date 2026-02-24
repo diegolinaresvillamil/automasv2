@@ -1,0 +1,130 @@
+$orange: #ff671f;
+
+.logos {
+  width: 100%;
+  max-width: 1500px;
+  margin: 100px auto;
+  padding: 0 16px;
+}
+
+.logos__container {
+  width: 100%;
+}
+
+.logos__title {
+  text-align: center;
+  margin: 0 0 44px;
+  color: #000;
+  font-weight: 800;
+  font-size: clamp(28px, 3vw, 48px);
+  line-height: 1.1;
+}
+
+.logos__marquee {
+  --duration: 18s;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+
+  /* degradado suave en bordes (como “fade”) */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+}
+
+.logos__track {
+  display: flex;
+  align-items: center;
+  gap: clamp(28px, 4vw, 70px);
+  width: max-content;
+  animation: logos-scroll var(--duration) linear infinite;
+  will-change: transform;
+  padding: 10px 6px 6px;
+}
+
+/* ✅ Pausa al hover en todo el carrusel */
+.logos__marquee:hover .logos__track {
+  animation-play-state: paused;
+}
+
+.logos__item {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+}
+
+.logos__link {
+  display: inline-grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.logos__img {
+  height: clamp(26px, 3vw, 52px);
+  width: auto;
+  object-fit: contain;
+
+  opacity: 0.45;
+  filter: grayscale(1);
+
+  transform: scale(1);
+  transition: transform 180ms ease, opacity 180ms ease, filter 180ms ease;
+}
+
+/* ✅ Hover por logo */
+@media (hover: hover) and (pointer: fine) {
+  .logos__item:hover .logos__img,
+  .logos__link:hover .logos__img {
+    opacity: 0.9;
+    filter: grayscale(0);
+    transform: scale(1.06);
+  }
+}
+
+/* Accesibilidad: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .logos__track {
+    animation: none;
+  }
+}
+
+/* Responsive: un poco más compacto */
+@media (max-width: 576px) {
+  .logos {
+    margin: 70px auto;
+  }
+
+  .logos__title {
+    margin-bottom: 28px;
+  }
+
+  .logos__track {
+    gap: 26px;
+  }
+
+  .logos__img {
+    height: 28px;
+    opacity: 0.55;
+  }
+}
+
+@keyframes logos-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* como duplicamos la lista, al mover -50% queda seamless */
+    transform: translateX(-50%);
+  }
+}

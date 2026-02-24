@@ -1,0 +1,60 @@
+@if (slides?.length) {
+  <section
+    class="hero"
+    (mouseenter)="pause()"
+    (mouseleave)="resume()"
+    aria-label="Hero carousel"
+  >
+    <div class="hero__viewport">
+      <div
+        class="hero__track"
+        [style.transform]="'translateX(-' + (index() * 100) + '%)'"
+      >
+        @for (s of slides; track $index) {
+          <article class="hero__slide" aria-roledescription="slide">
+            @if (s.href) {
+              <a class="hero__link" [href]="s.href" target="_blank" rel="noopener">
+                <picture class="hero__picture">
+                  <source media="(min-width: 993px)" [srcset]="s.desktopSrc" />
+                  <source media="(min-width: 577px) and (max-width: 992px)" [srcset]="s.tabletSrc" />
+                  <source media="(max-width: 576px)" [srcset]="s.mobileSrc" />
+                  <img class="hero__img" [src]="s.desktopSrc" [alt]="s.alt || 'Banner'" loading="eager" />
+                </picture>
+              </a>
+            } @else {
+              <picture class="hero__picture">
+                <source media="(min-width: 993px)" [srcset]="s.desktopSrc" />
+                <source media="(min-width: 577px) and (max-width: 992px)" [srcset]="s.tabletSrc" />
+                <source media="(max-width: 576px)" [srcset]="s.mobileSrc" />
+                <img class="hero__img" [src]="s.desktopSrc" [alt]="s.alt || 'Banner'" loading="eager" />
+              </picture>
+            }
+          </article>
+        }
+      </div>
+
+      @if (showArrows && slides.length > 1) {
+        <button class="hero__arrow hero__arrow--left" type="button" (click)="prev()" aria-label="Anterior">
+          ‹
+        </button>
+        <button class="hero__arrow hero__arrow--right" type="button" (click)="next()" aria-label="Siguiente">
+          ›
+        </button>
+      }
+    </div>
+
+    @if (showDots && slides.length > 1) {
+      <div class="hero__dots" role="tablist" aria-label="Indicadores">
+        @for (_ of slides; track $index) {
+          <button
+            type="button"
+            class="hero__dot"
+            [class.is-active]="$index === index()"
+            (click)="goTo($index)"
+            aria-label="Ir al slide {{ $index + 1 }}"
+          ></button>
+        }
+      </div>
+    }
+  </section>
+}

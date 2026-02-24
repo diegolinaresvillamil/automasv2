@@ -1,0 +1,29 @@
+{
+  "/runt-api": {
+    "target": "https://b.automas.co",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/runt-api": "/api"
+    }
+  },
+  "/rtm-api": {
+    "target": "https://servicio-agendamiento.automas.co",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/rtm-api": "/api"
+    }
+  },
+  "/pagos-api": {
+    "target": "https://bv2.automas.co",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/pagos-api": "/api-v2/api"
+    }
+  }
+}

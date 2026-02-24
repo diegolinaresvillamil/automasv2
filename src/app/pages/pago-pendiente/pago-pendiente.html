@@ -1,0 +1,100 @@
+<!-- ===================== PAGO PENDIENTE ===================== -->
+<section class="pago-resultado-section">
+  <div class="contenedor-principal">
+    <div class="pago-contenido">
+      <h2 class="pago-titulo">Pago en proceso</h2>
+
+      <!-- Estado del pago -->
+      <div class="estado-box estado-pendiente">
+        <div class="icono-check icono-spinner">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            <path d="M12 2 A10 10 0 0 1 22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span>Procesando pago...</span>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div class="progreso-box">
+        <div class="barra-progreso">
+          <div class="barra-progreso-fill" [style.width.%]="progreso()"></div>
+        </div>
+        <p class="progreso-texto">{{ mensajeEstado() }}</p>
+      </div>
+
+      <!-- Información del intento -->
+      <div class="info-box">
+        <div class="info-fila">
+          <span class="info-label">Referencia:</span>
+          <span class="info-valor">#{{ facturaNumero() }}</span>
+        </div>
+        <div class="info-fila">
+          <span class="info-label">Fecha:</span>
+          <span class="info-valor">{{ fechaIntento() | date:'dd-MM-yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-fila">
+          <span class="info-label">Intentos de verificación:</span>
+          <span class="info-valor">{{ intentosVerificacion() }} / {{ maxIntentos() }}</span>
+        </div>
+      </div>
+
+      <!-- Tabla de servicios -->
+      <div class="tabla-servicios">
+        <div class="tabla-header dos-columnas">
+          <div>Servicio</div>
+          <div>Monto</div>
+        </div>
+        <div class="tabla-fila dos-columnas">
+          <div>
+            {{ nombreServicio() }}<br>
+            <small *ngIf="sedeNombre()">{{ sedeNombre() }}</small><br>
+            <small *ngIf="fechaCita()">{{ fechaCita() }}</small>
+          </div>
+          <div>${{ montoPendiente() | number }}</div>
+        </div>
+      </div>
+
+      <!-- Información sobre pendiente -->
+      <div class="info-pendiente-box">
+        <h4>⏱️ ¿Por qué está pendiente?</h4>
+        <ul>
+          <li>El banco está verificando la transacción</li>
+          <li>Puede tardar hasta 48 horas en confirmarse</li>
+          <li>Te notificaremos por email cuando se confirme</li>
+          <li>Tu reserva está confirmada independientemente del pago</li>
+        </ul>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="botones-grupo">
+        <button 
+          class="boton boton-naranja" 
+          (click)="verificarEstado()"
+          [disabled]="verificando()"
+        >
+          {{ verificando() ? 'Verificando...' : 'Verificar ahora' }}
+        </button>
+        <button class="boton boton-outline" (click)="volverAlSitio()">
+          Volver al sitio web
+        </button>
+      </div>
+
+      <!-- Info de confirmación -->
+      <div class="regreso-box">
+        <h4>Tu reserva está confirmada</h4>
+        <p>
+          Aunque el pago esté pendiente, tu cita ha sido agendada exitosamente. 
+          Recibirás un correo de confirmación en los próximos minutos.
+        </p>
+        <div class="info-importante">
+          <h5>📧 Revisa tu email</h5>
+          <p>
+            Te hemos enviado todos los detalles de tu reserva. 
+            También recibirás un recordatorio 24 horas antes de tu cita.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

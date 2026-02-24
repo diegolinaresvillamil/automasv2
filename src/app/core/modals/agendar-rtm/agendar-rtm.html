@@ -1,0 +1,1350 @@
+@if (isOpen) {
+  <div class="rtm-modal" (click)="onBackdropClick($event)">
+    <div
+      class="rtm-modal__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Agendar RTM"
+    >
+      <button
+        type="button"
+        class="rtm-modal__close"
+        (click)="onClose()"
+        aria-label="Cerrar"
+      >
+        ✕
+      </button>
+
+      <div class="rtm-modal__card">
+        <!-- ========== PASO 1: FORMULARIO ========== -->
+        @if (currentStep === 1) {
+          <h2 class="rtm-modal__title">Ingresa los datos del vehículo.</h2>
+
+          <p class="rtm-modal__subtitle">
+            Digita la placa, el tipo de documento y número de documento para
+            consultar la información del vehículo.
+          </p>
+
+          <p class="rtm-modal__hint">
+            *Recuerda que esta información debe ser la del propietario.
+          </p>
+
+          <form class="rtm-form" [formGroup]="form" (ngSubmit)="submit()">
+            <div class="rtm-grid">
+              <!-- PLACA -->
+              <div class="field">
+                <label class="field__label">Número de placa</label>
+                <input
+                  class="field__input"
+                  type="text"
+                  autocomplete="off"
+                  inputmode="text"
+                  formControlName="placa"
+                  placeholder="Placa del vehículo a consultar"
+                />
+
+                @if (form.get('placa')?.touched && form.get('placa')?.invalid) {
+                  <div class="field__error">
+                    @if (form.get('placa')?.errors?.['required']) {
+                      <span>La placa es obligatoria.</span>
+                    }
+                    @if (form.get('placa')?.errors?.['placaFormato'] || form.get('placa')?.errors?.['placaTipo']) {
+                      <span>Placa inválida. Ej: IWK888 o IWK89L (6 caracteres).</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- NOMBRE -->
+              <div class="field">
+                <label class="field__label">Nombre</label>
+                <input
+                  class="field__input"
+                  type="text"
+                  autocomplete="name"
+                  formControlName="nombre"
+                  placeholder="Nombre del propietario"
+                />
+
+                @if (form.get('nombre')?.touched && form.get('nombre')?.invalid) {
+                  <div class="field__error">
+                    @if (form.get('nombre')?.errors?.['required']) {
+                      <span>El nombre es obligatorio.</span>
+                    }
+                    @if (form.get('nombre')?.errors?.['nombreFormato']) {
+                      <span>Solo letras y espacios.</span>
+                    }
+                    @if (form.get('nombre')?.errors?.['nombreCorto']) {
+                      <span>Ingresa un nombre válido.</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- TELÉFONO -->
+              <div class="field">
+                <label class="field__label">Teléfono</label>
+                <input
+                  class="field__input"
+                  type="tel"
+                  autocomplete="tel"
+                  inputmode="numeric"
+                  formControlName="telefono"
+                  placeholder="3001234567"
+                />
+
+                @if (form.get('telefono')?.touched && form.get('telefono')?.invalid) {
+                  <div class="field__error">
+                    @if (form.get('telefono')?.errors?.['required']) {
+                      <span>El teléfono es obligatorio.</span>
+                    }
+                    @if (form.get('telefono')?.errors?.['pattern']) {
+                      <span>Debe tener 10 números.</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- TIPO DOC -->
+              <div class="field">
+                <label class="field__label">Tipo de Documento del propietario</label>
+                <select class="field__input" formControlName="tipoDocumento">
+                  @for (t of docTypes; track t.value) {
+                    <option [value]="t.value">{{ t.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- NÚMERO DOC -->
+              <div class="field">
+                <label class="field__label">{{ docHelper }}</label>
+                <input
+                  class="field__input"
+                  type="text"
+                  autocomplete="off"
+                  [attr.inputmode]="(form.get('tipoDocumento')?.value === 'PAS') ? 'text' : 'numeric'"
+                  formControlName="numeroDocumento"
+                  [placeholder]="docPlaceholder"
+                />
+
+                @if (form.get('numeroDocumento')?.touched && form.get('numeroDocumento')?.invalid) {
+                  <div class="field__error">
+                    @if (form.get('numeroDocumento')?.errors?.['required']) {
+                      <span>El documento es obligatorio.</span>
+                    }
+                    @if (form.get('numeroDocumento')?.errors?.['docCC']) {
+                      <span>CC inválida (6 a 10 dígitos).</span>
+                    }
+                    @if (form.get('numeroDocumento')?.errors?.['docCE']) {
+                      <span>CE inválida (6 a 12 dígitos).</span>
+                    }
+                    @if (form.get('numeroDocumento')?.errors?.['docNIT']) {
+                      <span>NIT inválido (9 a 10 dígitos).</span>
+                    }
+                    @if (form.get('numeroDocumento')?.errors?.['docPAS']) {
+                      <span>Pasaporte inválido (6 a 12 alfanum).</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- BOTÓN -->
+              <div class="field field--cta">
+                <button 
+                  type="submit" 
+                  class="rtm-btn"
+                  [class.rtm-btn--active]="isLoading || (form.valid && !isLoading)"
+                  [disabled]="form.invalid || isLoading"
+                >
+                  @if (isLoading) {
+                    <span class="rtm-btn__spinner"></span>
+                    <span>Consultando...</span>
+                  } @else {
+                    <span>Consultar</span>
+                    <span aria-hidden="true">⌕</span>
+                  }
+                </button>
+              </div>
+            </div>
+
+            <!-- CHECK -->
+            <label class="rtm-check">
+              <input type="checkbox" formControlName="aceptaDatos" />
+              <span>He leído y acepto la autorización para tratamiento de datos personales.</span>
+            </label>
+
+            @if (form.get('aceptaDatos')?.touched && form.get('aceptaDatos')?.invalid) {
+              <div class="field__error field__error--center">
+                Debes aceptar el tratamiento de datos para continuar.
+              </div>
+            }
+
+            <!-- Imagen abajo -->
+            <div class="rtm-hero">
+              <img [src]="imageSrc" [alt]="imageAlt" />
+            </div>
+          </form>
+        }
+
+<!-- ========== PASO 2: INFORMACIÓN DEL VEHÍCULO ========== -->
+@if (currentStep === 2 && vehicleData) {
+  <div class="rtm-step2">
+    <div class="rtm-step2__header">
+      <span class="rtm-step2__icon">⚠️</span>
+      <h2 class="rtm-step2__title">
+        Te informamos la fecha de tu Revisión Técnico Mecánica
+      </h2>
+    </div>
+
+    <p class="rtm-step2__subtitle">
+      Evita multas, accidentes y contribuye al medio ambiente.
+    </p>
+
+    <p class="rtm-step2__vehicle-info">
+      El vehículo <strong>{{ vehicleData.marca }} {{ vehicleData.modelo }}</strong>
+      placa <strong>{{ vehicleData.placa }}</strong> cuenta con esta información:
+    </p>
+
+    @if (consultaRuntExitosa) {
+      <div class="rtm-step2__badge">
+        <span class="rtm-step2__badge-icon">✓</span>
+        <span>Datos verificados con el RUNT</span>
+      </div>
+    }
+
+    <div class="rtm-step2__data">
+      <div class="rtm-step2__field">
+        <label>Número de placa</label>
+        <input 
+          type="text" 
+          [value]="vehicleData.placa" 
+          readonly 
+          disabled
+        />
+      </div>
+
+      <div class="rtm-step2__field rtm-step2__field--warning">
+        <label>Vence el:</label>
+        <div class="rtm-step2__date-wrapper">
+          <input 
+            type="text" 
+            [value]="formatearFechaVencimiento(datosRunt?.fecha_vencimiento_rtm || vehicleData.vencimiento)" 
+            readonly 
+            disabled
+          />
+          <span class="rtm-step2__warning-icon">⚠️</span>
+        </div>
+      </div>
+
+      <div class="rtm-step2__field rtm-step2__field--cta">
+        <button 
+          type="button" 
+          class="rtm-step2__btn"
+          (click)="selectCityAndSede()"
+        >
+          Elegir ciudad y sede
+        </button>
+      </div>
+    </div>
+
+    <button 
+      type="button" 
+      class="rtm-step2__back"
+      (click)="goBack()"
+    >
+      ← Volver al paso anterior
+    </button>
+
+    <div class="rtm-hero">
+      <img [src]="imageSrc" [alt]="imageAlt" />
+    </div>
+  </div>
+}
+
+        <!-- ========== PASO 3: PREGUNTA DE UBICACIÓN ========== -->
+        @if (currentStep === 3) {
+          <div class="rtm-step3">
+            <h2 class="rtm-step3__title">
+              ¿Quieres ver las Sedes Cercanas a ti?
+            </h2>
+
+            <p class="rtm-step3__subtitle">
+              Usa tu ubicación actual para sugerencias automáticas.
+            </p>
+
+            <div class="rtm-step3__alert">
+              <span class="rtm-step3__alert-icon">⚠️</span>
+              <span>Tu información no será almacenada y puedes cambiarla en cualquier momento.</span>
+            </div>
+
+            <div class="rtm-step3__actions">
+              <button 
+                type="button" 
+                class="rtm-step3__btn rtm-step3__btn--secondary"
+                (click)="selectManually()"
+                [disabled]="isActivatingLocation"
+              >
+                No, seleccionar manualmente
+              </button>
+
+              <button 
+                type="button" 
+                class="rtm-step3__btn rtm-step3__btn--primary"
+                [class.rtm-step3__btn--loading]="isActivatingLocation"
+                (click)="activateLocation()"
+                [disabled]="isActivatingLocation"
+              >
+                @if (isActivatingLocation) {
+                  <span class="rtm-step3__spinner"></span>
+                  <span>Activando ubicación...</span>
+                } @else {
+                  <span>Sí, activar ubicación</span>
+                }
+              </button>
+            </div>
+
+            <button 
+              type="button" 
+              class="rtm-step3__back"
+              (click)="goBack()"
+            >
+              ← Volver al paso anterior
+            </button>
+          </div>
+        }
+
+        <!-- ========== PASO 4: SELECCIÓN (MULTIPASOS) ========== -->
+        @if (currentStep === 4) {
+          <div class="rtm-step4">
+            <!-- SUB-PASO 1: CIUDAD -->
+            @if (step4SubStep === 1) {
+              <h2 class="rtm-step4__title">
+                Consulta el valor de la Revisión Técnico-Mecánica
+              </h2>
+
+              <p class="rtm-step4__subtitle">
+                Al seleccionar la ciudad y la sede de tu preferencia te mostraremos el valor base del servicio.
+              </p>
+
+              <p class="rtm-step4__note">
+                *Recuerda que este valor no cuenta con el fondo nacional de seguridad vial.<br> El valor de la tarifa podrá variar según la resolución 20213040063835 de 2021 o la que la modifique y/o sustituya; y el valor adicional será asumido por el consumidor.
+              </p>
+
+              <!-- CIUDAD -->
+              <div class="rtm-step4__section">
+                <label class="rtm-step4__label">Ciudad</label>
+                <select 
+                  class="rtm-step4__select"
+                  [(ngModel)]="selectedCiudad"
+                >
+                  <option [value]="null">Selecciona una ciudad</option>
+                  @for (ciudad of ciudades; track ciudad.id) {
+                    <option [ngValue]="ciudad">{{ ciudad.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- ✅ BOTÓN CONTINUAR CON SPINNER -->
+              <div class="rtm-step4__actions">
+                <button
+                  type="button"
+                  class="rtm-step4__btn-next"
+                  [class.rtm-step4__btn-next--loading]="isLoadingSedes"
+                  [disabled]="!selectedCiudad || isLoadingSedes"
+                  (click)="advanceToStep4_2()"
+                >
+                  @if (isLoadingSedes) {
+                    <span class="rtm-btn__spinner"></span>
+                    <span>Cargando sedes...</span>
+                  } @else {
+                    <span>Continuar</span>
+                  }
+                </button>
+              </div>
+
+              <button 
+                type="button" 
+                class="rtm-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+
+            <!-- ✅ SUB-PASO 2: SELECCIÓN DE SEDE CON SPINNERS -->
+            @if (step4SubStep === 2) {
+              <h2 class="rtm-step4__title">Selecciona una sede</h2>
+
+              <p class="rtm-step4__location-info">
+                <span class="rtm-step4__location-icon">📍</span>
+                <span>{{ selectedCiudad?.name }}</span>
+              </p>
+
+              <!-- ✅ MOBILE: 3 SEDES POR PÁGINA (SIN MAPA) -->
+              <div class="rtm-step4__sedes rtm-step4__sedes--mobile">
+                @for (sede of sedesPaginadas; track sede.id) {
+                  <div class="rtm-step4__sede-card">
+                    <div class="rtm-step4__sede-info">
+                      <h3 class="rtm-step4__sede-name">{{ sede.name }}</h3>
+                      
+                      @if (extractDireccion(sede.description || '')) {
+                        <p class="rtm-step4__sede-address">
+                          <strong>📍 Dirección:</strong> {{ extractDireccion(sede.description || '') }}
+                        </p>
+                      }
+
+                      @if (extractHorarios(sede.description || '') && extractHorarios(sede.description || '') !== 'No disponible') {
+                        <p class="rtm-step4__sede-hours">
+                          <strong>🕐 Horarios:</strong><br>
+                          {{ extractHorarios(sede.description || '') }}
+                        </p>
+                      }
+
+                      @if (extractTelefono(sede.description || '')) {
+                        <p class="rtm-step4__sede-phone">
+                          <strong>📞 Teléfono:</strong> {{ extractTelefono(sede.description || '') }}
+                        </p>
+                      }
+
+                      @if (extractMapaUrl(sede.description || '')) {
+                        <button
+                          type="button"
+                          class="rtm-step4__sede-map-btn"
+                          [disabled]="selectedSedeLoading !== null"
+                          (click)="openGoogleMaps(sede)"
+                        >
+                          🗺️ Ver en Google Maps
+                        </button>
+                      }
+
+                      <!-- ✅ BOTÓN CON SPINNER -->
+                      <button
+                        type="button"
+                        class="rtm-step4__sede-select"
+                        [class.rtm-step4__sede-select--loading]="selectedSedeLoading === sede.id"
+                        [disabled]="selectedSedeLoading !== null"
+                        (click)="selectSedeStep4(sede)"
+                      >
+                        @if (selectedSedeLoading === sede.id) {
+                          <span class="rtm-btn__spinner"></span>
+                          <span>Cotizando valor...</span>
+                        } @else {
+                          <span>Selecciona esta sede para ver el valor estimado</span>
+                        }
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- ✅ DESKTOP: 2 SEDES POR PÁGINA (CON MAPA) -->
+              <div class="rtm-step4__sedes rtm-step4__sedes--desktop">
+                @for (sede of sedesPaginadasDesktop; track sede.id) {
+                  <div class="rtm-step4__sede-card">
+                    <!-- ✅ MAPA SOLO EN DESKTOP -->
+                    @if (extractMapaUrl(sede.description || '')) {
+                      <div class="rtm-step4__sede-map">
+                        <iframe
+                          [src]="sanitizeUrl('https://maps.google.com/maps?q=' + extractDireccion(sede.description || '') + '&output=embed')"
+                          width="100%"
+                          height="200"
+                          frameborder="0"
+                          style="border:0; border-radius: 8px;"
+                          allowfullscreen
+                          loading="lazy"
+                        ></iframe>
+                      </div>
+                    } @else {
+                      <div class="rtm-step4__sede-map" style="background: #f5f5f5; display: flex; align-items: center; justify-content: center; min-height: 200px; border-radius: 8px;">
+                        <p style="color: #999; font-size: 14px;">📍 Mapa no disponible</p>
+                      </div>
+                    }
+
+                    <div class="rtm-step4__sede-info">
+                      <h3 class="rtm-step4__sede-name">{{ sede.name }}</h3>
+                      
+                      @if (extractDireccion(sede.description || '')) {
+                        <p class="rtm-step4__sede-address">
+                          <strong>📍 Dirección:</strong> {{ extractDireccion(sede.description || '') }}
+                        </p>
+                      }
+
+                      @if (extractHorarios(sede.description || '') && extractHorarios(sede.description || '') !== 'No disponible') {
+                        <p class="rtm-step4__sede-hours">
+                          <strong>🕐 Horarios:</strong><br>
+                          {{ extractHorarios(sede.description || '') }}
+                        </p>
+                      }
+
+                      @if (extractTelefono(sede.description || '')) {
+                        <p class="rtm-step4__sede-phone">
+                          <strong>📞 Teléfono:</strong> {{ extractTelefono(sede.description || '') }}
+                        </p>
+                      }
+
+                      @if (extractMapaUrl(sede.description || '')) {
+                        <button
+                          type="button"
+                          class="rtm-step4__sede-map-btn"
+                          [disabled]="selectedSedeLoading !== null"
+                          (click)="openGoogleMaps(sede)"
+                        >
+                          🗺️ Ver en Google Maps
+                        </button>
+                      }
+
+                      <!-- ✅ BOTÓN CON SPINNER -->
+                      <button
+                        type="button"
+                        class="rtm-step4__sede-select"
+                        [class.rtm-step4__sede-select--loading]="selectedSedeLoading === sede.id"
+                        [disabled]="selectedSedeLoading !== null"
+                        (click)="selectSedeStep4(sede)"
+                      >
+                        @if (selectedSedeLoading === sede.id) {
+                          <span class="rtm-btn__spinner"></span>
+                          <span>Cotizando valor...</span>
+                        } @else {
+                          <span>Selecciona esta sede para ver el valor estimado</span>
+                        }
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- ✅ PAGINADOR MOBILE -->
+              @if (totalSedesPages > 1) {
+                <div class="rtm-step4__pagination rtm-step4__pagination--mobile">
+                  <button
+                    type="button"
+                    class="rtm-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === 1 || selectedSedeLoading !== null"
+                    (click)="prevSedesPage()"
+                  >
+                    ← Anterior
+                  </button>
+
+                  <span class="rtm-step4__pagination-info">
+                    {{ sedesCurrentPage }} de {{ totalSedesPages }}
+                  </span>
+
+                  <button
+                    type="button"
+                    class="rtm-step4__pagination-btn"
+                    [disabled]="sedesCurrentPage === totalSedesPages || selectedSedeLoading !== null"
+                    (click)="nextSedesPage()"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              }
+
+              <!-- ✅ PAGINADOR DESKTOP -->
+              @if (totalSedesPagesDesktop > 1) {
+                <div class="rtm-step4__pagination rtm-step4__pagination--desktop">
+                  <button
+                    type="button"
+                    class="rtm-step4__pagination-btn"
+                    [disabled]="sedesDesktopCurrentPage === 1 || selectedSedeLoading !== null"
+                    (click)="prevSedesPageDesktop()"
+                  >
+                    ← Anterior
+                  </button>
+
+                  <span class="rtm-step4__pagination-info">
+                    {{ sedesDesktopCurrentPage }} de {{ totalSedesPagesDesktop }}
+                  </span>
+
+                  <button
+                    type="button"
+                    class="rtm-step4__pagination-btn"
+                    [disabled]="sedesDesktopCurrentPage === totalSedesPagesDesktop || selectedSedeLoading !== null"
+                    (click)="nextSedesPageDesktop()"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              }
+
+              <button 
+                type="button" 
+                class="rtm-step4__back"
+                (click)="goBack()"
+              >
+                ← Volver al paso anterior
+              </button>
+            }
+
+            <!-- SUB-PASO 3: RESUMEN -->
+            @if (step4SubStep === 3 && selectedSede) {
+              <div class="rtm-step4__summary">
+                <h2 class="rtm-step4__summary-title">{{ selectedSede.name }}</h2>
+                <p class="rtm-step4__summary-type">Revisión Técnico-Mecánica</p>
+
+                <div class="rtm-step4__summary-price">
+                  <span class="rtm-step4__summary-price-label">COP</span>
+                  <span class="rtm-step4__summary-price-amount">{{ precioEstimado.toLocaleString('es-CO') }}</span>
+                </div>
+
+                <p class="rtm-step4__summary-note">
+                  El valor final puede variar según el modelo y año del vehículo.
+                </p>
+
+                <div class="rtm-step4__summary-actions">
+                  <button
+                    type="button"
+                    class="rtm-step4__summary-btn rtm-step4__summary-btn--secondary"
+                    (click)="openConditions()"
+                  >
+                    Condiciones del Servicio
+                  </button>
+
+                  <button
+                    type="button"
+                    class="rtm-step4__summary-btn rtm-step4__summary-btn--primary"
+                    (click)="finalizarAgendamiento()"
+                  >
+                    Agendar mi revisión
+                  </button>
+                </div>
+
+                <button 
+                  type="button" 
+                  class="rtm-step4__back"
+                  (click)="goBack()"
+                >
+                  ← Volver al paso anterior
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ========== PASO 5: CONFIRMACIÓN Y PAGO ========== -->
+        @if (currentStep === 5) {
+          <div class="rtm-step5">
+            <h2 class="rtm-step5__title">¡Todo listo!</h2>
+            <p class="rtm-step5__subtitle">Este es el valor de tu revisión</p>
+            <p class="rtm-step5__intro">Completa tus datos y agenda tu revisión.</p>
+
+            <div class="rtm-step5__layout">
+              
+              <!-- COLUMNA DERECHA: Resumen (DESKTOP ONLY) -->
+              <div class="rtm-step5__summary-card rtm-step5__summary-card--desktop">
+                <h3 class="rtm-step5__summary-title">
+                  {{ selectedSede?.name || 'Sede seleccionada' }}
+                </h3>
+                <p class="rtm-step5__summary-vehicle">Revisión Técnico-Mecánica</p>
+                
+                <div class="rtm-step5__summary-price">
+                  <span class="rtm-step5__summary-price-label">Valor total (estimado)</span>
+                  <span class="rtm-step5__summary-price-amount">
+                    COP {{ precioEstimado.toLocaleString('es-CO') }}
+                  </span>
+                </div>
+
+                <p class="rtm-step5__summary-note">
+                  Este es el total estimado para tu revisión técnico-mecánica.
+                </p>
+
+                <button
+                  type="button"
+                  class="rtm-step5__btn-conditions"
+                  (click)="openConditions()"
+                >
+                  Condiciones del Servicio
+                </button>
+
+                <div class="rtm-step5__vehicles-img">
+                  <img [src]="imageSrc" [alt]="imageAlt" />
+                </div>
+              </div>
+
+              <!-- COLUMNA IZQUIERDA: Formulario -->
+              <div class="rtm-step5__form-wrapper">
+                <form [formGroup]="step5Form" class="rtm-step5__form">
+                  
+                  <!-- MOBILE: SUB-PASO 1 - Fecha y Hora -->
+                  @if (step5SubStep === 1) {
+                    <div class="rtm-step5__mobile-only">
+                      <div class="rtm-step5__field-row">
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Fecha de tu revisión</label>
+                          <input
+                            type="date"
+                            class="rtm-step5__input"
+                            formControlName="fechaRevision"
+                            [min]="getTodayDate()"
+                          />
+                          @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                            <span class="rtm-step5__error">Selecciona una fecha</span>
+                          }
+                        </div>
+
+                        <!-- ✅ HORARIOS DINÁMICOS -->
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Horario disponible</label>
+                          <select 
+                            class="rtm-step5__input"
+                            formControlName="horaRevision"
+                            [disabled]="isLoadingHorarios || horariosDisponibles.length === 0"
+                          >
+                            @if (isLoadingHorarios) {
+                              <option value="">Cargando horarios...</option>
+                            } @else if (horariosDisponibles.length === 0) {
+                              <option value="">No hay horarios disponibles</option>
+                            } @else {
+                              <option value="">Selecciona una hora</option>
+                              @for (horario of horariosDisponibles; track horario) {
+                                <option [value]="horario">{{ horario }}</option>
+                              }
+                            }
+                          </select>
+                          @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                            <span class="rtm-step5__error">Selecciona un horario</span>
+                          }
+                          @if (isLoadingHorarios) {
+                            <span class="rtm-step5__loading-text">⏳ Cargando horarios disponibles...</span>
+                          }
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        class="rtm-step5__btn-next"
+                        [disabled]="!canAdvanceToStep5_2()"
+                        (click)="advanceToStep5_2()"
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                  }
+
+                  <!-- MOBILE: SUB-PASO 2 - Datos Personales -->
+                  @if (step5SubStep === 2) {
+                    <div class="rtm-step5__mobile-only">
+                      <div class="rtm-step5__field-row">
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Número de placa</label>
+                          <input
+                            type="text"
+                            class="rtm-step5__input"
+                            formControlName="placa"
+                          />
+                        </div>
+
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Nombre</label>
+                          <input
+                            type="text"
+                            class="rtm-step5__input"
+                            formControlName="nombre"
+                          />
+                          @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                            <span class="rtm-step5__error">El nombre es obligatorio</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="rtm-step5__field-row">
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Teléfono</label>
+                          <input
+                            type="tel"
+                            class="rtm-step5__input"
+                            formControlName="telefono"
+                            inputmode="numeric"
+                          />
+                          @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                            <span class="rtm-step5__error">Teléfono inválido (10 dígitos)</span>
+                          }
+                        </div>
+
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Correo</label>
+                          <input
+                            type="email"
+                            class="rtm-step5__input"
+                            formControlName="correo"
+                            placeholder="correo@gmail.com"
+                          />
+                          @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                            <span class="rtm-step5__error">Correo inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="rtm-step5__field-row">
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Tipo de documento</label>
+                          <select class="rtm-step5__input" formControlName="tipoDocumento">
+                            @for (t of docTypes; track t.value) {
+                              <option [value]="t.value">{{ t.label }}</option>
+                            }
+                          </select>
+                        </div>
+
+                        <div class="rtm-step5__field">
+                          <label class="rtm-step5__label">Documento</label>
+                          <input
+                            type="text"
+                            class="rtm-step5__input"
+                            formControlName="numeroDocumento"
+                          />
+                          @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                            <span class="rtm-step5__error">Documento inválido</span>
+                          }
+                        </div>
+                      </div>
+
+                      <label class="rtm-step5__checkbox">
+                        <input type="checkbox" formControlName="aceptaTerminos" />
+                        <span>
+                          He leído y acepto la 
+                          <a href="#" target="_blank" class="rtm-step5__link">autorización para tratamiento de datos personales</a>.
+                        </span>
+                      </label>
+                      @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                        <span class="rtm-step5__error rtm-step5__error--center">
+                          Debes aceptar los términos
+                        </span>
+                      }
+
+                      <button
+                        type="button"
+                        class="rtm-step5__btn-next"
+                        [disabled]="step5Form.get('nombre')?.invalid || step5Form.get('telefono')?.invalid || step5Form.get('correo')?.invalid || step5Form.get('numeroDocumento')?.invalid || step5Form.get('aceptaTerminos')?.invalid"
+                        (click)="advanceToStep5_3()"
+                      >
+                        Ver resumen
+                      </button>
+                    </div>
+                  }
+
+                  <!-- MOBILE: SUB-PASO 3 - Resumen -->
+                  @if (step5SubStep === 3) {
+                    <div class="rtm-step5__mobile-only">
+                      <div class="rtm-step5__summary-card rtm-step5__summary-card--mobile">
+                        <h3 class="rtm-step5__summary-title">
+                          {{ selectedSede?.name || 'Sede seleccionada' }}
+                        </h3>
+                        <p class="rtm-step5__summary-vehicle">Revisión Técnico-Mecánica</p>
+                        
+                        <div class="rtm-step5__summary-price">
+                          <span class="rtm-step5__summary-price-label">Valor total</span>
+                          <span class="rtm-step5__summary-price-amount">
+                            COP {{ precioEstimado.toLocaleString('es-CO') }}
+                          </span>
+                        </div>
+
+                        <p class="rtm-step5__summary-note">
+                          Este es el total para tu revisión técnico-mecánica.
+                        </p>
+
+                        <button
+                          type="button"
+                          class="rtm-step5__btn-conditions"
+                          (click)="openConditions()"
+                        >
+                          Condiciones del Servicio
+                        </button>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- DESKTOP: TODO VISIBLE -->
+                  <div class="rtm-step5__desktop-always">
+                    <div class="rtm-step5__field-row">
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Fecha de tu revisión</label>
+                        <input
+                          type="date"
+                          class="rtm-step5__input"
+                          formControlName="fechaRevision"
+                          [min]="getTodayDate()"
+                        />
+                        @if (step5Form.get('fechaRevision')?.touched && step5Form.get('fechaRevision')?.invalid) {
+                          <span class="rtm-step5__error">Selecciona una fecha</span>
+                        }
+                      </div>
+
+                      <!-- ✅ HORARIOS DINÁMICOS DESKTOP -->
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Horario disponible</label>
+                        <select 
+                          class="rtm-step5__input"
+                          formControlName="horaRevision"
+                          [disabled]="isLoadingHorarios || horariosDisponibles.length === 0"
+                        >
+                          @if (isLoadingHorarios) {
+                            <option value="">Cargando horarios...</option>
+                          } @else if (horariosDisponibles.length === 0) {
+                            <option value="">No hay horarios disponibles</option>
+                          } @else {
+                            <option value="">Selecciona una hora</option>
+                            @for (horario of horariosDisponibles; track horario) {
+                              <option [value]="horario">{{ horario }}</option>
+                            }
+                          }
+                        </select>
+                        @if (step5Form.get('horaRevision')?.touched && step5Form.get('horaRevision')?.invalid) {
+                          <span class="rtm-step5__error">Selecciona un horario</span>
+                        }
+                        @if (isLoadingHorarios) {
+                          <span class="rtm-step5__loading-text">⏳ Cargando horarios disponibles...</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="rtm-step5__field-row">
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Número de placa</label>
+                        <input
+                          type="text"
+                          class="rtm-step5__input"
+                          formControlName="placa"
+                        />
+                      </div>
+
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Nombre</label>
+                        <input
+                          type="text"
+                          class="rtm-step5__input"
+                          formControlName="nombre"
+                        />
+                        @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
+                          <span class="rtm-step5__error">El nombre es obligatorio</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="rtm-step5__field-row">
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Teléfono</label>
+                        <input
+                          type="tel"
+                          class="rtm-step5__input"
+                          formControlName="telefono"
+                          inputmode="numeric"
+                        />
+                        @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
+                          <span class="rtm-step5__error">Teléfono inválido (10 dígitos)</span>
+                        }
+                      </div>
+
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Correo</label>
+                        <input
+                          type="email"
+                          class="rtm-step5__input"
+                          formControlName="correo"
+                          placeholder="correo@gmail.com"
+                        />
+                        @if (step5Form.get('correo')?.touched && step5Form.get('correo')?.invalid) {
+                          <span class="rtm-step5__error">Correo inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="rtm-step5__field-row">
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Tipo de documento</label>
+                        <select class="rtm-step5__input" formControlName="tipoDocumento">
+                          @for (t of docTypes; track t.value) {
+                            <option [value]="t.value">{{ t.label }}</option>
+                          }
+                        </select>
+                      </div>
+
+                      <div class="rtm-step5__field">
+                        <label class="rtm-step5__label">Documento</label>
+                        <input
+                          type="text"
+                          class="rtm-step5__input"
+                          formControlName="numeroDocumento"
+                        />
+                        @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
+                          <span class="rtm-step5__error">Documento inválido</span>
+                        }
+                      </div>
+                    </div>
+
+                    <label class="rtm-step5__checkbox">
+                      <input type="checkbox" formControlName="aceptaTerminos" />
+                      <span>
+                        He leído y acepto la 
+                        <a href="#" target="_blank" class="rtm-step5__link">autorización para tratamiento de datos personales</a>.
+                      </span>
+                    </label>
+                    @if (step5Form.get('aceptaTerminos')?.touched && step5Form.get('aceptaTerminos')?.invalid) {
+                      <span class="rtm-step5__error rtm-step5__error--center">
+                        Debes aceptar los términos
+                      </span>
+                    }
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- BOTONES DE ACCIÓN -->
+            <div class="rtm-step5__actions">
+              <button 
+                type="button" 
+                class="rtm-step5__back"
+                (click)="goBackStep5()"
+              >
+                ← Volver
+              </button>
+
+              <button
+                type="button"
+                class="rtm-step5__btn-pay"
+                [disabled]="step5Form.invalid"
+                (click)="continuarAlPago()"
+              >
+                Continuar al pago →
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 6: FINALIZA TU PAGO ========== -->
+        @if (currentStep === 6) {
+          <div class="rtm-step6">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="rtm-step6__layout">
+              
+              <!-- Columna izquierda: Código + Resumen -->
+              <div class="rtm-step6__left-col">
+                <h2 class="rtm-step6__title">Finaliza tu pago</h2>
+                
+                <!-- Código Promocional -->
+                <div class="rtm-step6__promo-section">
+                  <h3 class="rtm-step6__promo-title">Código Promocional</h3>
+                  <p class="rtm-step6__promo-subtitle">
+                    ¿Dispones de un código promocional? Introdúcelo aquí
+                  </p>
+                  <div class="rtm-step6__promo-input-group">
+                    <input
+                      type="text"
+                      class="rtm-step6__promo-input"
+                      [(ngModel)]="codigoPromocional"
+                      placeholder="AUTOMAS10"
+                    />
+                    <button
+                      type="button"
+                      class="rtm-step6__promo-btn"
+                      (click)="aplicarCodigo()"
+                    >
+                      Aplicar Código
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="rtm-step6__order-summary">
+                  <h3 class="rtm-step6__order-title">Resumen del pedido</h3>
+                  <p class="rtm-step6__order-date">
+                    Fecha de la transacción: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <table class="rtm-step6__order-table">
+                    <thead>
+                      <tr>
+                        <th>Servicio</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="rtm-step6__service-name">
+                            Revisión Técnico-Mecánica
+                          </div>
+                          <div class="rtm-step6__service-detail">
+                            {{ selectedSede?.name }}
+                          </div>
+                          <div class="rtm-step6__service-date">
+                            {{ getFechaTransaccion() }}
+                          </div>
+                        </td>
+                        <td>${{ precioEstimado.toLocaleString('es-CO') }}</td>
+                        <td>1</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="rtm-step6__order-total">
+                    <span class="rtm-step6__order-total-label">
+                      Cantidad total (IVA incluido):
+                    </span>
+                    <span class="rtm-step6__order-total-value">
+                      ${{ precioEstimado.toLocaleString('es-CO') }}
+                    </span>
+                  </div>
+
+                  <label class="rtm-step6__checkbox">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="aceptaCondicionesPago"
+                    />
+                    <span>
+                      Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    class="rtm-step6__btn-pay"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="rtm-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Columna derecha: Método de pago + Datos -->
+              <div class="rtm-step6__right-col">
+                
+                <!-- Método de pago -->
+                <div class="rtm-step6__payment-method">
+                  <h3 class="rtm-step6__payment-title">Método de pago</h3>
+                  <p class="rtm-step6__payment-subtitle">
+                    Elige la pasarela de pago:
+                  </p>
+                  <div class="rtm-step6__payment-card">
+                    <img
+                      src="assets/mercadopago.png"
+                      alt="Mercado Pago"
+                      class="rtm-step6__payment-logo"
+                    />
+                    <span class="rtm-step6__payment-name">Mercado Pago</span>
+                  </div>
+                </div>
+
+                <!-- Datos del cliente -->
+                <div class="rtm-step6__client-data">
+                  <h3 class="rtm-step6__client-title">Datos del cliente</h3>
+                  
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Nombre:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Placa:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Teléfono:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Email:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="rtm-step6__mobile">
+              
+              <!-- Sub-paso 1: Resumen del pedido -->
+              @if (step6SubStep === 1) {
+                <h2 class="rtm-step6__title-mobile">Resumen del pedido</h2>
+
+                <div class="rtm-step6__order-summary-mobile">
+                  <p class="rtm-step6__order-date-mobile">
+                    Fecha: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <div class="rtm-step6__service-card">
+                    <div class="rtm-step6__service-name">
+                      Revisión Técnico-Mecánica
+                    </div>
+                    <div class="rtm-step6__service-detail">
+                      {{ selectedSede?.name }}
+                    </div>
+                    <div class="rtm-step6__service-price">
+                      ${{ precioEstimado.toLocaleString('es-CO') }}
+                    </div>
+                  </div>
+
+                  <div class="rtm-step6__total-mobile">
+                    <span>Total (IVA incluido):</span>
+                    <strong>${{ precioEstimado.toLocaleString('es-CO') }}</strong>
+                  </div>
+                </div>
+
+                <div class="rtm-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="rtm-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="rtm-step6__btn-next-mobile"
+                    (click)="advanceToStep6_2()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 2: Método de pago -->
+              @if (step6SubStep === 2) {
+                <h2 class="rtm-step6__title-mobile">Método de pago</h2>
+
+                <div class="rtm-step6__payment-card-mobile">
+                  <img
+                    src="assets/mercadopago.png"
+                    alt="Mercado Pago"
+                    class="rtm-step6__payment-logo-mobile"
+                  />
+                  <span class="rtm-step6__payment-name-mobile">Mercado Pago</span>
+                </div>
+
+                <div class="rtm-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="rtm-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="rtm-step6__btn-next-mobile"
+                    (click)="advanceToStep6_3()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 3: Datos del cliente + Confirmación -->
+              @if (step6SubStep === 3) {
+                <h2 class="rtm-step6__title-mobile">Datos del cliente</h2>
+
+                <div class="rtm-step6__client-data-mobile">
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Nombre:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('nombre')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Placa:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Teléfono:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="rtm-step6__client-item">
+                    <span class="rtm-step6__client-label">Email:</span>
+                    <span class="rtm-step6__client-value">
+                      {{ step5Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+                <label class="rtm-step6__checkbox-mobile">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="aceptaCondicionesPago"
+                  />
+                  <span>
+                    Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                  </span>
+                </label>
+
+                <div class="rtm-step6__actions-mobile">
+                  <button
+                    type="button"
+                    class="rtm-step6__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="rtm-step6__btn-pay-mobile"
+                    [disabled]="!aceptaCondicionesPago || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="rtm-step6__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              }
+
+            </div>
+
+          </div>
+        }
+
+        <!-- ========== PASO 7: CONFIRMACIÓN FINAL ========== -->
+        @if (currentStep === 7) {
+          <div class="rtm-step7">
+            <h2 class="rtm-step7__title">¡Pago confirmado!</h2>
+            <p class="rtm-step7__message">
+              Tu revisión técnico-mecánica ha sido agendada y pagada exitosamente.
+            </p>
+            <p class="rtm-step7__code">
+              Código de reserva: <strong>{{ getCodigoReserva() }}</strong>
+            </p>
+            <button
+              type="button"
+              class="rtm-step7__btn-close"
+              (click)="onClose()"
+            >
+              Cerrar
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

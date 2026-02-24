@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": false
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -31,6 +32,9 @@
             ],
             "styles": [
               "src/styles.scss"
+            ],
+            "scripts": [
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
             ]
           },
           "configurations": {
@@ -39,12 +43,12 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumError": "800MB"
                 },
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumError": "800MB"
                 }
               ],
               "outputHashing": "all"
@@ -64,10 +68,17 @@
               "buildTarget": "automas-v2:build:production"
             },
             "development": {
-              "buildTarget": "automas-v2:build:development"
+              "buildTarget": "automas-v2:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n"
         },
         "test": {
           "builder": "@angular/build:unit-test"

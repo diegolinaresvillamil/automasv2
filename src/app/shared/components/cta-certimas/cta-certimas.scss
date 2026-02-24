@@ -1,0 +1,270 @@
+$orange: #ff671f;
+
+.cta-certimas {
+  width: 100%;
+  margin: 100px auto;
+  padding: 0 16px;
+}
+
+.cta-certimas__container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Logo más grande (como pediste) */
+.cta-certimas__logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 90px;
+
+  img {
+    width: clamp(320px, 34vw, 520px);
+    height: auto;
+    display: block;
+  }
+}
+
+/* Card naranja */
+.cta-certimas__card {
+  position: relative;
+  background: $orange;
+  border-radius: 25px;
+
+  /* ✅ más padding para que se vea “más naranja” como el referente */
+  padding: 80px 60px;
+
+  /* ✅ clave: permite que la imagen se salga */
+  overflow: visible;
+
+  max-width: 1300px;
+  margin: 0 auto 100px;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Contenido */
+.cta-certimas__content {
+  color: #fff;
+  max-width: 600px; /* como en el referente */
+}
+
+.cta-certimas__title {
+  margin: 0 0 15px;
+  font-weight: 800;
+  font-size: clamp(34px, 3.2vw, 52px);
+  line-height: 1.05;
+}
+
+.cta-certimas__desc {
+  margin: 0 0 35px;
+  font-size: clamp(16px, 1.4vw, 24px);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* Acciones */
+.cta-certimas__actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Play */
+.cta-certimas__play {
+  height: 60px;
+  border-radius: 12px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 18px 8px 12px;
+
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+
+  &:hover {
+    background-color: #ffe8df;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Icono play (triángulo) */
+.cta-certimas__playIcon {
+  width: 0;
+  height: 0;
+  border-left: 22px solid $orange;
+  border-top: 14px solid transparent;
+  border-bottom: 14px solid transparent;
+  margin-left: 6px;
+}
+
+/* CTA */
+.cta-certimas__cta {
+  height: 60px;
+  border-radius: 12px;
+  background: #fff;
+  color: $orange;
+  border: 2px solid #fff;
+
+  padding: 10px 26px;
+
+  font-size: clamp(16px, 1.35vw, 25px);
+  font-weight: 600;
+  text-decoration: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: transform 180ms ease;
+
+  &:hover {
+    transform: translateY(-3px);
+  }
+}
+
+/* ✅ IMAGEN COMO EN EL REFERENTE (ABSOLUTA, SALE ABAJO) */
+.cta-certimas__image {
+  position: absolute;
+  right: -100px;
+  bottom: -50px; /* ✅ esto es lo que te faltaba */
+  transform: rotate(-8deg);
+  z-index: 1;
+
+  width: 48vw;
+  max-width: 750px;
+  min-width: 400px;
+
+  pointer-events: none;
+  user-select: none;
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    filter: drop-shadow(0 24px 28px rgba(0, 0, 0, 0.35));
+  }
+}
+
+/* ===== Modal ===== */
+.cta-certimas__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.cta-certimas__modalContent {
+  position: relative;
+  width: min(900px, 100%);
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeIn 0.35s ease;
+}
+
+.cta-certimas__close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.cta-certimas__videoWrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .cta-certimas__image {
+    width: 55vw;
+    bottom: -160px;
+    right: -60px;
+  }
+}
+
+/* Tablet: centrado y la imagen se vuelve normal (opcional) */
+@media (max-width: 992px) {
+  .cta-certimas__logo {
+    margin-bottom: 60px;
+
+    img {
+      width: clamp(260px, 50vw, 360px);
+    }
+  }
+
+  .cta-certimas__card {
+    text-align: center;
+    padding: 60px 30px;
+    margin-bottom: 60px;
+  }
+
+  .cta-certimas__content {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .cta-certimas__actions {
+    justify-content: center;
+    gap: 15px;
+  }
+
+  /* ✅ como pediste: en móvil/tablet podemos ocultar imagen */
+  .cta-certimas__image {
+    display: none;
+  }
+}
+
+/* Móvil */
+@media (max-width: 576px) {
+  .cta-certimas {
+    margin: 80px auto;
+  }
+
+  .cta-certimas__card {
+    padding: 40px 20px;
+  }
+
+  .cta-certimas__play {
+    height: 50px;
+    padding: 6px 10px;
+  }
+
+  .cta-certimas__cta {
+    height: 50px;
+    padding: 8px 22px;
+  }
+}

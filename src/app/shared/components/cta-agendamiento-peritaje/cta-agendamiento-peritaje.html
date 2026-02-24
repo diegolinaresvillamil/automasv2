@@ -1,0 +1,30 @@
+<section class="cta-peritaje">
+  <div class="cta-peritaje__inner">
+    <div class="cta-peritaje__content">
+      <p class="cta-peritaje__kicker">{{ kicker }}</p>
+      <h2 class="cta-peritaje__title">{{ title }}</h2>
+      <p class="cta-peritaje__desc">{{ description }}</p>
+      <p class="cta-peritaje__note">{{ note }}</p>
+
+      <div class="cta-peritaje__actions">
+        <a class="cta-btn is-light" href="#" (click)="openSedesTarifasModal($event)">
+          <span class="cta-btn__text">Consulta sedes y tarifas</span>
+          <span class="cta-btn__icon" aria-hidden="true"><i class="bi bi-search"></i></span>
+        </a>
+
+        <a class="cta-btn is-orange" href="#" (click)="openPeritajeModal($event)">
+          <span class="cta-btn__text">Agendar mi peritaje ahora</span>
+          <span class="cta-btn__icon" aria-hidden="true"><i class="bi bi-calendar-event"></i></span>
+        </a>
+      </div>
+    </div>
+
+    <div class="cta-peritaje__media">
+      <img [src]="imageSrc" [alt]="imageAlt" />
+    </div>
+  </div>
+</section>
+
+<app-agendar-peritaje [isOpen]="isPeritajeModalOpen" (close)="closePeritajeModal()"></app-agendar-peritaje>
+
+<app-sedes-tarifas-peritaje [isOpen]="isSedesTarifasModalOpen" (close)="closeSedesTarifasModal()"></app-sedes-tarifas-peritaje>

@@ -1,0 +1,1109 @@
+@if (isOpen) {
+  <div class="tramites-modal" (click)="onBackdropClick($event)">
+    <div class="tramites-modal__dialog">
+      <div class="tramites-modal__card">
+        
+        <!-- Botón cerrar -->
+        <button 
+          type="button" 
+          class="tramites-modal__close"
+          (click)="onClose()"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
+
+        <!-- ========== PASO 1: SELECCIÓN DE TRÁMITE ========== -->
+        @if (currentStep === 1) {
+          <div class="tramites-step1">
+            <h2 class="tramites-step1__title">Elige tu trámite vehicular</h2>
+            <p class="tramites-step1__subtitle">
+              Selecciona el servicio que deseas realizar y continúa con el proceso
+            </p>
+
+            <!-- DESKTOP: Grid de trámites -->
+            <div class="tramites-step1__grid">
+              @for (tramite of tramites; track tramite.id) {
+                <div 
+                  class="tramites-step1__card"
+                  [class.is-selected]="selectedTramite === tramite.id"
+                  (click)="selectTramite(tramite.id)"
+                >
+                  <div class="tramites-step1__icon">
+                    <img [src]="tramite.iconSrc" [alt]="tramite.nombre" />
+                  </div>
+                  <span class="tramites-step1__name">{{ tramite.nombre }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- MOBILE: Select desplegable -->
+            <div class="tramites-step1__select-wrapper">
+              <label class="tramites-step1__select-label">Selecciona el trámite</label>
+              <select 
+                class="tramites-step1__select"
+                [(ngModel)]="selectedTramite"
+              >
+                <option value="">-- Selecciona un trámite --</option>
+                @for (tramite of tramites; track tramite.id) {
+                  <option [value]="tramite.id">{{ tramite.nombre }}</option>
+                }
+              </select>
+              @if (selectedTramite) {
+                <div class="tramites-step1__selected-preview">
+                  <div class="tramites-step1__icon">
+                    <img [src]="getSelectedTramiteIconSrc()" [alt]="getSelectedTramiteName()" />
+                  </div>
+                  <span>{{ getSelectedTramiteName() }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Botones -->
+            <div class="tramites-step1__actions">
+              <button
+                type="button"
+                class="tramites-step1__btn-cancel"
+                (click)="onClose()"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                class="tramites-step1__btn-continue"
+                [disabled]="!selectedTramite"
+                (click)="continueToStep2()"
+              >
+                Continuar →
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ========== PASO 2: FECHA Y HORA + RESUMEN ========== -->
+        @if (currentStep === 2) {
+          <div class="tramites-step2">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="tramites-step2__layout">
+              
+              <!-- Columna izquierda: Formulario -->
+              <div class="tramites-step2__form-col">
+                <h2 class="tramites-step2__title">Elige dónde y cuándo</h2>
+                <p class="tramites-step2__subtitle">
+                  Trámite seleccionado: <strong>{{ getSelectedTramiteName() }}</strong>
+                </p>
+
+                <form [formGroup]="step2Form" class="tramites-step2__form">
+                  
+                  <!-- Fecha -->
+                  <div class="tramites-step2__field">
+                    <label class="tramites-step2__label">
+                      Fecha <span class="tramites-step2__required">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      class="tramites-step2__input"
+                      formControlName="fechaTramite"
+                      [min]="getTodayDate()"
+                    />
+                    @if (f2['fechaTramite'].touched && f2['fechaTramite'].errors) {
+                      <span class="tramites-step2__error">Selecciona una fecha</span>
+                    }
+                  </div>
+
+                  <!-- Hora -->
+                  <div class="tramites-step2__field">
+                    <label class="tramites-step2__label">
+                      Hora <span class="tramites-step2__required">*</span>
+                    </label>
+                    <select class="tramites-step2__input" formControlName="horaTramite">
+                      <option value="">Selecciona un horario</option>
+                      @for (hora of horariosDisponibles; track hora) {
+                        <option [value]="hora">{{ hora }}</option>
+                      }
+                    </select>
+                    @if (f2['horaTramite'].touched && f2['horaTramite'].errors) {
+                      <span class="tramites-step2__error">Selecciona un horario</span>
+                    }
+                  </div>
+
+                  <!-- Botones DESKTOP -->
+                  <div class="tramites-step2__actions tramites-step2__actions--desktop">
+                    <button
+                      type="button"
+                      class="tramites-step2__btn-back"
+                      (click)="goBack()"
+                    >
+                      ← Volver
+                    </button>
+
+                    <button
+                      type="button"
+                      class="tramites-step2__btn-submit"
+                      [disabled]="step2Form.invalid"
+                      (click)="continueToStep3()"
+                    >
+                      Continuar
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+
+              <!-- Columna derecha: Resumen (SOLO DESKTOP) -->
+              <div class="tramites-step2__summary-col">
+                <div class="tramites-step2__summary-card">
+                  <h3 class="tramites-step2__summary-title">📋 Resumen</h3>
+                  
+                  <div class="tramites-step2__summary-item">
+                    <span class="tramites-step2__summary-label">Trámite:</span>
+                    <span class="tramites-step2__summary-value">{{ getSelectedTramiteName() }}</span>
+                  </div>
+
+                  @if (step2Form.get('fechaTramite')?.value) {
+                    <div class="tramites-step2__summary-item">
+                      <span class="tramites-step2__summary-label">Fecha:</span>
+                      <span class="tramites-step2__summary-value">{{ step2Form.get('fechaTramite')?.value }}</span>
+                    </div>
+                  }
+
+                  @if (step2Form.get('horaTramite')?.value) {
+                    <div class="tramites-step2__summary-item">
+                      <span class="tramites-step2__summary-label">Hora:</span>
+                      <span class="tramites-step2__summary-value">{{ step2Form.get('horaTramite')?.value }}</span>
+                    </div>
+                  }
+
+                  <div class="tramites-step2__summary-price">
+                    <span class="tramites-step2__summary-label">Valor:</span>
+                    <span class="tramites-step2__summary-price-value">
+                      ${{ getPrecioTramite().toLocaleString('es-CO') }}
+                    </span>
+                  </div>
+
+                  <p class="tramites-step2__summary-note">
+                    ⏱️ Tiempo estimado: 1 hora
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="tramites-step2__mobile">
+              
+              <!-- Sub-paso 1: Fecha y hora -->
+              @if (step2SubStep === 1) {
+                <h2 class="tramites-step2__title-mobile">Elige dónde y cuándo</h2>
+                <p class="tramites-step2__subtitle-mobile">
+                  Trámite: <strong>{{ getSelectedTramiteName() }}</strong>
+                </p>
+
+                <form [formGroup]="step2Form" class="tramites-step2__form-mobile">
+                  
+                  <!-- Fecha -->
+                  <div class="tramites-step2__field">
+                    <label class="tramites-step2__label">
+                      Fecha <span class="tramites-step2__required">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      class="tramites-step2__input"
+                      formControlName="fechaTramite"
+                      [min]="getTodayDate()"
+                    />
+                    @if (f2['fechaTramite'].touched && f2['fechaTramite'].errors) {
+                      <span class="tramites-step2__error">Selecciona una fecha</span>
+                    }
+                  </div>
+
+                  <!-- Hora -->
+                  <div class="tramites-step2__field">
+                    <label class="tramites-step2__label">
+                      Hora <span class="tramites-step2__required">*</span>
+                    </label>
+                    <select class="tramites-step2__input" formControlName="horaTramite">
+                      <option value="">Selecciona un horario</option>
+                      @for (hora of horariosDisponibles; track hora) {
+                        <option [value]="hora">{{ hora }}</option>
+                      }
+                    </select>
+                    @if (f2['horaTramite'].touched && f2['horaTramite'].errors) {
+                      <span class="tramites-step2__error">Selecciona un horario</span>
+                    }
+                  </div>
+
+                  <!-- Botones MOBILE Sub-paso 1 -->
+                  <div class="tramites-step2__actions-mobile">
+                    <button
+                      type="button"
+                      class="tramites-step2__btn-back-mobile"
+                      (click)="goBack()"
+                    >
+                      ← Volver
+                    </button>
+
+                    <button
+                      type="button"
+                      class="tramites-step2__btn-next-mobile"
+                      [disabled]="step2Form.invalid"
+                      (click)="advanceToStep2_2()"
+                    >
+                      Ver resumen
+                    </button>
+                  </div>
+                </form>
+              }
+
+              <!-- Sub-paso 2: Resumen -->
+              @if (step2SubStep === 2) {
+                <h2 class="tramites-step2__title-mobile">Resumen del trámite</h2>
+
+                <div class="tramites-step2__summary-mobile">
+                  <div class="tramites-step2__summary-item">
+                    <span class="tramites-step2__summary-label">Trámite:</span>
+                    <span class="tramites-step2__summary-value">{{ getSelectedTramiteName() }}</span>
+                  </div>
+
+                  <div class="tramites-step2__summary-item">
+                    <span class="tramites-step2__summary-label">Fecha:</span>
+                    <span class="tramites-step2__summary-value">{{ step2Form.get('fechaTramite')?.value }}</span>
+                  </div>
+
+                  <div class="tramites-step2__summary-item">
+                    <span class="tramites-step2__summary-label">Hora:</span>
+                    <span class="tramites-step2__summary-value">{{ step2Form.get('horaTramite')?.value }}</span>
+                  </div>
+
+                  <div class="tramites-step2__summary-price">
+                    <span class="tramites-step2__summary-label">Valor:</span>
+                    <span class="tramites-step2__summary-price-value">
+                      ${{ getPrecioTramite().toLocaleString('es-CO') }}
+                    </span>
+                  </div>
+
+                  <p class="tramites-step2__summary-note">
+                    ⏱️ Tiempo estimado: 1 hora
+                  </p>
+                </div>
+
+                <!-- Botones MOBILE Sub-paso 2 -->
+                <div class="tramites-step2__actions-mobile">
+                  <button
+                    type="button"
+                    class="tramites-step2__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="tramites-step2__btn-submit-mobile"
+                    (click)="continueToStep3()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+            </div>
+
+          </div>
+        }
+
+        <!-- ========== PASO 3: CONFIRMACIÓN DE DATOS ========== -->
+        @if (currentStep === 3) {
+          <div class="tramites-step3">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="tramites-step3__layout">
+              
+              <!-- Columna izquierda: Formulario -->
+              <div class="tramites-step3__form-col">
+                <h2 class="tramites-step3__title">¡Confirma tu agendamiento!</h2>
+                <p class="tramites-step3__subtitle">
+                 Estas por agendar el trámite <strong>{{ getSelectedTramiteName() }}</strong> para el 
+                  <strong>{{ step2Form.get('fechaTramite')?.value }}</strong>
+                </p>
+                <p class="tramites-step3__note">
+                  Por favor, completa los siguientes datos para finalizar tu solicitud.
+                </p>
+
+                <form [formGroup]="step3Form" class="tramites-step3__form">
+                  
+                  <!-- Fila 1: Placa y Nombre -->
+                  <div class="tramites-step3__field-row">
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">
+                        Número de placa
+                      </label>
+                      <input
+                        type="text"
+                        class="tramites-step3__input"
+                        formControlName="placa"
+                        placeholder="Ej: ABC123"
+                        maxlength="6"
+                      />
+                      @if (f3['placa'].touched && f3['placa'].errors) {
+                        <span class="tramites-step3__error">La placa es obligatoria</span>
+                      }
+                    </div>
+
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">
+                        Nombre completo del vendedor<br>
+                        <span class="tramites-step3__sublabel">(propietario actual)</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="tramites-step3__input"
+                        formControlName="nombreVendedor"
+                        placeholder="Ej: Juan Pérez"
+                      />
+                      @if (f3['nombreVendedor'].touched && f3['nombreVendedor'].errors) {
+                        <span class="tramites-step3__error">El nombre es obligatorio</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Fila 2: Teléfono y Correo -->
+                  <div class="tramites-step3__field-row">
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">Teléfono</label>
+                      <input
+                        type="tel"
+                        class="tramites-step3__input"
+                        formControlName="telefono"
+                        placeholder="Ej: 3001234567"
+                        maxlength="10"
+                      />
+                      @if (f3['telefono'].touched && f3['telefono'].errors) {
+                        <span class="tramites-step3__error">Debe tener 10 dígitos</span>
+                      }
+                    </div>
+
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">Correo electrónico</label>
+                      <input
+                        type="email"
+                        class="tramites-step3__input"
+                        formControlName="correo"
+                        placeholder="Ej: correo@ejemplo.com"
+                      />
+                      @if (f3['correo'].touched && f3['correo'].errors) {
+                        <span class="tramites-step3__error">Correo inválido</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Fila 3: Documentos del vendedor -->
+                  <div class="tramites-step3__field-row">
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">
+                        Selecciona el tipo de documento del vendedor<br>
+                        <span class="tramites-step3__sublabel">(propietario actual)</span>
+                      </label>
+                      <select class="tramites-step3__input" formControlName="tipoDocVendedor">
+                        @for (tipo of docTypes; track tipo.value) {
+                          <option [value]="tipo.value">{{ tipo.label }}</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">
+                        Ingresa el número de documento del vendedor<br>
+                        <span class="tramites-step3__sublabel">(propietario actual)</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="tramites-step3__input"
+                        formControlName="numeroDocVendedor"
+                        placeholder="Ej: 1234567890"
+                      />
+                      @if (f3['numeroDocVendedor'].touched && f3['numeroDocVendedor'].errors) {
+                        <span class="tramites-step3__error">El documento es obligatorio</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Fila 4: Documentos del comprador -->
+                  <div class="tramites-step3__field-row">
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">
+                        Selecciona el tipo de documento del comprador
+                      </label>
+                      <select class="tramites-step3__input" formControlName="tipoDocComprador">
+                        <option value="">Selecciona tipo</option>
+                        @for (tipo of docTypes; track tipo.value) {
+                          <option [value]="tipo.value">{{ tipo.label }}</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="tramites-step3__field">
+                      <label class="tramites-step3__label">
+                        Ingresa el número de documento del comprador
+                      </label>
+                      <input
+                        type="text"
+                        class="tramites-step3__input"
+                        formControlName="numeroDocComprador"
+                        placeholder="Ej: 1234567890"
+                      />
+                      @if (f3['numeroDocComprador'].touched && f3['numeroDocComprador'].errors) {
+                        <span class="tramites-step3__error">El documento es obligatorio</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Botones DESKTOP -->
+                  <div class="tramites-step3__actions tramites-step3__actions--desktop">
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-back"
+                      (click)="goBack()"
+                    >
+                      ← Volver
+                    </button>
+
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-submit"
+                      [disabled]="step3Form.invalid || isLoading"
+                      (click)="confirmarTramite()"
+                    >
+                      @if (isLoading) {
+                        <span class="tramites-step3__spinner"></span>
+                        Confirmando...
+                      } @else {
+                        Continuar
+                      }
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+
+              <!-- Columna derecha: Resumen (SOLO DESKTOP) -->
+              <div class="tramites-step3__summary-col">
+                <div class="tramites-step3__summary-card">
+                  <h3 class="tramites-step3__summary-title">Trámite - {{ getSelectedTramiteName() }}</h3>
+                  
+                  <div class="tramites-step3__summary-price">
+                    <span class="tramites-step3__summary-label">Costo de:</span>
+                    <span class="tramites-step3__summary-price-value">
+                      ${{ getPrecioTramite().toLocaleString('es-CO') }}
+                    </span>
+                  </div>
+
+                  <p class="tramites-step3__summary-note">
+                    Por favor verifica todos los datos antes de agendar*
+                  </p>
+
+                  <button
+                    type="button"
+                    class="tramites-step3__btn-conditions"
+                    (click)="openConditions()"
+                  >
+                    Condiciones del Trámite
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="tramites-step3__mobile">
+              
+              <!-- Sub-paso 1: Datos personales -->
+              @if (step3SubStep === 1) {
+                <h2 class="tramites-step3__title-mobile">Datos del vehículo</h2>
+
+                <form [formGroup]="step3Form" class="tramites-step3__form-mobile">
+                  
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">Número de placa</label>
+                    <input
+                      type="text"
+                      class="tramites-step3__input"
+                      formControlName="placa"
+                      placeholder="Ej: ABC123"
+                      maxlength="6"
+                    />
+                    @if (f3['placa'].touched && f3['placa'].errors) {
+                      <span class="tramites-step3__error">La placa es obligatoria</span>
+                    }
+                  </div>
+
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">
+                      Nombre completo del vendedor (propietario actual)
+                    </label>
+                    <input
+                      type="text"
+                      class="tramites-step3__input"
+                      formControlName="nombreVendedor"
+                      placeholder="Ej: Juan Pérez"
+                    />
+                    @if (f3['nombreVendedor'].touched && f3['nombreVendedor'].errors) {
+                      <span class="tramites-step3__error">El nombre es obligatorio</span>
+                    }
+                  </div>
+
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">Teléfono</label>
+                    <input
+                      type="tel"
+                      class="tramites-step3__input"
+                      formControlName="telefono"
+                      placeholder="Ej: 3001234567"
+                      maxlength="10"
+                    />
+                    @if (f3['telefono'].touched && f3['telefono'].errors) {
+                      <span class="tramites-step3__error">Debe tener 10 dígitos</span>
+                    }
+                  </div>
+
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">Correo electrónico</label>
+                    <input
+                      type="email"
+                      class="tramites-step3__input"
+                      formControlName="correo"
+                      placeholder="Ej: correo@ejemplo.com"
+                    />
+                    @if (f3['correo'].touched && f3['correo'].errors) {
+                      <span class="tramites-step3__error">Correo inválido</span>
+                    }
+                  </div>
+
+                  <div class="tramites-step3__actions-mobile">
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-back-mobile"
+                      (click)="goBack()"
+                    >
+                      ← Volver
+                    </button>
+
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-next-mobile"
+                      [disabled]="!canAdvanceToStep3_2()"
+                      (click)="advanceToStep3_2()"
+                    >
+                      Continuar
+                    </button>
+                  </div>
+                </form>
+              }
+
+              <!-- Sub-paso 2: Documento vendedor -->
+              @if (step3SubStep === 2) {
+                <h2 class="tramites-step3__title-mobile">Documento del vendedor</h2>
+
+                <form [formGroup]="step3Form" class="tramites-step3__form-mobile">
+                  
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">
+                      Tipo de documento del vendedor (propietario actual)
+                    </label>
+                    <select class="tramites-step3__input" formControlName="tipoDocVendedor">
+                      @for (tipo of docTypes; track tipo.value) {
+                        <option [value]="tipo.value">{{ tipo.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">
+                      Número de documento del vendedor
+                    </label>
+                    <input
+                      type="text"
+                      class="tramites-step3__input"
+                      formControlName="numeroDocVendedor"
+                      placeholder="Ej: 1234567890"
+                    />
+                    @if (f3['numeroDocVendedor'].touched && f3['numeroDocVendedor'].errors) {
+                      <span class="tramites-step3__error">El documento es obligatorio</span>
+                    }
+                  </div>
+
+                  <div class="tramites-step3__actions-mobile">
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-back-mobile"
+                      (click)="goBack()"
+                    >
+                      ← Volver
+                    </button>
+
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-next-mobile"
+                      [disabled]="!canAdvanceToStep3_3()"
+                      (click)="advanceToStep3_3()"
+                    >
+                      Continuar
+                    </button>
+                  </div>
+                </form>
+              }
+
+              <!-- Sub-paso 3: Documento comprador -->
+              @if (step3SubStep === 3) {
+                <h2 class="tramites-step3__title-mobile">Documento del comprador</h2>
+
+                <form [formGroup]="step3Form" class="tramites-step3__form-mobile">
+                  
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">
+                      Tipo de documento del comprador
+                    </label>
+                    <select class="tramites-step3__input" formControlName="tipoDocComprador">
+                      <option value="">Selecciona tipo</option>
+                      @for (tipo of docTypes; track tipo.value) {
+                        <option [value]="tipo.value">{{ tipo.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="tramites-step3__field">
+                    <label class="tramites-step3__label">
+                      Número de documento del comprador
+                    </label>
+                    <input
+                      type="text"
+                      class="tramites-step3__input"
+                      formControlName="numeroDocComprador"
+                      placeholder="Ej: 1234567890"
+                    />
+                    @if (f3['numeroDocComprador'].touched && f3['numeroDocComprador'].errors) {
+                      <span class="tramites-step3__error">El documento es obligatorio</span>
+                    }
+                  </div>
+
+                  <div class="tramites-step3__actions-mobile">
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-back-mobile"
+                      (click)="goBack()"
+                    >
+                      ← Volver
+                    </button>
+
+                    <button
+                      type="button"
+                      class="tramites-step3__btn-next-mobile"
+                      [disabled]="!canAdvanceToStep3_4()"
+                      (click)="advanceToStep3_4()"
+                    >
+                      Ver resumen
+                    </button>
+                  </div>
+                </form>
+              }
+
+              <!-- Sub-paso 4: Resumen final -->
+              @if (step3SubStep === 4) {
+                <h2 class="tramites-step3__title-mobile">Resumen final</h2>
+
+                <div class="tramites-step3__summary-mobile">
+                  <div class="tramites-step3__summary-item">
+                    <span class="tramites-step3__summary-label">Trámite:</span>
+                    <span class="tramites-step3__summary-value">{{ getSelectedTramiteName() }}</span>
+                  </div>
+
+                  <div class="tramites-step3__summary-item">
+                    <span class="tramites-step3__summary-label">Fecha:</span>
+                    <span class="tramites-step3__summary-value">{{ step2Form.get('fechaTramite')?.value }}</span>
+                  </div>
+
+                  <div class="tramites-step3__summary-item">
+                    <span class="tramites-step3__summary-label">Hora:</span>
+                    <span class="tramites-step3__summary-value">{{ step2Form.get('horaTramite')?.value }}</span>
+                  </div>
+
+                  <div class="tramites-step3__summary-item">
+                    <span class="tramites-step3__summary-label">Placa:</span>
+                    <span class="tramites-step3__summary-value">{{ step3Form.get('placa')?.value }}</span>
+                  </div>
+
+                  <div class="tramites-step3__summary-price">
+                    <span class="tramites-step3__summary-label">Costo:</span>
+                    <span class="tramites-step3__summary-price-value">
+                      ${{ getPrecioTramite().toLocaleString('es-CO') }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="tramites-step3__actions-mobile">
+                  <button
+                    type="button"
+                    class="tramites-step3__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="tramites-step3__btn-submit-mobile"
+                    [disabled]="step3Form.invalid || isLoading"
+                    (click)="confirmarTramite()"
+                  >
+                    @if (isLoading) {
+                      <span class="tramites-step3__spinner"></span>
+                      Confirmando...
+                    } @else {
+                      Continuar
+                    }
+                  </button>
+                </div>
+              }
+
+            </div>
+
+          </div>
+        }
+
+        <!-- ========== PASO 4: FINALIZA TU PAGO ========== -->
+        @if (currentStep === 4) {
+          <div class="tramites-step4">
+            
+            <!-- DESKTOP: Layout 2 columnas -->
+            <div class="tramites-step4__layout">
+              
+              <!-- Columna izquierda: Código + Resumen -->
+              <div class="tramites-step4__left-col">
+                <h2 class="tramites-step4__title">Finaliza tu pago</h2>
+                
+                <!-- Código Promocional -->
+                <div class="tramites-step4__promo-section">
+                  <h3 class="tramites-step4__promo-title">Código Promocional</h3>
+                  <p class="tramites-step4__promo-subtitle">
+                    ¿Dispones de un código promocional? Introdúcelo aquí
+                  </p>
+                  <div class="tramites-step4__promo-input-group">
+                    <input
+                      type="text"
+                      class="tramites-step4__promo-input"
+                      [(ngModel)]="codigoPromocional"
+                      placeholder="AUTOMAS10"
+                    />
+                    <button
+                      type="button"
+                      class="tramites-step4__promo-btn"
+                      (click)="aplicarCodigo()"
+                    >
+                      Aplicar Código
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Resumen del pedido -->
+                <div class="tramites-step4__order-summary">
+                  <h3 class="tramites-step4__order-title">Resumen del pedido</h3>
+                  <p class="tramites-step4__order-date">
+                    Fecha de la transacción: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <table class="tramites-step4__order-table">
+                    <thead>
+                      <tr>
+                        <th>Servicio</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="tramites-step4__service-name">
+                            Preliquidación Trámite Vehicular
+                          </div>
+                          <div class="tramites-step4__service-detail">
+                            Preliquidación Trámites Vehiculares
+                          </div>
+                          <div class="tramites-step4__service-date">
+                            {{ getFechaTransaccion() }}
+                          </div>
+                        </td>
+                        <td>${{ getPrecioTramite().toLocaleString('es-CO') }}</td>
+                        <td>1</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="tramites-step4__order-total">
+                    <span class="tramites-step4__order-total-label">
+                      Cantidad total (IVA incluido):
+                    </span>
+                    <span class="tramites-step4__order-total-value">
+                      ${{ getPrecioTramite().toLocaleString('es-CO') }}
+                    </span>
+                  </div>
+
+                  <label class="tramites-step4__checkbox">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="aceptaCondiciones"
+                    />
+                    <span>
+                      Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                    </span>
+                  </label>
+
+                  <button
+                    type="button"
+                    class="tramites-step4__btn-pay"
+                    [disabled]="!aceptaCondiciones || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="tramites-step4__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Columna derecha: Método de pago + Datos -->
+              <div class="tramites-step4__right-col">
+                
+                <!-- Método de pago -->
+                <div class="tramites-step4__payment-method">
+                  <h3 class="tramites-step4__payment-title">Método de pago</h3>
+                  <p class="tramites-step4__payment-subtitle">
+                    Elige la pasarela de pago:
+                  </p>
+                  <div class="tramites-step4__payment-card">
+                    <img
+                      src="assets/mercadopago.png"
+                      alt="Mercado Pago"
+                      class="tramites-step4__payment-logo"
+                    />
+                    <span class="tramites-step4__payment-name">Mercado Pago</span>
+                  </div>
+                </div>
+
+                <!-- Datos del cliente -->
+                <div class="tramites-step4__client-data">
+                  <h3 class="tramites-step4__client-title">Datos del cliente</h3>
+                  
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Nombre:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('nombreVendedor')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Placa:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Teléfono:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Email:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- MOBILE: Sub-pasos -->
+            <div class="tramites-step4__mobile">
+              
+              <!-- Sub-paso 1: Resumen del pedido -->
+              @if (step4SubStep === 1) {
+                <h2 class="tramites-step4__title-mobile">Resumen del pedido</h2>
+
+                <div class="tramites-step4__order-summary-mobile">
+                  <p class="tramites-step4__order-date-mobile">
+                    Fecha: {{ getFechaTransaccion() }}
+                  </p>
+
+                  <div class="tramites-step4__service-card">
+                    <div class="tramites-step4__service-name">
+                      Preliquidación Trámite Vehicular
+                    </div>
+                    <div class="tramites-step4__service-detail">
+                      {{ getSelectedTramiteName() }}
+                    </div>
+                    <div class="tramites-step4__service-price">
+                      ${{ getPrecioTramite().toLocaleString('es-CO') }}
+                    </div>
+                  </div>
+
+                  <div class="tramites-step4__total-mobile">
+                    <span>Total (IVA incluido):</span>
+                    <strong>${{ getPrecioTramite().toLocaleString('es-CO') }}</strong>
+                  </div>
+                </div>
+
+                <div class="tramites-step4__actions-mobile">
+                  <button
+                    type="button"
+                    class="tramites-step4__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="tramites-step4__btn-next-mobile"
+                    (click)="advanceToStep4_2()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 2: Método de pago -->
+              @if (step4SubStep === 2) {
+                <h2 class="tramites-step4__title-mobile">Método de pago</h2>
+
+                <div class="tramites-step4__payment-card-mobile">
+                  <img
+                    src="assets/mercadopago.png"
+                    alt="Mercado Pago"
+                    class="tramites-step4__payment-logo-mobile"
+                  />
+                  <span class="tramites-step4__payment-name-mobile">Mercado Pago</span>
+                </div>
+
+                <div class="tramites-step4__actions-mobile">
+                  <button
+                    type="button"
+                    class="tramites-step4__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="tramites-step4__btn-next-mobile"
+                    (click)="advanceToStep4_3()"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
+
+              <!-- Sub-paso 3: Datos del cliente + Confirmación -->
+              @if (step4SubStep === 3) {
+                <h2 class="tramites-step4__title-mobile">Datos del cliente</h2>
+
+                <div class="tramites-step4__client-data-mobile">
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Nombre:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('nombreVendedor')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Placa:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('placa')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Teléfono:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('telefono')?.value }}
+                    </span>
+                  </div>
+
+                  <div class="tramites-step4__client-item">
+                    <span class="tramites-step4__client-label">Email:</span>
+                    <span class="tramites-step4__client-value">
+                      {{ step3Form.get('correo')?.value }}
+                    </span>
+                  </div>
+                </div>
+
+                <label class="tramites-step4__checkbox-mobile">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="aceptaCondiciones"
+                  />
+                  <span>
+                    Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+                  </span>
+                </label>
+
+                <div class="tramites-step4__actions-mobile">
+                  <button
+                    type="button"
+                    class="tramites-step4__btn-back-mobile"
+                    (click)="goBack()"
+                  >
+                    ← Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    class="tramites-step4__btn-pay-mobile"
+                    [disabled]="!aceptaCondiciones || isLoading"
+                    (click)="confirmarPago()"
+                  >
+                    @if (isLoading) {
+                      <span class="tramites-step4__spinner"></span>
+                      Procesando...
+                    } @else {
+                      Confirmar y Pagar
+                    }
+                  </button>
+                </div>
+              }
+
+            </div>
+
+          </div>
+        }
+
+        <!-- ========== PASO 5: CONFIRMACIÓN FINAL ========== -->
+        @if (currentStep === 5) {
+          <div class="tramites-step5">
+            <h2 class="tramites-step5__title">¡Pago confirmado!</h2>
+            <p class="tramites-step5__message">
+              Tu trámite de <strong>{{ getSelectedTramiteName() }}</strong> ha sido agendado y pagado exitosamente.
+            </p>
+            <button
+              type="button"
+              class="tramites-step5__btn-close"
+              (click)="onClose()"
+            >
+              Cerrar
+            </button>
+          </div>
+        }
+
+      </div>
+    </div>
+  </div>
+}

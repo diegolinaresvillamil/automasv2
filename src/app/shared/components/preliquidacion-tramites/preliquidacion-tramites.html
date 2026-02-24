@@ -1,0 +1,83 @@
+<section class="preliq">
+  <h2 class="section-title preliq__title">{{ title }}</h2>
+
+  <div class="preliq__wrap">
+    @if (isMobile) {
+      <!-- Flechas (clickeables) -->
+      <button
+        type="button"
+        class="preliq-arrow preliq-arrow--left"
+        (click)="prev()"
+        aria-label="Anterior"
+      >
+        ‹
+      </button>
+
+      <button
+        type="button"
+        class="preliq-arrow preliq-arrow--right"
+        (click)="next()"
+        aria-label="Siguiente"
+      >
+        ›
+      </button>
+    }
+
+    <!-- Track scrolleable -->
+    <div class="preliq__grid" #track>
+      @for (c of cards; track $index) {
+        <div
+          class="preliq-card"
+          [class.is-active]="$index === activeIndex"
+        >
+          <div class="preliq-card__top">
+            @if (c.icon && c.icon !== 'none') {
+              <span class="preliq-card__icon" aria-hidden="true">
+                @if (c.icon === 'search') { <i class="bi bi-search"></i> }
+                @if (c.icon === 'file') { <i class="bi bi-file-earmark-text"></i> }
+              </span>
+            }
+
+            <div class="preliq-card__titles">
+              <h3 class="preliq-card__title">{{ c.title }}</h3>
+              <p class="preliq-card__subtitle">{{ c.subtitle }}</p>
+            </div>
+          </div>
+
+          <!-- ✅ siempre renderiza para alinear botones aunque no haya description -->
+          <p class="preliq-card__desc">{{ c.description || ' ' }}</p>
+
+          <!-- ✅ BOTÓN ACTUALIZADO: ahora abre la modal -->
+          <button 
+            type="button"
+            class="preliq-card__btn"
+            (click)="openTramitesModal($event)"
+          >
+            Agendar
+          </button>
+        </div>
+      }
+    </div>
+
+    @if (isMobile) {
+      <!-- Dots (indicador) -->
+      <div class="preliq-dots" aria-label="Indicador de tarjetas">
+        @for (_ of cards; track $index) {
+          <button
+            type="button"
+            class="preliq-dot"
+            [class.is-active]="$index === activeIndex"
+            (click)="scrollToIndex($index)"
+            [attr.aria-label]="'Ir a tarjeta ' + ($index + 1)"
+          ></button>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ✅ MODAL DE TRÁMITES AQUÍ -->
+<app-agendar-tramites 
+  [isOpen]="isTramitesModalOpen" 
+  (close)="closeTramitesModal()"
+></app-agendar-tramites>
