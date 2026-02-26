@@ -635,7 +635,7 @@
                 <h3 class="rtm-step5__summary-title">
                   {{ selectedSede?.name || 'Sede seleccionada' }}
                 </h3>
-                <p class="rtm-step5__summary-vehicle">Revisión Técnico-Mecánica</p>
+                <p class="rtm-step5__summary-vehicle">{{ getNombreServicioCompleto() }}</p>
                 
                 <div class="rtm-step5__summary-price">
                   <span class="rtm-step5__summary-price-label">Valor total (estimado)</span>
@@ -1063,7 +1063,7 @@
                       <tr>
                         <td>
                           <div class="rtm-step6__service-name">
-                            Revisión Técnico-Mecánica
+                            {{ getNombreServicioCompleto() }}
                           </div>
                           <div class="rtm-step6__service-detail">
                             {{ selectedSede?.name }}
@@ -1183,7 +1183,7 @@
 
                   <div class="rtm-step6__service-card">
                     <div class="rtm-step6__service-name">
-                      Revisión Técnico-Mecánica
+                      {{ getNombreServicioCompleto() }}
                     </div>
                     <div class="rtm-step6__service-detail">
                       {{ selectedSede?.name }}

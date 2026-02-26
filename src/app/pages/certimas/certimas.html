@@ -1,0 +1,232 @@
+<!-- HERO CERTIMÁS -->
+<section class="hero-certimas">
+  <div class="hero-wrap">
+    <div class="hero-text">
+      <h1>
+        El Verdadero Estado<br />
+        de tu <span class="highlight">Próximo Vehículo</span>
+      </h1>
+      <p>
+        Comprar <strong>CertiMás</strong> es un paso previo al peritaje. Por lo tanto, lo
+        complementa y te ayuda a tomar una decisión más acertada.
+      </p>
+
+<a
+  class="btn-video"
+  href="https://servicio.automas.co/compras/automas/?package=119100"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  ADQUIERE TU CERTIMAS AHORA
+  <i class="bi bi-box-arrow-up-right"></i>
+</a>
+    </div>
+
+    <div class="hero-image">
+      <img src="assets/auto-certimas.png" alt="Auto CertiMás" />
+    </div>
+  </div>
+</section>
+
+<section class="elige-compra">
+  <h2>Elige y Compra</h2>
+
+  <div class="planes-wrapper">
+    <button class="arrow-btn arrow-left" (click)="scrollPrev()" aria-label="Plan anterior">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="planes-grid" #planesGrid>
+      <div class="plan-card">
+        <div class="plan-tag">1 PLACA</div>
+        <h3 class="price">$ 23.000</h3>
+        <img src="assets/plan-certimas.png" alt="CertiMás 1 placa" />
+        <p><strong>1 CertiMás</strong></p>
+        <p class="desc">Consulta el historial de 1 vehículo con tan solo la placa.</p>
+
+        <a
+          class="btn-comprar"
+          href="https://servicio.automas.co/compras/automas/?package=119100"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Comprar Ahora
+          <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+      </div>
+
+      <div class="plan-card destacado">
+        <div class="plan-tag destacado-tag">5 PLACAS</div>
+        <h3 class="price">$ 105.000</h3>
+        <img src="assets/plan-certimas.png" alt="CertiMás 5 placas" />
+        <p><strong>5 CertiMás</strong></p>
+        <p class="desc">Consulta el historial de 5 vehículos con tan solo la placa.</p>
+
+        <a
+          class="btn-comprar destacado-btn"
+          href="https://servicio.automas.co/compras/automas/?package=119100"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Comprar Ahora
+          <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+      </div>
+
+      <div class="plan-card">
+        <div class="plan-tag">3 PLACAS</div>
+        <h3 class="price">$ 59.000</h3>
+        <img src="assets/plan-certimas.png" alt="CertiMás 3 placas" />
+        <p><strong>3 CertiMás</strong></p>
+        <p class="desc">Consulta el historial de 3 vehículos con tan solo la placa.</p>
+
+        <a
+          class="btn-comprar"
+          href="https://servicio.automas.co/compras/automas/?package=119100"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Comprar Ahora
+          <i class="bi bi-box-arrow-up-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <button class="arrow-btn arrow-right" (click)="scrollNext()" aria-label="Siguiente plan">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="slider-dots">
+    <span class="dot" [class.active]="currentSlide === 0" (click)="scrollToSlide(0)"></span>
+    <span class="dot" [class.active]="currentSlide === 1" (click)="scrollToSlide(1)"></span>
+    <span class="dot" [class.active]="currentSlide === 2" (click)="scrollToSlide(2)"></span>
+  </div>
+</section>
+
+<section class="certimas-info">
+  <h2>¿Qué veras en tu <strong>CertiMás</strong>?</h2>
+
+  <div class="info-grid">
+    <div class="info-column info-column-left desktop-only">
+      <div class="info-item" *ngFor="let item of leftItems; let i = index" (click)="toggleLeft(i)">
+        <div class="info-header">
+          <i [class]="item.icon"></i>
+          <span>{{ item.title }}</span>
+          <i class="bi" [ngClass]="{'bi-chevron-up': item.open, 'bi-chevron-down': !item.open}"></i>
+        </div>
+        <div class="info-content" *ngIf="item.open">
+          <p>{{ item.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-image desktop-only">
+      <img src="assets/celular.png" alt="Vista previa CertiMás" />
+    </div>
+
+    <div class="info-column info-column-right desktop-only">
+      <div class="info-item" *ngFor="let item of rightItems; let i = index" (click)="toggleRight(i)">
+        <div class="info-header">
+          <i [class]="item.icon"></i>
+          <span>{{ item.title }}</span>
+          <i class="bi" [ngClass]="{'bi-chevron-up': item.open, 'bi-chevron-down': !item.open}"></i>
+        </div>
+        <div class="info-content" *ngIf="item.open">
+          <p>{{ item.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-layout mobile-only">
+    <div class="mobile-grid">
+      <div class="mobile-icons-left">
+        <div
+          class="mobile-icon-item"
+          *ngFor="let item of leftItems; let i = index"
+          (click)="toggleMobileItem('left', i)"
+          [class.active]="mobileActiveItem?.side === 'left' && mobileActiveItem?.index === i"
+        >
+          <i [class]="item.icon"></i>
+        </div>
+      </div>
+
+      <div class="mobile-image">
+        <img src="assets/celular.png" alt="Vista previa CertiMás" />
+      </div>
+
+      <div class="mobile-icons-right">
+        <div
+          class="mobile-icon-item"
+          *ngFor="let item of rightItems; let i = index"
+          (click)="toggleMobileItem('right', i)"
+          [class.active]="mobileActiveItem?.side === 'right' && mobileActiveItem?.index === i"
+        >
+          <i [class]="item.icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-expanded-content" *ngIf="mobileActiveItem">
+      <h3>
+        <i [class]="getActiveItemIcon()"></i>
+        {{ getActiveItemTitle() }}
+      </h3>
+      <p>{{ getActiveItemDescription() }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="certimas-section text-center py-5">
+  <div class="certimas-logo mb-5">
+    <img src="/assets/logo-certimas.png" alt="Certimás" class="img-fluid" />
+  </div>
+
+  <div class="certimas-box mx-auto p-4 p-md-5 position-relative overflow-visible">
+    <div class="row align-items-center justify-content-between">
+      <div class="col-12 col-md-6 text-white text-md-start mb-4 mb-md-0">
+        <h2 class="fw-bold mb-2">¿Cómo Funciona?</h2>
+        <p class="mb-4">
+          Solo con tu placa podrás conocer el verdadero estado del vehículo que quieres comprar.
+        </p>
+
+        <div class="d-flex flex-wrap gap-3">
+          <button class="btn btn-light play-btn d-flex align-items-center" (click)="openVideo()">
+            <i class="bi bi-play-fill me-2"></i>
+          </button>
+          <a
+  class="btn btn-outline-light compra-btn"
+  href="https://servicio.automas.co/compras/automas/?package=119100"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  Compra Ahora
+  <i class="bi bi-box-arrow-up-right ms-2"></i>
+</a>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 text-center position-relative">
+        <img src="/assets/certimas.png" alt="Certimás App" class="img-fluid certimas-img" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="video-modal" [class.show]="showVideo" (click)="closeVideo()">
+  <div class="video-content" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="closeVideo()">&times;</button>
+    <iframe
+      width="100%"
+      height="400"
+      [src]="videoUrl"
+      title="Video Certimás"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+<app-faq [title]="'Preguntas Frecuentes'" [items]="faqItems" [multiple]="false"></app-faq>

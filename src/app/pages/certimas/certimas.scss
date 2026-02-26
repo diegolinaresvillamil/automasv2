@@ -1,0 +1,1004 @@
+$orange: #ff671f;
+$black: #000;
+$white: #fff;
+
+// ===============================
+// HERO CERTIMÁS
+// ===============================
+.hero-certimas {
+  background: linear-gradient(to bottom, #ececec 0%, #ffffff 100%);
+  padding: 280px 0;
+  border-radius: 0 0 20px 20px;
+  position: relative;
+  overflow: hidden;
+  margin-top: -150px;
+
+  .hero-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 8%;
+    gap: 60px;
+    position: relative;
+  }
+
+  .hero-text {
+    flex: 1;
+    color: $black;
+    z-index: 2;
+    position: relative;
+    max-width: 620px;
+
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: $black;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      white-space: normal;
+    }
+
+    .highlight {
+      color: $black;
+    }
+
+    p {
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: $black;
+      line-height: 1.6;
+      margin-bottom: 45px;
+      max-width: 480px;
+    }
+  }
+
+  .btn-video {
+    background: $white;
+    color: $orange;
+    font-weight: 600;
+    padding: 18px 40px;
+    border-radius: 10px;
+    font-size: 1.56rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+
+    i {
+      font-size: 1.6rem;
+      color: $orange;
+    }
+
+    &:hover {
+      background: $orange;
+      color: $white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(255, 103, 31, 0.35);
+
+      i {
+        color: $white;
+      }
+    }
+  }
+
+  .hero-image {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 55vw;
+    max-width: 950px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    pointer-events: none;
+
+    img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      object-position: right;
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .hero-certimas {
+    padding: 140px 0;
+
+    .hero-wrap {
+      flex-direction: column;
+      text-align: center;
+      padding: 0 6%;
+    }
+
+    .hero-text {
+      max-width: 90%;
+
+      p {
+        margin: 0 auto 30px;
+      }
+    }
+
+    .hero-image {
+      position: relative;
+      top: auto;
+      right: auto;
+      transform: none;
+      width: 90%;
+      max-width: 700px;
+      margin-top: 40px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-certimas {
+    padding: 80px 0;
+    margin-top: -50px;
+
+    .hero-text {
+      h1 {
+        font-size: 2.4rem;
+      }
+
+      p {
+        font-size: 1.1rem;
+      }
+    }
+
+    .btn-video {
+      font-size: 1.1rem;
+      padding: 12px 24px;
+    }
+
+    .hero-image {
+      width: 100%;
+      max-width: 100%;
+      object-position: center;
+    }
+  }
+}
+
+// ===============================
+// ELIGE Y COMPRA
+// ===============================
+.elige-compra {
+  text-align: center;
+  padding: 120px 8% 100px;
+  background: $white;
+
+  h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 120px;
+    color: $black;
+  }
+
+  .planes-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .planes-grid {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .plan-card {
+    background: #f9f9f9;
+    border-radius: 20px;
+    padding: 55px 35px;
+    width: 340px;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+
+      img {
+        transform: scale(1.05);
+      }
+    }
+
+    img {
+      width: 95%;
+      height: auto;
+      margin: 0 auto 22px;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    p strong {
+      font-weight: 600;
+      font-size: 1.75rem;
+      color: inherit;
+    }
+
+    .desc {
+      font-size: 1.375rem;
+      color: #666;
+      margin-bottom: 35px;
+      line-height: 1.5;
+      max-width: 260px;
+      margin-inline: auto;
+    }
+  }
+
+  .plan-tag {
+    position: absolute;
+    top: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: $orange;
+    color: $white;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    border: 4px solid $white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: fit-content;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1.3px solid $white;
+      border-radius: 6px;
+      pointer-events: none;
+    }
+
+    &.destacado-tag {
+      background: $white;
+      color: $orange;
+      border: 4px solid $orange;
+
+      &::after {
+        border: 1.3px solid $orange;
+      }
+    }
+  }
+
+  .price {
+    font-size: 2.9rem;
+    font-weight: 800;
+    color: $black;
+    margin: 30px 0 24px;
+  }
+
+  .btn-comprar {
+    background: $orange;
+    color: $white;
+    border: none;
+    border-radius: 10px;
+    padding: 16px 36px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+
+    &:hover {
+      background: #e55f1e;
+      transform: translateY(-2px);
+    }
+  }
+
+  .destacado {
+    background: $orange !important;
+    color: $white;
+    transform: scale(1.07);
+    z-index: 2;
+    padding: 60px 35px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+
+    .price,
+    p,
+    .desc,
+    p strong {
+      color: $white !important;
+    }
+
+    .btn-comprar {
+      background: $white;
+      color: $orange;
+
+      &:hover {
+        background: #f7f7f7;
+      }
+    }
+  }
+
+  .arrow-btn,
+  .slider-dots {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .elige-compra {
+    padding: 80px 0 100px;
+
+    h2 {
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+      padding: 0 5%;
+    }
+
+    .planes-wrapper {
+      position: relative;
+      padding: 0 50px;
+    }
+
+    .planes-grid {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      gap: 25px;
+      padding: 40px 0 20px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      justify-content: flex-start;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      &::before,
+      &::after {
+        content: '';
+        display: block;
+        min-width: calc((100vw - 300px - 100px) / 2);
+        flex-shrink: 0;
+      }
+    }
+
+    .plan-card {
+      min-width: 300px;
+      max-width: 300px;
+      scroll-snap-align: center;
+
+      img {
+        width: 85%;
+      }
+    }
+
+    .destacado {
+      transform: none;
+      min-width: 300px;
+      max-width: 300px;
+    }
+
+    .plan-tag {
+      font-size: 1.3rem;
+      top: -22px;
+      padding: 8px 18px;
+    }
+
+    .arrow-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 45px;
+      height: 45px;
+      background: $orange;
+      color: $white;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+
+      &:active {
+        transform: translateY(-50%) scale(0.95);
+      }
+
+      &.arrow-left {
+        left: 5px;
+      }
+      &.arrow-right {
+        right: 5px;
+      }
+    }
+
+    .slider-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 30px;
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ddd;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &.active {
+          background: $orange;
+          transform: scale(1.2);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .elige-compra {
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 50px;
+    }
+
+    .planes-wrapper {
+      padding: 0 45px;
+    }
+
+    .planes-grid {
+      &::before,
+      &::after {
+        min-width: calc((100vw - 280px - 90px) / 2);
+      }
+    }
+
+    .plan-card {
+      min-width: 280px;
+      max-width: 280px;
+      padding: 45px 25px;
+    }
+
+    .destacado {
+      min-width: 280px;
+      max-width: 280px;
+    }
+
+    .price {
+      font-size: 2.5rem;
+    }
+
+    .plan-card p strong {
+      font-size: 1.5rem;
+    }
+
+    .plan-card .desc {
+      font-size: 1.2rem;
+    }
+
+    .btn-comprar {
+      font-size: 1.3rem;
+      padding: 14px 28px;
+    }
+
+    .arrow-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 1.3rem;
+    }
+  }
+}
+
+// ===============================
+// CERTIMAS INFO (mantengo tu estructura)
+// ===============================
+.certimas-info {
+  text-align: center;
+  padding: 140px 8%;
+  background-color: $white;
+
+  h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 100px;
+    color: $black;
+  }
+
+  .mobile-only {
+    display: none;
+  }
+
+  .desktop-only {
+    display: flex;
+  }
+
+  .info-grid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6rem;
+    flex-wrap: wrap;
+  }
+
+  .info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 380px;
+  }
+
+  .info-image {
+    flex-shrink: 0;
+
+    img {
+      max-width: 400px;
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.03);
+      }
+    }
+  }
+
+  .info-item {
+    background: $white;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+
+    &:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      transform: translateY(-3px);
+
+      .info-header {
+        i:first-child {
+          color: $orange !important;
+        }
+
+        span {
+          color: $orange;
+        }
+      }
+    }
+  }
+
+  .info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 28px;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: $black;
+    transition: all 0.3s ease;
+
+    i:first-child {
+      font-size: 2rem;
+      color: $black !important;
+      margin-right: 14px;
+      transition: color 0.3s ease;
+    }
+
+    i.bi {
+      font-size: 1.75rem;
+      color: $orange;
+      transition: transform 0.3s ease;
+    }
+  }
+
+  .info-content {
+    padding: 0 28px 18px;
+    color: #555;
+    font-size: 1.375rem;
+    line-height: 1.6;
+    text-align: left;
+    transition: all 0.3s ease;
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+@media (max-width: 992px) {
+  .certimas-info {
+    padding: 100px 5%;
+
+    h2 {
+      font-size: 2.5rem;
+      margin-bottom: 60px;
+    }
+
+    .desktop-only {
+      display: none !important;
+    }
+
+    .mobile-only {
+      display: block;
+    }
+
+    .mobile-grid {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .mobile-icons-left,
+    .mobile-icons-right {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .mobile-icon-item {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: $white;
+      border: 2px solid #e5e5e5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+
+      i {
+        font-size: 1.8rem;
+        color: $black;
+        transition: color 0.3s ease;
+      }
+
+      &:hover,
+      &.active {
+        border-color: $orange;
+        background: #fff5f0;
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(255, 103, 31, 0.2);
+
+        i {
+          color: $orange;
+        }
+      }
+    }
+
+    .mobile-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      img {
+        max-width: 240px;
+        width: 100%;
+        height: auto;
+      }
+    }
+
+    .mobile-expanded-content {
+      background: $white;
+      border: 2px solid $orange;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 5px 20px rgba(255, 103, 31, 0.15);
+      text-align: left;
+      animation: slideDown 0.3s ease;
+
+      h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $orange;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        i {
+          font-size: 1.7rem;
+        }
+      }
+
+      p {
+        font-size: 1.2rem;
+        color: #555;
+        line-height: 1.6;
+        margin: 0;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .certimas-info {
+    h2 {
+      font-size: 2rem;
+    }
+
+    .mobile-grid {
+      gap: 15px;
+    }
+
+    .mobile-icon-item {
+      width: 50px;
+      height: 50px;
+
+      i {
+        font-size: 1.5rem;
+      }
+    }
+
+    .mobile-image img {
+      max-width: 200px;
+    }
+
+    .mobile-expanded-content {
+      padding: 20px;
+
+      h3 {
+        font-size: 1.3rem;
+      }
+
+      p {
+        font-size: 1.1rem;
+      }
+    }
+  }
+}
+
+// ==============================
+// SECCIÓN CERTIMÁS + MODAL VIDEO
+// ==============================
+.certimas-section {
+  background-color: $white;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 120px;
+  font-family: 'Urbanist', sans-serif;
+}
+
+.certimas-logo {
+  margin-bottom: 120px;
+
+  img {
+    width: 420px;
+    max-width: 95%;
+  }
+}
+
+.certimas-box {
+  background-color: $orange;
+  border-radius: 25px;
+  max-width: 1300px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+  margin-bottom: 100px;
+  padding: 80px 60px;
+
+  h2 {
+    font-size: 3rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+
+  p {
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-bottom: 35px;
+    max-width: 600px;
+  }
+}
+
+.certimas-img {
+  position: absolute;
+  bottom: -200px;
+  right: -100px;
+  transform: rotate(-8deg);
+  z-index: 1;
+  width: 48vw;
+  max-width: 750px;
+  min-width: 400px;
+  transition: width 0.4s ease;
+}
+
+.play-btn,
+.compra-btn {
+  font-size: 1.56rem;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: $white;
+  color: $orange;
+  border: none;
+  padding: 8px 18px 8px 12px;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+
+  i {
+    font-size: 2.3rem;
+    line-height: 1;
+  }
+
+  &:hover {
+    background-color: #ffe8df;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.compra-btn {
+  background: $white;
+  color: $orange;
+  border: 2px solid $white;
+  padding: 10px 26px;
+
+  &:hover {
+    transform: translateY(-3px);
+  }
+}
+
+.video-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 9999;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .video-content {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: $white;
+    cursor: pointer;
+    z-index: 10;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1200px) {
+  .certimas-img {
+    width: 55vw;
+    bottom: -160px;
+    right: -60px;
+  }
+}
+
+@media (max-width: 992px) {
+  .certimas-box {
+    text-align: center;
+    padding: 60px 30px;
+
+    h2 {
+      font-size: 2.4rem;
+    }
+
+    p {
+      font-size: 1.3rem;
+      margin-inline: auto;
+    }
+  }
+
+  .certimas-img {
+    position: relative;
+    right: 0;
+    bottom: 0;
+    transform: rotate(0);
+    width: 80vw;
+    max-width: 500px;
+    margin-top: 40px;
+    min-width: auto;
+  }
+
+  .play-btn,
+  .compra-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .certimas-logo {
+    margin-bottom: 60px;
+
+    img {
+      width: 320px;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .certimas-box {
+    padding: 40px 20px;
+
+    h2 {
+      font-size: 2rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+    }
+  }
+
+  .certimas-img {
+    width: 90vw;
+  }
+
+  .play-btn,
+  .compra-btn {
+    font-size: 1.2rem;
+  }
+}

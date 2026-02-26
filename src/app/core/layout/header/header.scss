@@ -369,3 +369,54 @@ $bp-md: 992px;
     display: none !important;
   }
 }
+
+
+
+/* =========================================
+   FIX: Hamburguesa clickeable + menú visible en móvil/tablet
+   (NO rompe desktop)
+========================================= */
+
+.top-header {
+  position: fixed; /* ya lo tienes, pero lo dejamos explícito */
+  z-index: 2000;   /* subimos el header por encima del resto */
+}
+
+/* Asegura que el botón quede por encima del logo absoluto */
+.hamburger-right {
+  position: relative;
+  z-index: 2100;
+}
+
+/* Deja el logo debajo del botón para que no bloquee el click */
+.top-header .logo {
+  position: relative;
+  z-index: 2050;
+}
+
+/* Móvil/tablet <= 992 */
+@include down($bp-md) {
+
+  /* Menú principal como panel debajo del header fijo */
+  .nav-menu {
+    position: fixed;        /* en vez de static */
+    top: $header-height;    /* justo debajo del header */
+    left: 0;
+    width: 100%;
+    transform: none;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: $shadow-md;
+    background: $white;
+
+    display: none;          /* sigue oculto */
+    flex-direction: column;
+    padding: 16px 0;
+
+    z-index: 1900;          /* por debajo del header, por encima del contenido */
+  }
+
+  .nav-menu.open {
+    display: flex;
+  }
+}

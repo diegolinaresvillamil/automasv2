@@ -18,8 +18,17 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
+import { Observable, throwError } from 'rxjs';
+import { finalize, switchMap, tap } from 'rxjs/operators';
+
 import { PeritajeApiService } from '../../services/peritaje-api.service';
 import { RtmApiService } from '../../services/rtm-api.service';
+import { PagosApiService } from '../../services/pagos-api.service';
+
+import {
+  GenerarLinkPagoRequest,
+  GenerarLinkPagoResponse,
+} from '../../../shared/models/pagos.models';
 
 interface DocType {
   value: string;
@@ -90,6 +99,7 @@ export class AgendarPeritajeComponent {
   private sanitizer = inject(DomSanitizer);
   private peritajeApi = inject(PeritajeApiService);
   private rtmApi = inject(RtmApiService);
+  private pagosApi = inject(PagosApiService);
 
   // =============================
   // ✅ ESTADOS / STEPS
@@ -182,12 +192,7 @@ export class AgendarPeritajeComponent {
 
   selectTab(tab: ComboId): void {
     this.selectedTab = tab;
-    console.log(
-      '🧭 [PERITAJE] Tab seleccionada:',
-      tab,
-      'Precio:',
-      this.getPrecioActual()
-    );
+    console.log('🧭 [PERITAJE] Tab seleccionada:', tab, 'Precio:', this.getPrecioActual());
     this.cdr.markForCheck();
   }
 
@@ -232,25 +237,23 @@ export class AgendarPeritajeComponent {
   // =============================
   codigoPromocional = '';
   aceptaCondicionesPago = false;
+
+  // 🔁 útiles para debug
   agendamientoResponse: any = null;
+  pagoId: string | null = null;
+  paymentLink: string | null = null;
+  paymentPreferenceId: string | null = null;
 
   constructor() {
     this.form = this.fb.group({
       placa: [
         '',
-        [
-          Validators.required,
-          this.placaLongitudValidator,
-          this.placaFormatoValidator,
-        ],
+        [Validators.required, this.placaLongitudValidator, this.placaFormatoValidator],
       ],
       nombre: ['', [Validators.required]],
       telefono: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       tipoDocumento: ['CC', Validators.required],
-      numeroDocumento: [
-        '',
-        [Validators.required, this.documentoValidator.bind(this)],
-      ],
+      numeroDocumento: ['', [Validators.required, this.documentoValidator.bind(this)]],
       aceptaDatos: [false, Validators.requiredTrue],
     });
 
@@ -301,24 +304,47 @@ export class AgendarPeritajeComponent {
     return helpers[tipo] || '';
   }
 
+  /** ✅ Para pintar el nombre REAL del servicio (API) donde lo necesites */
+  getNombreServicioSeleccionado(): string {
+    return this.selectedService?.nombre || `Peritaje ${this.getComboNombre()}`;
+  }
+
+  /** ✅ Para pintar un resumen completo tipo: "Servicio ... - Sede ... - dd/mm/yyyy - franja" */
+  getResumenServicioParaPago(): string {
+    const servicio = (this.selectedService?.nombre || '').trim();
+    const sede = (this.selectedSede?.nombre || '').trim();
+    const fecha = this.fechaAgenda
+      ? `${String(this.fechaAgenda.day).padStart(2, '0')}/${String(this.fechaAgenda.month).padStart(2, '0')}/${this.fechaAgenda.year}`
+      : '';
+    const franja = (this.step5Form?.value?.horaRevision || '').toString().trim();
+
+    const parts = [servicio, sede, fecha, franja].filter((p) => !!p);
+    return parts.join(' - ');
+  }
+
+  // ✅ NUEVO: fecha agendada + hora (para mostrar en el resumen de pago)
+  getFechaAgendadaConHora(): string {
+    const fecha = this.fechaAgenda
+      ? `${String(this.fechaAgenda.day).padStart(2, '0')}/${String(this.fechaAgenda.month).padStart(2, '0')}/${this.fechaAgenda.year}`
+      : '';
+    const hora = (this.step5Form?.value?.horaRevision || '').toString().trim();
+    const parts = [fecha, hora].filter((p) => !!p);
+    return parts.join(' - ');
+  }
+
   // =============================
   // ✅ VALIDATORS
   // =============================
-  private placaLongitudValidator(
-    control: AbstractControl
-  ): ValidationErrors | null {
+  private placaLongitudValidator(control: AbstractControl): ValidationErrors | null {
     const v = (control.value || '').toString().trim().toUpperCase();
     if (!v) return null;
     return v.length === 6 ? null : { placaLongitud: true };
   }
 
-  private placaFormatoValidator(
-    control: AbstractControl
-  ): ValidationErrors | null {
+  private placaFormatoValidator(control: AbstractControl): ValidationErrors | null {
     const v = (control.value || '').toString().trim().toUpperCase();
     if (!v) return null;
-    const ok =
-      /^[A-Z]{3}\d{3}$/.test(v) || /^[A-Z]{3}\d{2}[A-Z]$/.test(v);
+    const ok = /^[A-Z]{3}\d{3}$/.test(v) || /^[A-Z]{3}\d{2}[A-Z]$/.test(v);
     return ok ? null : { placaFormato: true };
   }
 
@@ -332,9 +358,7 @@ export class AgendarPeritajeComponent {
     if (tipo === 'CE') return /^\d{6,12}$/.test(v) ? null : { docCE: true };
     if (tipo === 'NIT') return /^\d{9,10}$/.test(v) ? null : { docNIT: true };
     if (tipo === 'PAS')
-      return /^[A-Z0-9]{6,12}$/.test(v.toUpperCase())
-        ? null
-        : { docPAS: true };
+      return /^[A-Z0-9]{6,12}$/.test(v.toUpperCase()) ? null : { docPAS: true };
 
     return null;
   }
@@ -350,10 +374,7 @@ export class AgendarPeritajeComponent {
   // ✅ NORMALIZADORES PARA API (CLAVE)
   // =============================
   private getTipoCombustibleParaApi(): string {
-    const raw = (this.vehiculoData.tipo_combustible || '')
-      .toString()
-      .trim()
-      .toUpperCase();
+    const raw = (this.vehiculoData.tipo_combustible || '').toString().trim().toUpperCase();
 
     const hasGas = raw.includes('GAS');
     const hasElec = raw.includes('ELEC') || raw.includes('ELÉC');
@@ -379,10 +400,7 @@ export class AgendarPeritajeComponent {
    * - Lo demás se manda como clase normal
    */
   private getClaseVehiculoParaApiPresencial(): string {
-    const clase = (this.vehiculoData.clase_vehiculo || '')
-      .toString()
-      .trim()
-      .toUpperCase();
+    const clase = (this.vehiculoData.clase_vehiculo || '').toString().trim().toUpperCase();
 
     if (clase.includes('MOTOCICLETA') || clase.includes('MOTO')) {
       return 'MOTOCICLETA';
@@ -397,15 +415,11 @@ export class AgendarPeritajeComponent {
    * - Fallback a URBANA/SUPERBIKE por cilindraje
    */
   private getClasesVehiculoParaApiDomicilioConFallback(): string[] {
-    const clase = (this.vehiculoData.clase_vehiculo || '')
-      .toString()
-      .trim()
-      .toUpperCase();
+    const clase = (this.vehiculoData.clase_vehiculo || '').toString().trim().toUpperCase();
 
     if (clase.includes('MOTOCICLETA') || clase.includes('MOTO')) {
       const seg = this.getMotoSegmentoUi();
-      const fallback =
-        seg === 'SUPERBIKE' ? 'MOTOCICLETA SUPERBIKE' : 'MOTOCICLETA URBANA';
+      const fallback = seg === 'SUPERBIKE' ? 'MOTOCICLETA SUPERBIKE' : 'MOTOCICLETA URBANA';
       return ['MOTOCICLETA', fallback];
     }
 
@@ -468,8 +482,7 @@ export class AgendarPeritajeComponent {
     if (match?.[1]) return match[1].trim();
 
     // 2) fallback si hay "Lunes..." etc
-    const regexHorario =
-      /(Lunes.*?)(?=(\s*@|$))/i;
+    const regexHorario = /(Lunes.*?)(?=(\s*@|$))/i;
     const m2 = texto.match(regexHorario);
     if (m2?.[1]) return m2[1].trim();
 
@@ -496,25 +509,17 @@ export class AgendarPeritajeComponent {
     const latOk = this.isValidCoord(sede.lat);
     const lngOk = this.isValidCoord(sede.lng);
 
-    let q = '';
-
     if (latOk && lngOk) {
-      q = `${Number(sede.lat)},${Number(sede.lng)}`;
-    } else {
-      const base =
-        (sede.direccion || '').trim() ||
-        (sede.nombre || '').trim();
-
-      if (!base) return null;
-
-      q = `${base}, ${this.selectedCiudad}, Colombia`;
-      q = encodeURIComponent(q);
+      const q = `${Number(sede.lat)},${Number(sede.lng)}`;
       return this.sanitizeUrl(`https://www.google.com/maps?q=${q}&output=embed`);
     }
 
-    return this.sanitizeUrl(
-      `https://www.google.com/maps?q=${q}&output=embed`
-    );
+    // ✅ fallback: buscar por dirección/nombre (para que NO se quede en blanco en PC)
+    const base = (sede.direccion || '').trim() || (sede.nombre || '').trim();
+    if (!base) return null;
+
+    const q = encodeURIComponent(`${base}, ${this.selectedCiudad}, Colombia`);
+    return this.sanitizeUrl(`https://www.google.com/maps?q=${q}&output=embed`);
   }
 
   // =============================
@@ -546,54 +551,47 @@ export class AgendarPeritajeComponent {
 
     const placa = (this.form.value.placa || '').toUpperCase();
 
-    this.rtmApi
-      .consultarRunt(placa, tipoDoc, this.form.value.numeroDocumento)
-      .subscribe({
-        next: (response: any) => {
-          if (response?.error) {
-            this.isLoading = false;
-            alert('No se pudo consultar el RUNT: ' + (response?.mensaje || ''));
-            return;
-          }
-
-          const dataRunt = response?.data || {};
-
-          this.vehiculoData = {
-            marca: dataRunt.marca || '',
-            linea: dataRunt.linea || '',
-            modelo: dataRunt.modelo || '',
-            placa,
-            clase_vehiculo: dataRunt.clase || dataRunt.claseVehiculo || '',
-            tipo_servicio:
-              dataRunt.servicio || dataRunt.tipoServicio || 'Particular',
-            tipo_combustible:
-              dataRunt.combustible || dataRunt.tipoCombustible || 'GASOLINA',
-            cilindraje: dataRunt.cilindraje || 0,
-          };
-
-          console.log('✅ [PERITAJE] Vehículo RUNT:', this.vehiculoData);
-          console.log('🧩 [PERITAJE] Normalizados API:', {
-            tipo_combustible_api: this.getTipoCombustibleParaApi(),
-            clase_vehiculo_presencial_api: this.getClaseVehiculoParaApiPresencial(),
-            clases_vehiculo_domicilio_api:
-              this.getClasesVehiculoParaApiDomicilioConFallback(),
-            es_pesado: this.esVehiculoPesado(),
-            moto_segmento_ui:
-              (this.vehiculoData.clase_vehiculo || '')
-                .toUpperCase()
-                .includes('MOT')
-                ? this.getMotoSegmentoUi()
-                : null,
-          });
-
-          this.consultarServiciosPresenciales();
-        },
-        error: (err) => {
-          console.error('❌ Error al consultar RUNT:', err);
+    this.rtmApi.consultarRunt(placa, tipoDoc, this.form.value.numeroDocumento).subscribe({
+      next: (response: any) => {
+        if (response?.error) {
           this.isLoading = false;
-          alert('Error al consultar el RUNT. Verifica datos e intenta nuevamente.');
-        },
-      });
+          alert('No se pudo consultar el RUNT: ' + (response?.mensaje || ''));
+          return;
+        }
+
+        const dataRunt = response?.data || {};
+
+        this.vehiculoData = {
+          marca: dataRunt.marca || '',
+          linea: dataRunt.linea || '',
+          modelo: dataRunt.modelo || '',
+          placa,
+          clase_vehiculo: dataRunt.clase || dataRunt.claseVehiculo || '',
+          tipo_servicio: dataRunt.servicio || dataRunt.tipoServicio || 'Particular',
+          tipo_combustible: dataRunt.combustible || dataRunt.tipoCombustible || 'GASOLINA',
+          cilindraje: dataRunt.cilindraje || 0,
+        };
+
+        console.log('✅ [PERITAJE] Vehículo RUNT:', this.vehiculoData);
+        console.log('🧩 [PERITAJE] Normalizados API:', {
+          tipo_combustible_api: this.getTipoCombustibleParaApi(),
+          clase_vehiculo_presencial_api: this.getClaseVehiculoParaApiPresencial(),
+          clases_vehiculo_domicilio_api: this.getClasesVehiculoParaApiDomicilioConFallback(),
+          es_pesado: this.esVehiculoPesado(),
+          moto_segmento_ui:
+            (this.vehiculoData.clase_vehiculo || '').toUpperCase().includes('MOT')
+              ? this.getMotoSegmentoUi()
+              : null,
+        });
+
+        this.consultarServiciosPresenciales();
+      },
+      error: (err) => {
+        console.error('❌ Error al consultar RUNT:', err);
+        this.isLoading = false;
+        alert('Error al consultar el RUNT. Verifica datos e intenta nuevamente.');
+      },
+    });
   }
 
   private consultarServiciosPresenciales(): void {
@@ -680,10 +678,7 @@ export class AgendarPeritajeComponent {
         clase_vehiculo: claseVehiculo,
       };
 
-      console.log(
-        `🏠 [PERITAJE] Consultando domicilio intento ${idx + 1}/${clasesTry.length} params:`,
-        params
-      );
+      console.log(`🏠 [PERITAJE] Consultando domicilio intento ${idx + 1}/${clasesTry.length} params:`, params);
 
       this.peritajeApi.obtenerServicios(params).subscribe({
         next: (response: any) => {
@@ -779,14 +774,30 @@ export class AgendarPeritajeComponent {
 
   getImagenActual(): string {
     const categoria = this.determinarCategoriaVehiculo();
-    const imgSet =
-      this.imagenesCombos[categoria] || this.imagenesCombos['VEHICULOS LIVIANOS'];
+    const imgSet = this.imagenesCombos[categoria] || this.imagenesCombos['VEHICULOS LIVIANOS'];
 
     const key = this.selectedTab;
     return imgSet[key] || imgSet['plata'] || 'assets/peritaje-liviano-plata.png';
   }
 
+  // ✅ NUEVO: normaliza el nombre del servicio para que el HTML NO duplique "Peritaje"
+  private normalizeComboLabelFromServiceName(nombreServicio: string): string {
+    const raw = (nombreServicio || '').toString().trim();
+    if (!raw) return '';
+
+    // Quita "Peritaje" al inicio si viene (case-insensitive)
+    let cleaned = raw.replace(/^\s*peritaje\s*/i, '').trim();
+
+    // Quita separadores iniciales si quedaran
+    cleaned = cleaned.replace(/^[-–—:|]+/g, '').trim();
+
+    return cleaned;
+  }
+
   getComboNombre(): string {
+    const fromService = this.normalizeComboLabelFromServiceName(this.selectedService?.nombre || '');
+    if (fromService) return fromService;
+
     const map: Record<ComboId, string> = {
       plata: 'Plata',
       oro: 'Oro',
@@ -813,12 +824,7 @@ export class AgendarPeritajeComponent {
       plata: {
         titulo: 'El Combo Plata incluye:',
         descripcion: 'Inspección básica y certificado de peritaje.',
-        items: [
-          'Estructura y Carrocería',
-          'Improntas y Antecedentes (LTA)',
-          'Prueba de Motor',
-          'CertiMás Basic',
-        ],
+        items: ['Estructura y Carrocería', 'Improntas y Antecedentes (LTA)', 'Prueba de Motor', 'CertiMás Basic'],
       },
       oro: {
         titulo: 'El Combo Oro incluye:',
@@ -866,9 +872,7 @@ export class AgendarPeritajeComponent {
 
     if (clase.includes('MOTOCICLETA') || clase.includes('MOTO')) {
       const seg = this.getMotoSegmentoUi();
-      return seg === 'SUPERBIKE'
-        ? 'MOTOCICLETAS SUPERBIKE'
-        : 'MOTOCICLETAS URBANA';
+      return seg === 'SUPERBIKE' ? 'MOTOCICLETAS SUPERBIKE' : 'MOTOCICLETAS URBANA';
     }
 
     if (this.esVehiculoPesado()) return 'VEHICULOS PESADOS';
@@ -909,8 +913,7 @@ export class AgendarPeritajeComponent {
     }
 
     this.esServicioADomicilio =
-      tab === 'domicilio' ||
-      (servicio?.name || '').toLowerCase().includes('domicilio');
+      tab === 'domicilio' || (servicio?.name || '').toLowerCase().includes('domicilio');
 
     // ✅ dirección requerida SOLO si domicilio
     const direccionControl = this.step5Form.get('direccionServicio');
@@ -987,16 +990,11 @@ export class AgendarPeritajeComponent {
     const lat = position.coords.latitude;
     const lng = position.coords.longitude;
 
-    if (lat >= 4.5 && lat <= 4.9 && lng >= -74.3 && lng <= -73.9)
-      this.selectedCiudad = 'Bogotá';
-    else if (lat >= 6.1 && lat <= 6.4 && lng >= -75.7 && lng <= -75.4)
-      this.selectedCiudad = 'Medellín';
-    else if (lat >= 3.3 && lat <= 3.6 && lng >= -76.7 && lng <= -76.4)
-      this.selectedCiudad = 'Cali';
-    else if (lat >= 10.8 && lat <= 11.2 && lng >= -75.0 && lng <= -74.6)
-      this.selectedCiudad = 'Barranquilla';
-    else if (lat >= 10.2 && lat <= 10.6 && lng >= -75.7 && lng <= -75.3)
-      this.selectedCiudad = 'Cartagena';
+    if (lat >= 4.5 && lat <= 4.9 && lng >= -74.3 && lng <= -73.9) this.selectedCiudad = 'Bogotá';
+    else if (lat >= 6.1 && lat <= 6.4 && lng >= -75.7 && lng <= -75.4) this.selectedCiudad = 'Medellín';
+    else if (lat >= 3.3 && lat <= 3.6 && lng >= -76.7 && lng <= -76.4) this.selectedCiudad = 'Cali';
+    else if (lat >= 10.8 && lat <= 11.2 && lng >= -75.0 && lng <= -74.6) this.selectedCiudad = 'Barranquilla';
+    else if (lat >= 10.2 && lat <= 10.6 && lng >= -75.7 && lng <= -75.3) this.selectedCiudad = 'Cartagena';
     else this.selectedCiudad = 'Bogotá';
   }
 
@@ -1043,10 +1041,8 @@ export class AgendarPeritajeComponent {
   }
 
   private getReferenciaOrdenSedes(): { lat: number; lng: number } | null {
-    // 1) si hay ubicación del usuario, usar esa
     if (this.userLocation) return this.userLocation;
 
-    // 2) si no, usar centro de la ciudad del catálogo (para ordenar "bien" igualmente)
     const ciudad = this.ciudades.find((c) => c.nombre === this.selectedCiudad);
     if (ciudad && this.isValidCoord(ciudad.lat) && this.isValidCoord(ciudad.lng)) {
       return { lat: Number(ciudad.lat), lng: Number(ciudad.lng) };
@@ -1062,99 +1058,80 @@ export class AgendarPeritajeComponent {
       return;
     }
 
-    this.peritajeApi
-      .obtenerProveedores(this.selectedCiudad, String(this.selectedService.id))
-      .subscribe({
-        next: (response: any) => {
-          this.sedes = (response?.data || []).map((sede: any) => {
-            const desc = sede.description || '';
+    this.peritajeApi.obtenerProveedores(this.selectedCiudad, String(this.selectedService.id)).subscribe({
+      next: (response: any) => {
+        this.sedes = (response?.data || []).map((sede: any) => {
+          const desc = sede.description || '';
 
-            const direccionExtraida =
-              this.extraerDireccionDeDescription(desc) ||
-              (sede.address || sede.direccion || '').toString().trim();
+          const direccionExtraida =
+            this.extraerDireccionDeDescription(desc) ||
+            (sede.address || sede.direccion || '').toString().trim();
 
-            const horarioExtraido =
-              this.extraerHorario(desc) ||
-              (sede.schedule || sede.horario || '').toString().trim();
+          const horarioExtraido =
+            this.extraerHorario(desc) || (sede.schedule || sede.horario || '').toString().trim();
 
-            const telefonoExtraido =
-              (sede.phone || '').toString().trim() ||
-              this.extraerTelefonoDeDescription(desc);
+          const telefonoExtraido =
+            (sede.phone || '').toString().trim() || this.extraerTelefonoDeDescription(desc);
 
-            // ✅ foto desde API (varios nombres posibles)
-            const fotoUrl =
-              sede.photo ||
-              sede.foto ||
-              sede.image ||
-              sede.imagen ||
-              sede.picture ||
-              sede.logo ||
-              '';
+          const fotoUrl =
+            sede.photo || sede.foto || sede.image || sede.imagen || sede.picture || sede.logo || '';
 
-            const lat = (sede.lat ?? '').toString();
-            const lng = (sede.lng ?? '').toString();
+          const lat = (sede.lat ?? '').toString();
+          const lng = (sede.lng ?? '').toString();
 
-            const sedeMapped: Sede = {
-              id: sede.id,
-              nombre: sede.name || 'Sin nombre',
-              direccion:
-                direccionExtraida && direccionExtraida.length > 2
-                  ? direccionExtraida
-                  : 'Dirección no disponible',
-              telefono: telefonoExtraido || 'Sin teléfono',
-              horario:
-                horarioExtraido && horarioExtraido.length > 2
-                  ? horarioExtraido
-                  : 'Horario no disponible',
-              lat: lat || '0',
-              lng: lng || '0',
-              fotoUrl: (fotoUrl || '').toString().trim() || undefined,
-            };
+          const sedeMapped: Sede = {
+            id: sede.id,
+            nombre: sede.name || 'Sin nombre',
+            direccion:
+              direccionExtraida && direccionExtraida.length > 2 ? direccionExtraida : 'Dirección no disponible',
+            telefono: telefonoExtraido || 'Sin teléfono',
+            horario:
+              horarioExtraido && horarioExtraido.length > 2 ? horarioExtraido : 'Horario no disponible',
+            lat: lat || '0',
+            lng: lng || '0',
+            fotoUrl: (fotoUrl || '').toString().trim() || undefined,
+          };
 
-            return sedeMapped;
+          const embed = this.getSedeMapEmbedUrl(sedeMapped);
+          sedeMapped.mapEmbedUrl = embed ? (embed as any) : undefined;
+
+          return sedeMapped;
+        });
+
+        const ref = this.getReferenciaOrdenSedes();
+        if (ref) {
+          this.sedes.forEach((s) => {
+            const latOk = this.isValidCoord(s.lat);
+            const lngOk = this.isValidCoord(s.lng);
+
+            if (latOk && lngOk) {
+              s.distancia = this.calcularDistancia(
+                ref.lat,
+                ref.lng,
+                parseFloat(s.lat),
+                parseFloat(s.lng)
+              );
+            } else {
+              s.distancia = Number.POSITIVE_INFINITY;
+            }
           });
 
-          // ✅ calcular distancias + ordenar
-          const ref = this.getReferenciaOrdenSedes();
-          if (ref) {
-            this.sedes.forEach((s) => {
-              // si la sede no trae coords válidas, distancia = Infinity (para que quede al final)
-              const latOk = this.isValidCoord(s.lat);
-              const lngOk = this.isValidCoord(s.lng);
+          this.sedes.sort((a, b) => (a.distancia || 0) - (b.distancia || 0));
+        }
 
-              if (latOk && lngOk) {
-                s.distancia = this.calcularDistancia(
-                  ref.lat,
-                  ref.lng,
-                  parseFloat(s.lat),
-                  parseFloat(s.lng)
-                );
-              } else {
-                s.distancia = Number.POSITIVE_INFINITY;
-              }
-            });
-
-            this.sedes.sort((a, b) => (a.distancia || 0) - (b.distancia || 0));
-          }
-
-          this.updateSedesPaginadas();
-          this.isLoadingSedes = false;
-        },
-        error: (err) => {
-          console.error('❌ Error al cargar sedes:', err);
-          this.sedes = [];
-          this.updateSedesPaginadas();
-          this.isLoadingSedes = false;
-        },
-      });
+        this.updateSedesPaginadas();
+        this.isLoadingSedes = false;
+      },
+      error: (err) => {
+        console.error('❌ Error al cargar sedes:', err);
+        this.sedes = [];
+        this.updateSedesPaginadas();
+        this.isLoadingSedes = false;
+      },
+    });
   }
 
-  private calcularDistancia(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number {
+  private calcularDistancia(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
@@ -1208,9 +1185,7 @@ export class AgendarPeritajeComponent {
     if (latOk && lngOk) {
       url = `https://www.google.com/maps?q=${Number(sede.lat)},${Number(sede.lng)}`;
     } else {
-      const q = encodeURIComponent(
-        `${(sede.direccion || sede.nombre || '').trim()}, ${this.selectedCiudad}, Colombia`
-      );
+      const q = encodeURIComponent(`${(sede.direccion || sede.nombre || '').trim()}, ${this.selectedCiudad}, Colombia`);
       url = `https://www.google.com/maps?q=${q}`;
     }
 
@@ -1236,6 +1211,8 @@ export class AgendarPeritajeComponent {
     this.horariosDisponibles = [];
     this.mensajeHorarios = 'Selecciona una fecha para ver horarios disponibles';
     this.isLoadingHorarios = false;
+
+    this.step5Form.patchValue({ horaRevision: '' }, { emitEvent: false });
   }
 
   onFechaChange(event: any): void {
@@ -1243,6 +1220,7 @@ export class AgendarPeritajeComponent {
     if (!fechaSeleccionada) {
       this.horariosDisponibles = [];
       this.mensajeHorarios = 'Selecciona una fecha para ver horarios disponibles';
+      this.step5Form.patchValue({ horaRevision: '' }, { emitEvent: false });
       return;
     }
 
@@ -1254,28 +1232,29 @@ export class AgendarPeritajeComponent {
       day: fecha.getDate(),
     };
 
+    this.step5Form.patchValue({ horaRevision: '' }, { emitEvent: false });
+
     this.cargarHorariosDisponibles();
   }
 
   private normalizarSlots(raw: any): string[] {
     if (!raw) return [];
 
-    // si ya es array de strings
     if (Array.isArray(raw) && raw.every((x) => typeof x === 'string')) {
       return raw as string[];
     }
 
-    // array de objetos
     if (Array.isArray(raw) && raw.length && typeof raw[0] === 'object') {
       return raw
         .map((o: any) => {
-          // casos comunes
           const v =
             o?.label ||
             o?.hora ||
             o?.time ||
             o?.slot ||
             o?.value ||
+            o?.franja ||
+            o?.name ||
             (o?.start && o?.end ? `${o.start} - ${o.end}` : '') ||
             '';
           return (v || '').toString().trim();
@@ -1283,8 +1262,8 @@ export class AgendarPeritajeComponent {
         .filter((x: string) => !!x);
     }
 
-    // objeto con slots
     if (raw?.slots) return this.normalizarSlots(raw.slots);
+    if (raw?.data?.slots) return this.normalizarSlots(raw.data.slots);
 
     return [];
   }
@@ -1308,16 +1287,22 @@ export class AgendarPeritajeComponent {
 
     this.peritajeApi.obtenerHorariosDisponibles(payload).subscribe({
       next: (response: any) => {
-        // ✅ soporta respuestas tipo:
-        // - [{ slots: [...] }]
-        // - { slots: [...] }
-        // - { data: { slots: [...] } } (por si cambia)
-        let rawSlots: any = [];
-        if (Array.isArray(response) && response.length && response[0]?.slots) rawSlots = response[0].slots;
-        else if (response?.slots) rawSlots = response.slots;
-        else if (response?.data?.slots) rawSlots = response.data.slots;
+        let candidate: any = null;
 
-        const slots = this.normalizarSlots(rawSlots);
+        if (Array.isArray(response)) {
+          if (response.length && response[0]?.slots) candidate = response[0].slots;
+          else candidate = response;
+        } else if (response?.slots) {
+          candidate = response.slots;
+        } else if (response?.data?.slots) {
+          candidate = response.data.slots;
+        } else if (response?.data) {
+          candidate = response.data;
+        } else {
+          candidate = response;
+        }
+
+        const slots = this.normalizarSlots(candidate);
 
         this.horariosDisponibles = slots || [];
 
@@ -1374,6 +1359,12 @@ export class AgendarPeritajeComponent {
   }
 
   continuarAlPago(): void {
+    if (this.esServicioADomicilio) {
+      const dir = this.step5Form.get('direccionServicio');
+      dir?.setValidators([Validators.required]);
+      dir?.updateValueAndValidity({ emitEvent: false });
+    }
+
     if (this.step5Form.invalid) {
       this.step5Form.markAllAsTouched();
       alert('Por favor completa todos los campos obligatorios');
@@ -1407,21 +1398,82 @@ export class AgendarPeritajeComponent {
     alert(`Código "${this.codigoPromocional}" aplicado (pendiente de lógica real).`);
   }
 
+  /**
+   * ✅ Flujo final:
+   * 1) Agenda el peritaje
+   * 2) Genera link MercadoPago
+   * 3) Redirige al link (MP manejará success/failure/pending a tus páginas)
+   */
   confirmarPago(): void {
     if (!this.aceptaCondicionesPago) {
       alert('Debes aceptar las condiciones del servicio');
       return;
     }
 
+    if (this.isLoading) return;
+
     this.isLoading = true;
-    this.agendar();
+
+    this.agendar$()
+      .pipe(
+        tap((agRes) => {
+          this.agendamientoResponse = agRes;
+
+          // ✅ FIX: guardar la reserva de PERITAJE para que /pago-exitoso NO lea RTM
+          const invoiceId =
+            Number(agRes?.invoice_id ?? agRes?.invoiceId ?? agRes?.data?.invoice_id ?? 0) || 0;
+
+          const codeBooking = (
+            agRes?.codeBooking ??
+            agRes?.codigo_reserva ??
+            agRes?.booking_code ??
+            agRes?.data?.codeBooking ??
+            ''
+          ).toString();
+
+          const reservaPeritaje = {
+            tipo: 'peritaje',
+            invoiceId,
+            codeBooking,
+            monto: Number(this.getPrecioActual() || 0),
+            nombreServicio: this.getResumenServicioParaPago() || this.getNombreServicioSeleccionado(),
+            placa: this.vehiculoData.placa,
+            sede: this.selectedSede?.nombre || '',
+            fecha: this.getFechaAgendadaConHora(),
+          };
+
+          console.log('💾 [PERITAJE] Guardando ultima_reserva (PERITAJE):', reservaPeritaje);
+localStorage.setItem('ultima_reserva', JSON.stringify(reservaPeritaje)); // ✅ CLAVE que lee pago-exitoso
+localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opcional) debug
+        }),
+        switchMap(() => this.generarLinkMercadoPago$()),
+        tap((pagoRes) => {
+          this.pagoId = pagoRes.pago_id || null;
+          this.paymentPreferenceId = pagoRes.preference_id || null;
+          this.paymentLink = pagoRes.payment_link || null;
+
+          if (!this.paymentLink) {
+            throw new Error('No se recibió el link de pago desde la API');
+          }
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+        next: () => {
+          window.location.href = this.paymentLink!;
+        },
+        error: (err) => {
+          console.error('❌ Error confirmando pago:', err);
+          alert(err?.message || 'Ocurrió un error al generar el pago. Por favor intenta nuevamente.');
+        },
+      });
   }
 
-  private agendar(): void {
+  private agendar$(): Observable<any> {
     if (!this.fechaAgenda || !this.selectedSede || !this.selectedService) {
-      this.isLoading = false;
-      alert('Faltan datos de fecha/sede/servicio.');
-      return;
+      return throwError(() => new Error('Faltan datos de fecha/sede/servicio.'));
     }
 
     const tipoIdent =
@@ -1448,26 +1500,54 @@ export class AgendarPeritajeComponent {
       from_flow: 'peritaje',
 
       recibir_resultado: 'true',
+
       correo_resultado: this.step5Form.value.correoResultado,
       nombre_resultado: this.step5Form.value.nombreResultado,
+
+      servicio_resumen: this.getResumenServicioParaPago(),
     };
 
     if (this.esServicioADomicilio) {
       payload.direccion_servicio = this.step5Form.value.direccionServicio;
     }
 
-    this.peritajeApi.agendar(payload).subscribe({
-      next: (response: any) => {
-        this.agendamientoResponse = response;
-        this.currentStep = 7;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('❌ Error al agendar:', err);
-        this.isLoading = false;
-        alert('Error al agendar el peritaje. Por favor intenta nuevamente.');
-      },
-    });
+    return this.peritajeApi.agendar(payload);
+  }
+
+  /**
+   * ✅ FIX: NO consultar "proyecto" (evita 404).
+   * Genera link directo como tu RTM: pagos/generar-link/
+   */
+  private generarLinkMercadoPago$(): Observable<GenerarLinkPagoResponse> {
+    const urls = this.buildBackUrls();
+
+    // ✅ Payload estilo el que mostraste en la otra web
+    // (Aunque "proyecto" no sea obligatorio, lo dejamos en "pagina_web" porque es el que usas en RTM)
+    const req: GenerarLinkPagoRequest = {
+      proyecto: 'pagina_web' as any,
+      medio_pago: 'mercadopago',
+      servicio_label: this.getResumenServicioParaPago() || `Peritaje ${this.getComboNombre()}`,
+      valor: Number(this.getPrecioActual() || 0),
+      placa_vehiculo: this.vehiculoData.placa,
+      sede: null,
+      servicio_tipovehiculo: null,
+      urls,
+    };
+
+    console.log('💳 [PERITAJE] Generando link de pago...');
+    console.log('💳 [PERITAJE] Payload:', req);
+
+    return this.pagosApi.generarLinkPago(req);
+  }
+
+  private buildBackUrls(): { success: string; failure: string; pending: string } {
+    // ✅ Tus páginas ya existen
+    const origin = window.location.origin;
+    return {
+      success: `${origin}/pago-exitoso`,
+      failure: `${origin}/pago-fallido`,
+      pending: `${origin}/pago-pendiente`,
+    };
   }
 
   getFechaTransaccion(): string {
@@ -1534,6 +1614,14 @@ export class AgendarPeritajeComponent {
     this.precios = { plata: 0, oro: 0, diamante: 0, domicilio: 0 };
 
     this.esServicioADomicilio = false;
+
+    this.codigoPromocional = '';
+    this.aceptaCondicionesPago = false;
+
+    this.agendamientoResponse = null;
+    this.pagoId = null;
+    this.paymentLink = null;
+    this.paymentPreferenceId = null;
 
     this.form.reset({ tipoDocumento: 'CC', aceptaDatos: false });
     this.step5Form.reset({ tipoDocumento: 'CC', aceptaTerminos: false });

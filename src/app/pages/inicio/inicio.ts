@@ -81,25 +81,25 @@ export class Inicio {
       title: 'Revisión Técnico\nMecánica',
       imgNormal: 'assets/tecno-n.png',
       imgHover: 'assets/tecno-h.png',
-      href: '/servicios/revision-tecnica',
+      href: '/revision-tecnico-mecanica',
     },
     {
       title: 'Peritaje / Avalúo',
       imgNormal: 'assets/peritaje-n.png',
       imgHover: 'assets/peritaje-h.png',
-      href: '/servicios/peritaje',
+      href: '/peritaje',
     },
     {
       title: 'Trámites\nVehiculares',
       imgNormal: 'assets/tramites-n.png',
       imgHover: 'assets/tramites-h.png',
-      href: '/servicios/tramites',
+      href: '/tramites',
     },
     {
       title: 'CertiMás',
       imgNormal: 'assets/certimas-n.png',
       imgHover: 'assets/certimas-h.png',
-      href: '/servicios/certimas',
+      href: '/certimas',
     },
   ];
 

@@ -1,0 +1,136 @@
+<div class="rtm-page">
+  <app-cta-agendamiento-rtm
+    [imageSrc]="cta.imageSrc"
+    [linkConsultar]="cta.linkConsultar"
+    [linkAgendar]="cta.linkAgendar">
+  </app-cta-agendamiento-rtm>
+</div>
+
+
+
+<!-- SECCIÓN IMPORTANCIA -->
+<section class="importancia-section fullwidth">
+  <div class="image-side">
+    <img src="/assets/img-izq.png" alt="Vehículo AutoMás" />
+  </div>
+
+  <div class="content-side">
+    <span class="tag">¿Listo para tu revisión?</span>
+    <h2>
+      ¿Por Qué AutoMás es tu Mejor Opción
+      <span class="highlight">para la Revisión Técnico Mecánica?</span>
+    </h2>
+
+    <ul class="benefits">
+      <li>
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <strong>¿Buscas Seguridad?</strong><br />
+           Tu Protección es lo Primero. Prevenimos fallas graves en carretera verificando que tu vehículo esté en óptimas condiciones.
+        </div>
+      </li>
+
+      <li>
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <strong>¿Necesitas Rapidez?</strong><br />
+         Trámite Ágil y Transparente. Certifica tu vehículo rápidamente gracias a la tecnología de AutoMás.
+        </div>
+      </li>
+
+      <li>
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <strong>¿Quieres Evitar Costos Extra?</strong><br />
+          Cumplimiento 100% Legal. Mantente al día con la normativa vigente y evita costosas multas
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- Precios -->
+<section class="precios-tecno-section">
+  <div class="container">
+    <h2 class="titulo-seccion">
+      ¿Cuánto cuesta tu <span class="resaltado">Tecnomecánica?</span>
+    </h2>
+<div class="precios-grid">
+  @for (item of precios; track item.titulo) {
+    <div class="precio-card">
+      <h4>{{ item.titulo }}</h4>
+      <p>Desde <strong>{{ item.precio }}</strong></p>
+    </div>
+  }
+</div>
+
+    <!-- ✅ Disclaimer -->
+    <p class="precio-disclaimer">
+      * Este valor NO incluye Fondo Nacional de Seguridad Vial
+    </p>
+  </div>
+</section>
+
+
+
+<!-- SECCIÓN REVISIÓN EN 3 PASOS -->
+<section class="revision-pasos">
+  <div class="container">
+    <span class="tag">Proceso rápido y sencillo</span>
+    <h2>Haz tu Revisión Técnico<br />Mecánica en 3 pasos</h2>
+
+    <div class="pasos-grid">
+      <div class="paso">
+        <div class="icon-box">
+          <i class="bi bi-truck"></i>
+        </div>
+        <h3>Selecciona tu vehículo</h3>
+        <p>Ingresa la placa y valida los datos de tu carro o moto.</p>
+      </div>
+
+      <div class="paso">
+        <div class="icon-box">
+          <i class="bi bi-buildings"></i>
+        </div>
+        <h3>Elige ciudad y sede</h3>
+        <p>Busca el punto AutoMás más cercano y disponible para ti.</p>
+      </div>
+
+      <div class="paso">
+        <div class="icon-box">
+          <i class="bi bi-calendar-check"></i>
+        </div>
+        <h3>Agenda tu cita</h3>
+        <p>Elige fecha y hora, confirma y asegura tu revisión en minutos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN CERTIFICADO -->
+<section class="certificado-banner">
+  <div class="certificado-contenido">
+    <h2>¿Dónde ver tu <strong>Certificado</strong>?</h2>
+    <p>Puedes descargarlo en el siguiente botón</p>
+    <button class="btn-certificado">Descargar Ahora</button>
+  </div>
+
+  <div class="certificado-imagen">
+    <img src="assets/certificado.png" alt="Auto certificado" />
+  </div>
+</section>
+
+
+<app-faq
+  [title]="'Preguntas Frecuentes sobre la Revisión Técnico Mecánica'"
+  [items]="faqItems"
+  [multiple]="false">
+</app-faq>
+
+<app-noticias-grid
+  title="Últimas noticias"
+  [featured]="noticiaDestacada"
+  [cards]="noticiasCards"
+></app-noticias-grid>
+
+

@@ -15,47 +15,106 @@
   </button>
 
   <!-- Menú superior -->
-  <div class="top-links" [class.open]="topMenuOpen">
-<button class="btn btn-light btn-sm city-btn" >
+<div class="top-links" [class.open]="topMenuOpen">
+
+  <!-- Elige ciudad (lo dejamos como botón normal por ahora) -->
+<button class="btn btn-light btn-sm city-btn" type="button" (click)="abrirModalCiudad()">
   <i class="bi bi-geo-alt"></i> Elige tu ciudad
 </button>
-    <button class="btn btn-dark btn-sm whatsapp-btn">
-      <i class="bi bi-whatsapp"></i> Whatsapp MIA
-    </button>
-    <button class="btn btn-light btn-sm">Corporativo</button>
-    <button class="btn btn-light btn-sm">Trabaja con nosotros</button>
-  </div>
+
+  <!-- ✅ WhatsApp MIA -->
+  <a
+    href="https://wa.me/573158365888"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="btn btn-dark btn-sm whatsapp-btn"
+  >
+    <i class="bi bi-whatsapp"></i> Whatsapp MIA
+  </a>
+
+  <!-- ✅ Corporativo -->
+  <a
+    href="https://aplicacion.automas.co/"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="btn btn-light btn-sm"
+  >
+    Corporativo
+  </a>
+
+  <!-- ✅ Trabaja con nosotros -->
+  <a
+    href="https://selectivamyr.buk.co/trabaja-con-nosotros#Ofertas_Laborales"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="btn btn-light btn-sm"
+  >
+    Trabaja con nosotros
+  </a>
+
+</div>
 </header>
 
 <!-- NAV MENU (DESKTOP) -->
 <nav class="nav-menu" [class.open]="navMenuOpen">
   <ul class="navbar-nav">
-    <li><a routerLink="/tecnomecanica" routerLinkActive="active" class="nav-link">Revisión Técnico Mecánica</a></li>
-    <li><a routerLink="/certimas" routerLinkActive="active" class="nav-link">CertiMás</a></li>
-    <li><a routerLink="/peritaje" routerLinkActive="active" class="nav-link">Peritaje / Avalúo</a></li>
-    <li><a routerLink="/tramites" routerLinkActive="active" class="nav-link">Trámites Vehículares</a></li>
-    <li><a routerLink="/cobertura" routerLinkActive="active" class="nav-link">Cobertura</a></li>
-    <li><a routerLink="/complementarios" routerLinkActive="active" class="nav-link">Complementarios</a></li>
+    <li><a routerLink="/revision-tecnico-mecanica" routerLinkActive="active" class="nav-link" (click)="closeNavMenu()">Revisión Técnico Mecánica</a></li>
+    <li><a routerLink="/certimas" routerLinkActive="active" class="nav-link" (click)="closeNavMenu()">CertiMás</a></li>
+    <li><a routerLink="/peritaje" routerLinkActive="active" class="nav-link" (click)="closeNavMenu()">Peritaje / Avalúo</a></li>
+    <li><a routerLink="/tramites" routerLinkActive="active" class="nav-link" (click)="closeNavMenu()">Trámites Vehículares</a></li>
+    <li>
+  <a
+    href="https://sites.google.com/automas.com.co/portafolio-de-servicios-/portafolio"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="nav-link"
+  >
+    Cobertura
+  </a>
+</li>
+    <li><a routerLink="/complementarios" routerLinkActive="active" class="nav-link" (click)="closeNavMenu()">Complementarios</a></li>
   </ul>
 </nav>
 
 <!-- 🔹 NAV INFERIOR (solo móvil) -->
 <nav class="bottom-nav">
-<a >
+
+  <!-- Ubicación (si después quieres poner link real me dices) -->
+<a href="javascript:void(0)" (click)="abrirModalCiudad()">
   <i class="bi bi-geo"></i>
   <span>Ubicación</span>
 </a>
 
-  <a routerLink="#" routerLinkActive="active">
+  <!-- ✅ WhatsApp MIA -->
+  <a
+    href="https://wa.me/573158365888"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
     <i class="bi bi-whatsapp"></i>
     <span>Whatsapp MIA</span>
   </a>
-  <a routerLink="#" routerLinkActive="active">
+
+  <!-- ✅ Corporativo -->
+  <a
+    href="https://aplicacion.automas.co/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
     <i class="bi bi-building-fill-exclamation"></i>
     <span>Corporativo</span>
   </a>
-  <a routerLink="#" routerLinkActive="active">
+
+  <!-- ✅ Se Parte (Trabaja con nosotros) -->
+  <a
+    href="https://selectivamyr.buk.co/trabaja-con-nosotros#Ofertas_Laborales"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
     <i class="bi bi-person-check"></i>
     <span>Se Parte</span>
   </a>
+
 </nav>
+<!-- ✅ MODAL CIUDAD (se renderiza una sola vez) -->
+<app-ciudad-modal></app-ciudad-modal>

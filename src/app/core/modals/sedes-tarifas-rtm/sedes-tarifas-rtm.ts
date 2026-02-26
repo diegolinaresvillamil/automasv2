@@ -120,10 +120,12 @@ export class SedesTarifasRtmComponent {
   agendamientoResponse: any = null;
 
   tiposVehiculo = [
-    { id: 'cuadriciclos', nombre: 'Cuadriciclos', iconSvg: 'cuadriciclos.svg' },
-    { id: 'motocicletas', nombre: 'Motocicletas', iconSvg: 'motocicletas.svg' },
-    { id: 'ciclomotores', nombre: 'Ciclomotores', iconSvg: 'ciclomotores.svg' },
     { id: 'livianos', nombre: 'Livianos', iconSvg: 'livianos.svg' },
+    { id: 'motocicletas', nombre: 'Motocicletas', iconSvg: 'motocicletas.svg' },
+    { id: 'Pesados', nombre: 'Pesados', iconSvg: 'pesado2.png' },
+    { id: 'cuadriciclos', nombre: 'Cuadriciclos', iconSvg: 'cuadriciclos.svg' },
+    { id: 'ciclomotores', nombre: 'Ciclomotores', iconSvg: 'ciclomotores.svg' },
+    
   ];
 
   subtiposLivianos = [
@@ -400,8 +402,13 @@ export class SedesTarifasRtmComponent {
   // ========================================
   private obtenerClaseVehiculo(): string {
     const tipo = this.selectedTipoVehiculo;
+
     if (tipo === 'livianos') return 'AUTOMOVIL';
     if (tipo === 'motocicletas') return 'MOTOCICLETA';
+
+    // ✅ NUEVO: Pesados (soporta ambos ids por seguridad)
+    if (tipo === 'Pesados' || tipo === 'pesados') return 'PESADO';
+
     if (tipo === 'cuadriciclos') return 'CUADRICICLO';
     if (tipo === 'ciclomotores') return 'CICLOMOTOR';
     return 'AUTOMOVIL';
@@ -420,6 +427,11 @@ export class SedesTarifasRtmComponent {
 
     if (tipo === 'motocicletas') {
       return 227231;
+    }
+
+    // ✅ NUEVO: Pesados base 503.900 (soporta ambos ids por seguridad)
+    if (tipo === 'Pesados' || tipo === 'pesados') {
+      return 503900;
     }
 
     if (tipo === 'ciclomotores') {

@@ -1093,319 +1093,326 @@
         }
 
         <!-- ========== PASO 6: FINALIZA TU PAGO ========== -->
-        @if (currentStep === 6) {
-          <div class="peritaje-step6">
-            
-            <!-- DESKTOP: Layout 2 columnas -->
-            <div class="peritaje-step6__layout">
-              
-              <!-- Columna izquierda: Código + Resumen -->
-              <div class="peritaje-step6__left-col">
-                <h2 class="peritaje-step6__title">Finaliza tu pago</h2>
-                
-                <!-- Código Promocional -->
-                <div class="peritaje-step6__promo-section">
-                  <h3 class="peritaje-step6__promo-title">Código Promocional</h3>
-                  <p class="peritaje-step6__promo-subtitle">
-                    ¿Dispones de un código promocional? Introdúcelo aquí
-                  </p>
-                  <div class="peritaje-step6__promo-input-group">
-                    <input
-                      type="text"
-                      class="peritaje-step6__promo-input"
-                      [(ngModel)]="codigoPromocional"
-                      placeholder="AUTOMAS10"
-                    />
-                    <button
-                      type="button"
-                      class="peritaje-step6__promo-btn"
-                      (click)="aplicarCodigo()"
-                    >
-                      Aplicar Código
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Resumen del pedido -->
-                <div class="peritaje-step6__order-summary">
-                  <h3 class="peritaje-step6__order-title">Resumen del pedido</h3>
-                  <p class="peritaje-step6__order-date">
-                    Fecha de la transacción: {{ getFechaTransaccion() }}
-                  </p>
-
-                  <table class="peritaje-step6__order-table">
-                    <thead>
-                      <tr>
-                        <th>Servicio</th>
-                        <th>Precio</th>
-                        <th>Cantidad</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>
-                          <div class="peritaje-step6__service-name">
-                            Peritaje {{ getComboNombre() }}
-                          </div>
-                          <div class="peritaje-step6__service-detail">
-                            {{ selectedSede?.nombre }}
-                          </div>
-                          <div class="peritaje-step6__service-date">
-                            {{ getFechaTransaccion() }}
-                          </div>
-                        </td>
-                        <td>${{ getPrecioActual() | number:'1.0-0' }}</td>
-                        <td>1</td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  <div class="peritaje-step6__order-total">
-                    <span class="peritaje-step6__order-total-label">
-                      Cantidad total (IVA incluido):
-                    </span>
-                    <span class="peritaje-step6__order-total-value">
-                      ${{ getPrecioActual() | number:'1.0-0' }}
-                    </span>
-                  </div>
-
-                  <label class="peritaje-step6__checkbox">
-                    <input
-                      type="checkbox"
-                      [(ngModel)]="aceptaCondicionesPago"
-                    />
-                    <span>
-                      Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
-                    </span>
-                  </label>
-
-                  <button
-                    type="button"
-                    class="peritaje-step6__btn-pay"
-                    [disabled]="!aceptaCondicionesPago || isLoading"
-                    (click)="confirmarPago()"
-                  >
-                    @if (isLoading) {
-                      <span class="peritaje-step6__spinner"></span>
-                      Procesando...
-                    } @else {
-                      Confirmar y Pagar
-                    }
-                  </button>
-                </div>
-              </div>
-
-              <!-- Columna derecha: Método de pago + Datos -->
-              <div class="peritaje-step6__right-col">
-                
-                <!-- Método de pago -->
-                <div class="peritaje-step6__payment-method">
-                  <h3 class="peritaje-step6__payment-title">Método de pago</h3>
-                  <p class="peritaje-step6__payment-subtitle">
-                    Elige la pasarela de pago:
-                  </p>
-                  <div class="peritaje-step6__payment-card">
-                    <img
-                      src="assets/mercadopago.png"
-                      alt="Mercado Pago"
-                      class="peritaje-step6__payment-logo"
-                    />
-                    <span class="peritaje-step6__payment-name">Mercado Pago</span>
-                  </div>
-                </div>
-
-                <!-- Datos del cliente -->
-                <div class="peritaje-step6__client-data">
-                  <h3 class="peritaje-step6__client-title">Datos del cliente</h3>
-                  
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Nombre:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('nombre')?.value }}
-                    </span>
-                  </div>
-
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Placa:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('placa')?.value }}
-                    </span>
-                  </div>
-
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Teléfono:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('telefono')?.value }}
-                    </span>
-                  </div>
-
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Email:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('correo')?.value }}
-                    </span>
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-
-            <!-- MOBILE: Sub-pasos -->
-            <div class="peritaje-step6__mobile">
-              
-              <!-- Sub-paso 1: Resumen del pedido -->
-              @if (step6SubStep === 1) {
-                <h2 class="peritaje-step6__title-mobile">Resumen del pedido</h2>
-
-                <div class="peritaje-step6__order-summary-mobile">
-                  <p class="peritaje-step6__order-date-mobile">
-                    Fecha: {{ getFechaTransaccion() }}
-                  </p>
-
-                  <div class="peritaje-step6__service-card">
-                    <div class="peritaje-step6__service-name">
-                      Peritaje {{ getComboNombre() }}
-                    </div>
-                    <div class="peritaje-step6__service-detail">
-                      {{ selectedSede?.nombre }}
-                    </div>
-                    <div class="peritaje-step6__service-price">
-                      ${{ getPrecioActual() | number:'1.0-0' }}
-                    </div>
-                  </div>
-
-                  <div class="peritaje-step6__total-mobile">
-                    <span>Total (IVA incluido):</span>
-                    <strong>${{ getPrecioActual() | number:'1.0-0' }}</strong>
-                  </div>
-                </div>
-
-                <div class="peritaje-step6__actions-mobile">
-                  <button
-                    type="button"
-                    class="peritaje-step6__btn-back-mobile"
-                    (click)="goBack()"
-                  >
-                    ← Volver
-                  </button>
-
-                  <button
-                    type="button"
-                    class="peritaje-step6__btn-next-mobile"
-                    (click)="advanceToStep6_2()"
-                  >
-                    Continuar
-                  </button>
-                </div>
-              }
-
-              <!-- Sub-paso 2: Método de pago -->
-              @if (step6SubStep === 2) {
-                <h2 class="peritaje-step6__title-mobile">Método de pago</h2>
-
-                <div class="peritaje-step6__payment-card-mobile">
-                  <img
-                    src="assets/mercadopago.png"
-                    alt="Mercado Pago"
-                    class="peritaje-step6__payment-logo-mobile"
-                  />
-                  <span class="peritaje-step6__payment-name-mobile">Mercado Pago</span>
-                </div>
-
-                <div class="peritaje-step6__actions-mobile">
-                  <button
-                    type="button"
-                    class="peritaje-step6__btn-back-mobile"
-                    (click)="goBack()"
-                  >
-                    ← Volver
-                  </button>
-
-                  <button
-                    type="button"
-                    class="peritaje-step6__btn-next-mobile"
-                    (click)="advanceToStep6_3()"
-                  >
-                    Continuar
-                  </button>
-                </div>
-              }
-
-              <!-- Sub-paso 3: Datos del cliente + Confirmación -->
-              @if (step6SubStep === 3) {
-                <h2 class="peritaje-step6__title-mobile">Datos del cliente</h2>
-
-                <div class="peritaje-step6__client-data-mobile">
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Nombre:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('nombre')?.value }}
-                    </span>
-                  </div>
-
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Placa:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('placa')?.value }}
-                    </span>
-                  </div>
-
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Teléfono:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('telefono')?.value }}
-                    </span>
-                  </div>
-
-                  <div class="peritaje-step6__client-item">
-                    <span class="peritaje-step6__client-label">Email:</span>
-                    <span class="peritaje-step6__client-value">
-                      {{ step5Form.get('correo')?.value }}
-                    </span>
-                  </div>
-                </div>
-
-                <label class="peritaje-step6__checkbox-mobile">
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="aceptaCondicionesPago"
-                  />
-                  <span>
-                    Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
-                  </span>
-                </label>
-
-                <div class="peritaje-step6__actions-mobile">
-                  <button
-                    type="button"
-                    class="peritaje-step6__btn-back-mobile"
-                    (click)="goBack()"
-                  >
-                    ← Volver
-                  </button>
-
-                  <button
-                    type="button"
-                    class="peritaje-step6__btn-pay-mobile"
-                    [disabled]="!aceptaCondicionesPago || isLoading"
-                    (click)="confirmarPago()"
-                  >
-                    @if (isLoading) {
-                      <span class="peritaje-step6__spinner"></span>
-                      Procesando...
-                    } @else {
-                      Confirmar y Pagar
-                    }
-                  </button>
-                </div>
-              }
-
-            </div>
-
+@if (currentStep === 6) {
+  <div class="peritaje-step6">
+    
+    <!-- DESKTOP: Layout 2 columnas -->
+    <div class="peritaje-step6__layout">
+      
+      <!-- Columna izquierda: Código + Resumen -->
+      <div class="peritaje-step6__left-col">
+        <h2 class="peritaje-step6__title">Finaliza tu pago</h2>
+        
+        <!-- Código Promocional -->
+        <div class="peritaje-step6__promo-section">
+          <h3 class="peritaje-step6__promo-title">Código Promocional</h3>
+          <p class="peritaje-step6__promo-subtitle">
+            ¿Dispones de un código promocional? Introdúcelo aquí
+          </p>
+          <div class="peritaje-step6__promo-input-group">
+            <input
+              type="text"
+              class="peritaje-step6__promo-input"
+              [(ngModel)]="codigoPromocional"
+              placeholder="AUTOMAS10"
+            />
+            <button
+              type="button"
+              class="peritaje-step6__promo-btn"
+              (click)="aplicarCodigo()"
+            >
+              Aplicar Código
+            </button>
           </div>
-        }
+        </div>
 
+        <!-- Resumen del pedido -->
+        <div class="peritaje-step6__order-summary">
+          <h3 class="peritaje-step6__order-title">Resumen del pedido</h3>
+          <p class="peritaje-step6__order-date">
+            Fecha de la transacción: {{ getFechaTransaccion() }}
+          </p>
+
+          <table class="peritaje-step6__order-table">
+            <thead>
+              <tr>
+                <th>Servicio</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="peritaje-step6__service-name">
+                    Peritaje {{ getComboNombre() }}
+                  </div>
+                  <div class="peritaje-step6__service-detail">
+                    {{ selectedSede?.nombre }}
+                  </div>
+
+                  <!-- ✅ CAMBIO: Fecha agendada + franja -->
+                  <div class="peritaje-step6__service-date">
+                    {{ getFechaAgendadaConHora() }}
+                  </div>
+                </td>
+                <td>${{ getPrecioActual() | number:'1.0-0' }}</td>
+                <td>1</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="peritaje-step6__order-total">
+            <span class="peritaje-step6__order-total-label">
+              Cantidad total (IVA incluido):
+            </span>
+            <span class="peritaje-step6__order-total-value">
+              ${{ getPrecioActual() | number:'1.0-0' }}
+            </span>
+          </div>
+
+          <label class="peritaje-step6__checkbox">
+            <input
+              type="checkbox"
+              [(ngModel)]="aceptaCondicionesPago"
+            />
+            <span>
+              Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+            </span>
+          </label>
+
+          <button
+            type="button"
+            class="peritaje-step6__btn-pay"
+            [disabled]="!aceptaCondicionesPago || isLoading"
+            (click)="confirmarPago()"
+          >
+            @if (isLoading) {
+              <span class="peritaje-step6__spinner"></span>
+              Procesando...
+            } @else {
+              Confirmar y Pagar
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- Columna derecha: Método de pago + Datos -->
+      <div class="peritaje-step6__right-col">
+        
+        <!-- Método de pago -->
+        <div class="peritaje-step6__payment-method">
+          <h3 class="peritaje-step6__payment-title">Método de pago</h3>
+          <p class="peritaje-step6__payment-subtitle">
+            Elige la pasarela de pago:
+          </p>
+          <div class="peritaje-step6__payment-card">
+            <img
+              src="assets/mercadopago.png"
+              alt="Mercado Pago"
+              class="peritaje-step6__payment-logo"
+            />
+            <span class="peritaje-step6__payment-name">Mercado Pago</span>
+          </div>
+        </div>
+
+        <!-- Datos del cliente -->
+        <div class="peritaje-step6__client-data">
+          <h3 class="peritaje-step6__client-title">Datos del cliente</h3>
+          
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Nombre:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('nombre')?.value }}
+            </span>
+          </div>
+
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Placa:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('placa')?.value }}
+            </span>
+          </div>
+
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Teléfono:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('telefono')?.value }}
+            </span>
+          </div>
+
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Email:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('correo')?.value }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- MOBILE: Sub-pasos -->
+    <div class="peritaje-step6__mobile">
+      
+      <!-- Sub-paso 1: Resumen del pedido -->
+      @if (step6SubStep === 1) {
+        <h2 class="peritaje-step6__title-mobile">Resumen del pedido</h2>
+
+        <div class="peritaje-step6__order-summary-mobile">
+          <p class="peritaje-step6__order-date-mobile">
+            Fecha: {{ getFechaTransaccion() }}
+          </p>
+
+          <div class="peritaje-step6__service-card">
+            <div class="peritaje-step6__service-name">
+              Peritaje {{ getComboNombre() }}
+            </div>
+            <div class="peritaje-step6__service-detail">
+              {{ selectedSede?.nombre }}
+            </div>
+
+            <!-- ✅ CAMBIO: Fecha agendada + franja (en mobile) -->
+            <div class="peritaje-step6__service-date-mobile">
+              {{ getFechaAgendadaConHora() }}
+            </div>
+
+            <div class="peritaje-step6__service-price">
+              ${{ getPrecioActual() | number:'1.0-0' }}
+            </div>
+          </div>
+
+          <div class="peritaje-step6__total-mobile">
+            <span>Total (IVA incluido):</span>
+            <strong>${{ getPrecioActual() | number:'1.0-0' }}</strong>
+          </div>
+        </div>
+
+        <div class="peritaje-step6__actions-mobile">
+          <button
+            type="button"
+            class="peritaje-step6__btn-back-mobile"
+            (click)="goBack()"
+          >
+            ← Volver
+          </button>
+
+          <button
+            type="button"
+            class="peritaje-step6__btn-next-mobile"
+            (click)="advanceToStep6_2()"
+          >
+            Continuar
+          </button>
+        </div>
+      }
+
+      <!-- Sub-paso 2: Método de pago -->
+      @if (step6SubStep === 2) {
+        <h2 class="peritaje-step6__title-mobile">Método de pago</h2>
+
+        <div class="peritaje-step6__payment-card-mobile">
+          <img
+            src="assets/mercadopago.png"
+            alt="Mercado Pago"
+            class="peritaje-step6__payment-logo-mobile"
+          />
+          <span class="peritaje-step6__payment-name-mobile">Mercado Pago</span>
+        </div>
+
+        <div class="peritaje-step6__actions-mobile">
+          <button
+            type="button"
+            class="peritaje-step6__btn-back-mobile"
+            (click)="goBack()"
+          >
+            ← Volver
+          </button>
+
+          <button
+            type="button"
+            class="peritaje-step6__btn-next-mobile"
+            (click)="advanceToStep6_3()"
+          >
+            Continuar
+          </button>
+        </div>
+      }
+
+      <!-- Sub-paso 3: Datos del cliente + Confirmación -->
+      @if (step6SubStep === 3) {
+        <h2 class="peritaje-step6__title-mobile">Datos del cliente</h2>
+
+        <div class="peritaje-step6__client-data-mobile">
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Nombre:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('nombre')?.value }}
+            </span>
+          </div>
+
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Placa:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('placa')?.value }}
+            </span>
+          </div>
+
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Teléfono:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('telefono')?.value }}
+            </span>
+          </div>
+
+          <div class="peritaje-step6__client-item">
+            <span class="peritaje-step6__client-label">Email:</span>
+            <span class="peritaje-step6__client-value">
+              {{ step5Form.get('correo')?.value }}
+            </span>
+          </div>
+        </div>
+
+        <label class="peritaje-step6__checkbox-mobile">
+          <input
+            type="checkbox"
+            [(ngModel)]="aceptaCondicionesPago"
+          />
+          <span>
+            Entiendo qué incluye este servicio y estoy de acuerdo con sus condiciones.
+          </span>
+        </label>
+
+        <div class="peritaje-step6__actions-mobile">
+          <button
+            type="button"
+            class="peritaje-step6__btn-back-mobile"
+            (click)="goBack()"
+          >
+            ← Volver
+          </button>
+
+          <button
+            type="button"
+            class="peritaje-step6__btn-pay-mobile"
+            [disabled]="!aceptaCondicionesPago || isLoading"
+            (click)="confirmarPago()"
+          >
+            @if (isLoading) {
+              <span class="peritaje-step6__spinner"></span>
+              Procesando...
+            } @else {
+              Confirmar y Pagar
+            }
+          </button>
+        </div>
+      }
+
+    </div>
+
+  </div>
+}
         <!-- ========== PASO 7: CONFIRMACIÓN FINAL ========== -->
         @if (currentStep === 7) {
           <div class="peritaje-step7">

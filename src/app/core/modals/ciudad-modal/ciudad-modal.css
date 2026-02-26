@@ -1,0 +1,145 @@
+/* Backdrop */
+.ciudad-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+/* Contenedor principal */
+.ciudad-modal {
+  width: min(980px, 94vw);
+  background: 
+    url('/assets/bg-naranja-patrones.png') center/cover no-repeat,
+    #fa6119;
+  border-radius: 18px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  max-height: 90vh; /* 🔹 limita el alto total */
+  overflow: hidden; /* 🔹 evita que el fondo naranja tenga scroll */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Botón de cierre */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  color: #111;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #00b6c4;
+  color: #fff;
+}
+
+/* Contenido blanco con scroll interno */
+.sheet {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 22px 22px 26px;
+  margin-top: 36px;
+  overflow-y: auto; /* 🔹 Scroll interno */
+  max-height: calc(90vh - 50px);
+  scrollbar-width: thin;
+  scrollbar-color: #00b6c4 #e8e8e8;
+}
+
+/* Scrollbar para navegadores webkit */
+.sheet::-webkit-scrollbar {
+  width: 8px;
+}
+.sheet::-webkit-scrollbar-thumb {
+  background: #00b6c4;
+  border-radius: 6px;
+}
+.sheet::-webkit-scrollbar-track {
+  background: #f2f2f2;
+}
+
+/* Título y subtítulo */
+.titulo {
+  margin: 0 0 4px;
+  font-weight: 800;
+  font-size: clamp(1.25rem, 2.8vw, 1.6rem);
+  color: #111520;
+  text-align: center;
+}
+.sub {
+  text-align: center;
+  color: #444;
+  margin: 0 0 16px;
+}
+
+/* Grid de chips */
+.grid-ciudades {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* Botones */
+.city-chip {
+  background: #fff;
+  color: #111520;
+  border: 1px solid #eee;
+  border-radius: 999px;
+  padding: 0.6rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Hover azul */
+.city-chip:hover {
+  background: #00b6c4;
+  color: #fff;
+  border-color: #00b6c4;
+  box-shadow: 0 6px 16px rgba(0, 182, 196, 0.35);
+}
+
+/* Activo (ciudad actual) */
+.city-chip.active {
+  background: #00b6c4;
+  color: #fff;
+  border-color: #00b6c4;
+  box-shadow: 0 6px 16px rgba(0, 182, 196, 0.35);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .grid-ciudades {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .grid-ciudades {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 420px) {
+  .grid-ciudades {
+    grid-template-columns: 1fr;
+  }
+}

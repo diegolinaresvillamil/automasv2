@@ -1,0 +1,220 @@
+<!-- ============================= -->
+<!-- HERO TRÁMITES -->
+<!-- ============================= -->
+<section class="hero-certimas">
+  <div class="hero-wrap">
+    <div class="hero-text">
+      <h1>
+        ¡Preliquida tus trámites
+        <span class="highlight">sin fila ni estrés!</span>
+      </h1>
+      <p>
+        Agenda en línea y recibe atención personalizada.
+      </p>
+
+      <!-- ✅ ABRE MODAL -->
+      <button
+        type="button"
+        class="btn-video"
+        (click)="abrirAgendarTramites()"
+      >
+        Comenzar Ahora
+        <i class="bi bi-calendar-event"></i>
+      </button>
+    </div>
+
+    <div class="hero-image">
+      <img src="assets/carro-tramites.png" alt="Trámites Vehiculares" />
+    </div>
+  </div>
+</section>
+
+<!-- ============================= -->
+<!-- MODAL AGENDAR TRÁMITES -->
+<!-- ============================= -->
+<app-agendar-tramites
+  [isOpen]="isAgendarTramitesOpen"
+  (close)="cerrarAgendarTramites()"
+></app-agendar-tramites>
+
+<!-- ============================= -->
+<!-- SECCIÓN TRÁMITES -->
+<!-- ============================= -->
+<section class="tramites-section">
+  <h2>¿Qué trámites ofrecemos?</h2>
+
+  <div class="tramites-grid">
+    <div class="tramite-card" *ngFor="let tramite of tramites; let i = index">
+
+      <!-- HEADER (abre/cierra la card) -->
+      <div class="tramite-header" (click)="toggleTramite(i)">
+        <img [src]="tramite.icon" [alt]="tramite.title" class="tramite-icon" />
+        <span>{{ tramite.title }}</span>
+
+        <i
+          class="bi"
+          [ngClass]="{
+            'bi-chevron-up': tramite.open,
+            'bi-chevron-down': !tramite.open
+          }"
+        ></i>
+      </div>
+
+      <!-- CONTENIDO (cuando la card está abierta) -->
+      <div class="tramite-content" *ngIf="tramite.open">
+
+        <!-- ✅ ACORDEÓN: DOCUMENTOS -->
+        <div class="tramite-accordion">
+          <button
+            type="button"
+            class="tramite-accordion__header"
+            (click)="toggleDocs(i); $event.stopPropagation()"
+            [attr.aria-expanded]="tramite.docsOpen"
+          >
+            <span>Documentos</span>
+            <i
+              class="bi"
+              [ngClass]="{
+                'bi-chevron-up': tramite.docsOpen,
+                'bi-chevron-down': !tramite.docsOpen
+              }"
+            ></i>
+          </button>
+
+          <div class="tramite-accordion__body" *ngIf="tramite.docsOpen">
+            <ul>
+              <li *ngFor="let doc of tramite.docs">
+                <i class="bi bi-check-circle-fill"></i>
+                {{ doc }}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ✅ ACORDEÓN: REQUISITOS -->
+        <div class="tramite-accordion">
+          <button
+            type="button"
+            class="tramite-accordion__header"
+            (click)="toggleRequisitos(i); $event.stopPropagation()"
+            [attr.aria-expanded]="tramite.requisitosOpen"
+          >
+            <span>Requisitos</span>
+            <i
+              class="bi"
+              [ngClass]="{
+                'bi-chevron-up': tramite.requisitosOpen,
+                'bi-chevron-down': !tramite.requisitosOpen
+              }"
+            ></i>
+          </button>
+
+          <div class="tramite-accordion__body" *ngIf="tramite.requisitosOpen">
+            <ul>
+              <li *ngFor="let req of tramite.requisitos">
+                <i class="bi bi-check-circle-fill"></i>
+                {{ req }}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ✅ (Opcional) Botón dentro de la card para abrir modal sin scroll -->
+        <!--
+        <div class="tramite-actions">
+          <button
+            type="button"
+            class="btn-comenzar"
+            (click)="abrirAgendarDesdeTramite(tramite); $event.stopPropagation()"
+          >
+            Agendar este trámite
+          </button>
+        </div>
+        -->
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--Sección Agenda-->
+<section class="agenda-section">
+  <h2>¿Por qué agendar con nosotros?</h2>
+
+  <div class="agenda-grid">
+    <div
+      class="agenda-item"
+      *ngFor="let item of beneficios"
+      (mouseenter)="item.hover = true"
+      (mouseleave)="item.hover = false"
+    >
+      <div class="icon-wrapper">
+        <img
+          [src]="item.hover ? item.iconHover : item.icon"
+          [alt]="item.title"
+          class="agenda-icon"
+        />
+      </div>
+      <h3 [innerHTML]="item.title"></h3>
+    </div>
+  </div>
+</section>
+
+<!-- === SECCIÓN AGENDA TU TRÁMITE === -->
+<section class="agenda-pasos">
+  <div class="agenda-blur-layer">
+    <div class="agenda-container">
+      <!-- Columna Izquierda -->
+      <div class="agenda-info">
+        <h2>Agenda tu<br><strong>trámite en 3 pasos</strong></h2>
+
+        <ul class="agenda-list">
+          <li>
+            <span class="agenda-num">1</span>
+            <p>Selecciona el trámite</p>
+          </li>
+          <li>
+            <span class="agenda-num">2</span>
+            <p>Elige fecha y sede</p>
+          </li>
+          <li>
+            <span class="agenda-num">3</span>
+            <p>Recibe confirmación y asistencia</p>
+          </li>
+        </ul>
+
+        <!-- ✅ ABRE MODAL TRÁMITES -->
+        <button type="button" class="agenda-btn" (click)="abrirAgendarTramites()">
+          <span>Comenzar Ahora</span>
+          <i class="bi bi-calendar-event"></i>
+        </button>
+      </div>
+
+      <!-- Columna Derecha -->
+      <div class="agenda-image">
+        <img src="assets/carro-agenda.png" alt="Carro Agenda" />
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ============================= -->
+<!-- SECCIÓN FAQ -->
+<!-- ============================= -->
+<section class="faq-section">
+  <app-faq [items]="faqItems"></app-faq>
+</section>
+
+<!-- ============================= -->
+<!-- SECCIÓN NOTICIAS -->
+<!-- ============================= -->
+<section class="noticias-section">
+  <app-noticias-grid
+    [title]="noticiasTitle"
+    [featured]="noticiaDestacada"
+    [cards]="noticiasCards"
+  >
+  </app-noticias-grid>
+</section>

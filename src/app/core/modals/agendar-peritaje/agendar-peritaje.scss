@@ -1299,7 +1299,7 @@ select.peritaje-step1__input {
   }
 
   &__subtitle {
-    font-size: 1rem;
+    font-size: 1rem!important;
     color: #555;
     margin: 0 0 0.25rem 0;
     text-align: center;
@@ -1310,7 +1310,7 @@ select.peritaje-step1__input {
   }
 
   &__intro {
-    font-size: 0.875rem;
+    font-size: 0.875rem!important;
     color: #666;
     margin: 0 0 1.5rem 0;
     text-align: center;
@@ -1383,7 +1383,7 @@ select.peritaje-step1__input {
   }
 
   &__summary-vehicle {
-    font-size: 0.875rem;
+    font-size: 0.875rem!important;
     color: #555;
     margin: 0 0 1rem 0;
 
@@ -1426,7 +1426,7 @@ select.peritaje-step1__input {
   }
 
   &__summary-note {
-    font-size: 0.8125rem;
+    font-size: 0.8125rem!important;
     color: #555;
     line-height: 1.5;
     margin: 0 0 1rem 0;

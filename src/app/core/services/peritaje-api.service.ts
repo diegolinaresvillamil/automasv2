@@ -42,13 +42,12 @@ export interface HorarioDisponible {
   providedIn: 'root'
 })
 export class PeritajeApiService {
-  private readonly IS_LOCALHOST = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  
+  private readonly IS_LOCALHOST =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
   // ✅ USAR LA MISMA CONFIGURACIÓN QUE RTM
-  private readonly BASE_URL = this.IS_LOCALHOST
-    ? '/rtm-api'
-    : '/api-proxy.php?api=rtm';
-  
+  private readonly BASE_URL = this.IS_LOCALHOST ? '/rtm-api' : '/api-proxy.php?api=rtm';
+
   private readonly TOKEN = '2c632158202204ad6d69a9e0e2735a26268ebc3d';
 
   constructor(private http: HttpClient) {
@@ -59,7 +58,7 @@ export class PeritajeApiService {
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
-      'Authorization': `Token ${this.TOKEN}`,
+      Authorization: `Token ${this.TOKEN}`,
       'Content-Type': 'application/json'
     });
   }
@@ -115,9 +114,11 @@ export class PeritajeApiService {
    * Obtener proveedores/sedes de peritaje
    */
   obtenerProveedores(ciudad: string, serviceId?: string): Observable<any> {
-    let queryParams = `accion=obtener_proveedores&ciudad=${ciudad}&from_flow=peritaje`;
+    const ciudadEnc = encodeURIComponent(ciudad);
+    let queryParams = `accion=obtener_proveedores&ciudad=${ciudadEnc}&from_flow=peritaje`;
+
     if (serviceId) {
-      queryParams += `&services__contains=${serviceId}`;
+      queryParams += `&services__contains=${encodeURIComponent(serviceId)}`;
     }
 
     const url = this.IS_LOCALHOST
@@ -190,6 +191,23 @@ export class PeritajeApiService {
       ...data,
       from_flow: 'peritaje'
     };
+
+    return this.http.post<any>(url, body, { headers: this.getHeaders() });
+  }
+
+  // ========================================
+  // ✅ REGISTRAR PAGO (MISMO ENDPOINT QUE RTM)
+  // ========================================
+  registrarPago(invoiceId: number): Observable<any> {
+    const url = this.IS_LOCALHOST
+      ? `${this.BASE_URL}/wh/transversal/ejecutar-accion/?accion=registrar_pago`
+      : `${this.BASE_URL}&path=wh/transversal/ejecutar-accion/&accion=registrar_pago`;
+
+    const body = { invoice_id: invoiceId };
+
+    console.log('💳 [PERITAJE API] Registrando pago...');
+    console.log('💳 [PERITAJE API] Invoice ID:', invoiceId);
+    console.log('💳 [PERITAJE API] URL:', url);
 
     return this.http.post<any>(url, body, { headers: this.getHeaders() });
   }

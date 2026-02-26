@@ -1,0 +1,86 @@
+<div class="peritaje-page">
+<app-cta-agendamiento-peritaje></app-cta-agendamiento-peritaje>
+</div>
+
+
+<!-- SECCIÓN IMPORTANCIA -->
+<section class="importancia-section fullwidth">
+  <div class="image-side">
+    <img src="/assets/carro-peritaje.png" alt="Vehículo AutoMás" />
+  </div>
+
+  <div class="content-side">
+    <span class="tag">Asegura tu Inversión</span>
+    <h2>
+      La Compra Inteligente  <br />
+      Comienza con el Peritaje
+    </h2>
+
+    <ul class="benefits">
+      <li>
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <strong>Diagnóstico Experto, Inspección 360°</strong><br />
+          Evaluamos meticulosamente la estructura, motor y componentes vitales para determinar el estado real del vehículo.
+        </div>
+      </li>
+
+      <li>
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <strong>Transparencia Total, Historial y Legalidad Verificados</strong><br />
+          Consultamos antecedentes y revisamos documentos a fondo para confirmar la procedencia y legalidad del vehículo.
+        </div>
+      </li>
+
+      <li>
+        <i class="bi bi-check-circle-fill"></i>
+        <div>
+          <strong>Poder de Decisión    </strong><br />
+          Compra o Venta con Respaldo. Recibe la información técnica que necesitas para negociar con confianza y evitar cualquier riesgo o sorpresa futura.
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+
+<!-- SECCIÓN CERTIMÁS -->
+<section class="certimas-section text-center py-5">
+
+  <!-- Caja Naranja -->
+  <div class="certimas-box mx-auto p-4 p-md-5 position-relative overflow-visible">
+    <div class="row align-items-center justify-content-between">
+
+      <!-- Texto -->
+      <div class="col-12 col-md-6 text-white text-md-start mb-4 mb-md-0">
+        <h2 class="fw-bold mb-2">¡Solo con tu placa!</h2>
+        <p class="mb-4">
+          Consulta el mejor servicio para<br> tu vehículo
+        </p>
+
+        <div class="d-flex flex-wrap gap-3">
+          <button class="btn btn-outline-light compra-btn">Compra Ahora</button>
+        </div>
+      </div>
+
+      <!-- Imagen -->
+      <div class="col-12 col-md-6 text-center position-relative">
+        <img src="/assets/vehiculos.png" alt="Vehiculos" class="img-fluid certimas-img" />
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<app-faq
+  [title]="'Preguntas Frecuentes'"
+  [items]="faqItems"
+  [multiple]="false">
+</app-faq>
+
+<app-noticias-grid
+  [title]="noticiasTitle"
+  [featured]="noticiaDestacada"
+  [cards]="noticiasCards">
+</app-noticias-grid>

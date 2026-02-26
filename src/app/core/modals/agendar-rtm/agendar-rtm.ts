@@ -938,32 +938,30 @@ export class AgendarRtmComponent {
     });
   }
 
-  finalizarAgendamiento(): void {
-    console.log('✅ [Agendar RTM] Finalizando agendamiento desde paso 4');
-    
-    this.step5Form.patchValue({
-      placa: this.form.get('placa')?.value,
-      nombre: this.form.get('nombre')?.value,
-      telefono: this.form.get('telefono')?.value,
-      tipoDocumento: this.form.get('tipoDocumento')?.value,
-      numeroDocumento: this.form.get('numeroDocumento')?.value
-    });
-    
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const year = tomorrow.getFullYear();
-    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-    const day = String(tomorrow.getDate()).padStart(2, '0');
-    const fechaInicial = `${year}-${month}-${day}`;
-    
-    console.log('📅 [Agendar RTM] Estableciendo fecha inicial:', fechaInicial);
-    this.step5Form.patchValue({ fechaRevision: fechaInicial });
-    
-    this.cargarHorariosDisponibles(fechaInicial);
-    
-    this.currentStep = 5;
-    this.step5SubStep = 1;
-  }
+finalizarAgendamiento(): void {
+  console.log('✅ [Agendar RTM] Finalizando agendamiento desde paso 4');
+
+  this.step5Form.patchValue({
+    placa: this.form.get('placa')?.value,
+    nombre: this.form.get('nombre')?.value,
+    telefono: this.form.get('telefono')?.value,
+    tipoDocumento: this.form.get('tipoDocumento')?.value,
+    numeroDocumento: this.form.get('numeroDocumento')?.value
+  });
+
+  // ✅ IMPORTANTE: NO preseleccionar fecha ni cargar horarios automáticamente
+  // (Los horarios se cargarán cuando el usuario elija una fecha)
+  this.step5Form.patchValue(
+    { fechaRevision: '', horaRevision: '' },
+    { emitEvent: false }
+  );
+
+  this.horariosDisponibles = [];
+  this.isLoadingHorarios = false;
+
+  this.currentStep = 5;
+  this.step5SubStep = 1;
+}
 
   // ========================================
   // PASO 5: FORMULARIO FINAL
@@ -1286,13 +1284,12 @@ export class AgendarRtmComponent {
   // ========================================
   // HELPERS
   // ========================================
-  getTodayDate(): string {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
+getTodayDate(): string {
+  const now = new Date();
+  // Ajusta a zona horaria local para evitar que se vaya al día siguiente por UTC
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10); // YYYY-MM-DD
+}
 
   getFechaTransaccion(): string {
     const fecha = this.step5Form.get('fechaRevision')?.value;
@@ -1319,4 +1316,57 @@ export class AgendarRtmComponent {
   openConditions(): void {
     alert('Condiciones del servicio...');
   }
+
+getNombreServicioCompleto(): string {
+  const base = 'Revisión Técnico-Mecánica';
+
+  // ✅ Tipo de vehículo desde RUNT (clase del vehículo)
+  const claseRaw =
+    (this.datosRunt?.clase_vehiculo || this.vehicleData.clasificacion || '').toString().trim();
+
+  const claseUpper = claseRaw.toUpperCase();
+
+  let tipoVehiculo = '';
+  if (claseUpper.includes('MOTO')) tipoVehiculo = 'moto';
+  else if (
+    claseUpper.includes('CAMION') ||
+    claseUpper.includes('CAMIÓN') ||
+    claseUpper.includes('BUS') ||
+    claseUpper.includes('TRACTO') ||
+    claseUpper.includes('VOLQUETA') ||
+    claseUpper.includes('MAQUINARIA') ||
+    claseUpper.includes('PESADO')
+  ) {
+    tipoVehiculo = 'vehículo pesado';
+  } else if (claseRaw) {
+    tipoVehiculo = 'vehículo liviano';
+  }
+
+  // ✅ Tipo de servicio desde RUNT (Particular / Público / etc)
+  const tipoServicio =
+    (this.datosRunt?.tipo_servicio ||
+      (this as any)?.cotizacionData?.tipoServicioNombre ||
+      (this as any)?.cotizacionData?.tipoServicio ||
+      this.vehicleData.tipoServicio ||
+      '').toString().trim();
+
+  // ✅ Año / modelo (en tu código year lo estás llenando con data.modelo)
+  const anio =
+    (this.vehicleData.year || '').toString().trim() ||
+    (this.datosRunt?.modelo || '').toString().trim();
+
+  // ✅ Combustible desde RUNT
+  const tipoCombustible =
+    (this.datosRunt?.tipo_combustible || this.vehicleData.tipoCombustible || '').toString().trim();
+
+  const partes = [
+    base,
+    tipoVehiculo,
+    tipoServicio ? tipoServicio.toLowerCase() : '',
+    anio ? `año ${anio}` : '',
+    tipoCombustible ? tipoCombustible.toLowerCase() : '',
+  ].filter(Boolean);
+
+  return partes.join(' ');
+}
 }

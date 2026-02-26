@@ -1,0 +1,21 @@
+<div class="faq-container">
+  <h2>{{ title }}</h2>
+
+  <div
+    class="faq-item"
+    *ngFor="let item of items; let i = index"
+    [class.open]="isOpen(i)"
+  >
+    <div class="faq-question" (click)="toggle(i)">
+      <span>{{ item.question }}</span>
+      <i
+        class="bi faq-icon"
+        [ngClass]="isOpen(i) ? 'bi-chevron-up' : 'bi-chevron-down'"
+      ></i>
+    </div>
+
+    <div class="faq-answer" *ngIf="isOpen(i)">
+      {{ item.answer }}
+    </div>
+  </div>
+</div>

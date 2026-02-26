@@ -1,0 +1,24 @@
+<div class="ciudad-backdrop" *ngIf="open()" (click)="onBackdropClick($event)">
+  <div class="ciudad-modal">
+    <!-- Botón de cierre -->
+    <button class="close-btn" (click)="close()">×</button>
+
+    <!-- Contenedor de contenido -->
+    <div class="sheet scrollable">
+      <h3 class="titulo">Elige tu ciudad</h3>
+      <p class="sub">
+        Selecciona tu ciudad para personalizar la experiencia.
+      </p>
+
+      <div class="grid-ciudades">
+        <button
+          *ngFor="let c of ciudades"
+          class="city-chip"
+          [class.active]="isActive(c)"
+          (click)="go(c.slug)">
+          {{ c.nombre }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

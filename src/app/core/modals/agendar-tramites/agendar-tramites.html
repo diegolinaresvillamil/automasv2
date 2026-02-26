@@ -828,7 +828,7 @@
                             Preliquidación Trámite Vehicular
                           </div>
                           <div class="tramites-step4__service-detail">
-                            Preliquidación Trámites Vehiculares
+                            {{ getNombreServicioResumen() }}
                           </div>
                           <div class="tramites-step4__service-date">
                             {{ getFechaTransaccion() }}
@@ -948,7 +948,7 @@
                       Preliquidación Trámite Vehicular
                     </div>
                     <div class="tramites-step4__service-detail">
-                      {{ getSelectedTramiteName() }}
+                      {{ getNombreServicioResumen() }}
                     </div>
                     <div class="tramites-step4__service-price">
                       ${{ getPrecioTramite().toLocaleString('es-CO') }}

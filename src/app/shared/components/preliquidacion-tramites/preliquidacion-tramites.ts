@@ -8,7 +8,6 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-// ✅ IMPORTAR LA MODAL AQUÍ
 import { AgendarTramitesComponent } from '../../../core/modals/agendar-tramites/agendar-tramites';
 
 export type PreliqCard = {
@@ -22,7 +21,7 @@ export type PreliqCard = {
 @Component({
   selector: 'app-preliquidacion-tramites',
   standalone: true,
-  imports: [CommonModule, AgendarTramitesComponent], // ✅ AGREGAR AQUÍ
+  imports: [CommonModule, AgendarTramitesComponent],
   templateUrl: './preliquidacion-tramites.html',
   styleUrl: './preliquidacion-tramites.scss',
 })
@@ -36,13 +35,17 @@ export class PreliquidacionTramitesComponent
 
   @Input({ required: true }) cards: PreliqCard[] = [];
 
-  /** Autoplay (solo tiene sentido en móvil) */
+  /**
+   * Autoplay (solo tiene sentido en móvil)
+   * Si quieres que en móvil sea MANUAL, deja autoplay=true pero activa disableAutoplayOnMobile=true (default).
+   */
   @Input() autoplay = true;
   @Input() autoplayMs = 6000;
 
-  // ✅ VARIABLE PARA CONTROLAR LA MODAL
-  isTramitesModalOpen = false;
+  /** ✅ Por defecto, en móvil NO hacemos autoplay (manual). */
+  @Input() disableAutoplayOnMobile = true;
 
+  isTramitesModalOpen = false;
   isMobile = false;
 
   @ViewChild('track', { static: false })
@@ -52,7 +55,6 @@ export class PreliquidacionTramitesComponent
   private resumeTimer: number | null = null;
 
   private onResize = () => {
-    // ✅ async para evitar NG0100
     setTimeout(() => {
       const next = window.matchMedia('(max-width: 576px)').matches;
       const changed = next !== this.isMobile;
@@ -63,7 +65,7 @@ export class PreliquidacionTramitesComponent
         this.stopAutoplay();
       }
 
-      // si cambia a móvil, reanudamos autoplay (si aplica)
+      // si cambia a móvil, reanudamos autoplay solo si está permitido
       if (changed && this.isMobile) {
         this.startAutoplay();
       }
@@ -71,7 +73,6 @@ export class PreliquidacionTramitesComponent
   };
 
   ngOnInit(): void {
-    // ✅ antes del primer render
     this.isMobile = window.matchMedia('(max-width: 576px)').matches;
     window.addEventListener('resize', this.onResize);
   }
@@ -79,7 +80,7 @@ export class PreliquidacionTramitesComponent
   ngAfterViewInit(): void {
     this.bindUserInteractionPause();
 
-    // ✅ autoplay solo en móvil y async para no disparar NG0100
+    // ✅ autoplay solo en móvil (y solo si no está deshabilitado)
     setTimeout(() => this.startAutoplay(), 0);
   }
 
@@ -89,14 +90,12 @@ export class PreliquidacionTramitesComponent
     this.clearResumeTimer();
   }
 
-  // ✅ MÉTODO PARA ABRIR LA MODAL
   openTramitesModal(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
     this.isTramitesModalOpen = true;
   }
 
-  // ✅ MÉTODO PARA CERRAR LA MODAL
   closeTramitesModal(): void {
     this.isTramitesModalOpen = false;
   }
@@ -113,6 +112,10 @@ export class PreliquidacionTramitesComponent
     this.scrollToIndex(this.getNextIndex());
   }
 
+  /**
+   * ✅ CLAVE: NO usar scrollIntoView (puede disparar scroll vertical de la página).
+   * En su lugar, movemos SOLO el scroll horizontal del track.
+   */
   scrollToIndex(index: number): void {
     const track = this.trackRef?.nativeElement;
     if (!track) return;
@@ -123,13 +126,14 @@ export class PreliquidacionTramitesComponent
     const el = items[index];
     if (!el) return;
 
-    el.scrollIntoView({
+    // Calcula el left relativo al track (solo eje X)
+    const left = el.offsetLeft - track.offsetLeft;
+
+    track.scrollTo({
+      left,
       behavior: 'smooth',
-      inline: 'start',
-      block: 'nearest',
     });
 
-    // ✅ async para evitar NG0100 si cambia en medio del render
     setTimeout(() => {
       this.activeIndex = index;
     }, 0);
@@ -149,6 +153,7 @@ export class PreliquidacionTramitesComponent
   /** ===== Autoplay ===== */
   private startAutoplay(): void {
     if (!this.isMobile) return;
+    if (this.disableAutoplayOnMobile) return; // ✅ manual en móvil
     if (!this.autoplay || this.cards.length <= 1) return;
 
     this.stopAutoplay();
@@ -168,6 +173,7 @@ export class PreliquidacionTramitesComponent
 
   private pauseAndResume(): void {
     if (!this.isMobile) return;
+    if (this.disableAutoplayOnMobile) return; // ✅ si es manual, no hacemos nada
 
     this.stopAutoplay();
     this.clearResumeTimer();
@@ -239,7 +245,6 @@ export class PreliquidacionTramitesComponent
       }
     });
 
-    // ✅ async para evitar NG0100
     setTimeout(() => {
       this.activeIndex = bestIdx;
     }, 0);

@@ -1,0 +1,448 @@
+.peritaje-page {
+    margin-top: -140px;
+    padding-top: 100px;
+    background-color: #00C2C4;
+}
+
+
+/* ===============================
+   SECCIÓN: IMPORTANCIA TECNOMECÁNICA (AJUSTE IMAGEN IZQ)
+   =============================== */
+
+.importancia-section.fullwidth {
+  display: grid;
+  grid-template-columns: minmax(480px, 1.1fr) minmax(480px, 1fr);
+  align-items: center;
+  gap: clamp(24px, 3vw, 64px);
+  width: 100%;
+  background: #fff;
+  color: #000;
+  overflow: hidden;
+  padding: clamp(60px, 6vw, 120px) 0;
+}
+
+/* === IMAGEN IZQUIERDA PEGADA === */
+.image-side {
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  order: 1;
+}
+
+.image-side img {
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  object-fit: contain;
+  margin-left: 0 !important;
+  transform: translateX(-3%);
+}
+
+/* === CONTENIDO DERECHO === */
+.content-side {
+  padding: 0 clamp(16px, 3vw, 48px);
+  order: 2;
+}
+
+/* TAG / BADGE */
+.content-side .tag {
+  display: inline-block;
+  background: #ff671f;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+/* TÍTULO PRINCIPAL */
+.content-side h2 {
+  font-weight: 800;
+  color: #000;
+  line-height: 1.25;
+  font-size: 48px;
+  margin-bottom: 40px;
+}
+
+/* LISTA DE BENEFICIOS */
+.benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* 🔹 antes 28px → reduce separación vertical entre bullets */
+}
+
+.benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.benefits i {
+  color: #ff671f;
+  font-size: 2.2rem;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.benefits div {
+  line-height: 1.4;
+  color: #333;
+  max-width: 40ch;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+/* 🔧 AJUSTE ESPACIO ENTRE TÍTULO Y DESCRIPCIÓN */
+.benefits strong {
+  display: block;
+  color: #000;
+  font-size: 38px;
+  font-weight: 600;
+  margin-bottom: 1px; /* 🔹 antes 4px → reduce espacio */
+  line-height: 1!Important;   /* 🔹 compacta el texto verticalmente */
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+
+@media (max-width: 1400px) {
+  .image-side img {
+    max-width: 620px;
+    transform: translateX(-2%);
+  }
+}
+
+/* TABLETS Y CELULARES: contenido primero, imagen después */
+@media (max-width: 1200px) {
+  .importancia-section.fullwidth {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "content"
+      "image";
+    padding: clamp(50px, 6vw, 90px) 0;
+    text-align: center;
+  }
+
+  .content-side {
+    order: 1;
+  }
+
+  .image-side {
+    order: 2;
+    justify-content: flex-start !important;
+    align-self: flex-start;
+    width: 100%;
+  }
+
+  .image-side img {
+    width: 90%;
+    max-width: 520px;
+    transform: translateX(-3%) !important;
+    margin: 40px 0 0 0 !important;
+  }
+
+  .benefits {
+    text-align: left;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .content-side h2 {
+    font-size: 40px;
+  }
+
+  .benefits strong {
+    font-size: 32px;
+  }
+
+  .benefits div {
+    font-size: 20px;
+  }
+}
+
+/* MÓVILES MEDIANOS */
+@media (max-width: 768px) {
+  .content-side h2 {
+    font-size: 32px;
+  }
+
+  .content-side .tag {
+    font-size: 16px;
+  }
+
+  .benefits strong {
+    font-size: 26px;
+  }
+
+  .benefits div {
+    font-size: 18px;
+  }
+
+  .image-side img {
+    width: 100%;
+    max-width: 420px;
+    transform: translateX(-3%) !important;
+  }
+}
+
+/* MÓVILES PEQUEÑOS */
+@media (max-width: 480px) {
+  .content-side h2 {
+    font-size: 28px;
+  }
+
+  .benefits strong {
+    font-size: 22px;
+  }
+
+  .benefits div {
+    font-size: 16px;
+  }
+
+  .image-side img {
+    max-width: 340px;
+    width: 100%;
+    transform: translateX(-3%) !important;
+  }
+}
+
+
+/* ============================== */
+/* SECCIÓN CERTIMÁS */
+/* ============================== */
+
+.certimas-section {
+  background-color: #fff;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 120px;
+  font-family: 'Urbanist', sans-serif;
+}
+
+/* === LOGO === */
+.certimas-logo {
+  margin-bottom: 120px; /* ⬆️ Mayor espacio frente al contenedor naranja */
+}
+
+.certimas-logo img {
+  width: 420px;
+  max-width: 95%;
+}
+
+/* === CAJA NARANJA PRINCIPAL === */
+.certimas-box {
+  background-color: #ff671f;
+  border-radius: 25px;
+  max-width: 1300px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+  margin-bottom: 100px;
+  padding: 80px 60px;
+}
+
+/* === IMAGEN CELULARES === */
+.certimas-img {
+  position: absolute;
+  bottom: -200px;
+  right: -100px;
+  z-index: 1;
+  width: 48vw; /* ✅ Se adapta al ancho de la pantalla */
+  max-width: 750px; /* límite máximo para pantallas grandes */
+  min-width: 400px; /* evita que se haga muy pequeña */
+  transition: width 0.4s ease;
+}
+
+/* === TEXTO === */
+.certimas-box h2 {
+  font-size: 3rem; /* 48px */
+  font-weight: 600; /* Semibold */
+  margin-bottom: 15px;
+}
+
+.certimas-box p {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 400; /* Regular */
+  line-height: 1.5;
+  margin-bottom: 35px;
+  max-width: 600px;
+}
+
+/* === BOTONES === */
+.play-btn,
+.compra-btn {
+  font-size: 1.56rem; /* 25px */
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+/* --- Botón play --- */
+.play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff;
+  color: #ff671f;
+  border: none;
+  padding: 8px 18px 8px 12px;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.play-btn i {
+  font-size: 2.3rem;
+  line-height: 1;
+}
+
+.play-btn:hover {
+  background-color: #ffe8df;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* --- Botón compra --- */
+.compra-btn {
+  background: #fff;
+  color: #ff671f;
+  border: 2px solid #fff;
+  padding: 10px 26px;
+}
+
+.compra-btn:hover {
+  background-color: #fff;
+  color: #ff671f;
+  transform: translateY(-3px);
+}
+
+/* === MODAL VIDEO === */
+.video-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 9999;
+}
+
+.video-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.video-content {
+  position: relative;
+  width: 90%;
+  max-width: 800px;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeIn 0.4s ease;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  z-index: 10;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 1200px) {
+  .certimas-img {
+    width: 55vw;
+    bottom: -160px;
+    right: -60px;
+  }
+}
+
+@media (max-width: 992px) {
+  .certimas-box {
+    text-align: center;
+    padding: 60px 30px;
+  }
+
+  .certimas-img {
+    position: relative;
+    right: 0;
+    bottom: 0;
+    transform: rotate(0);
+    width: 80vw;
+    max-width: 500px;
+    margin-top: 40px;
+  }
+
+  .play-btn,
+  .compra-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .certimas-logo {
+    margin-bottom: 60px;
+  }
+
+  .certimas-logo img {
+    width: 320px;
+  }
+
+  .certimas-box h2 {
+    font-size: 2.4rem;
+  }
+
+  .certimas-box p {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .certimas-box {
+    padding: 40px 20px;
+  }
+
+  .certimas-box h2 {
+    font-size: 2rem;
+  }
+
+  .certimas-box p {
+    font-size: 1.1rem;
+  }
+
+  .certimas-img {
+    width: 90vw;
+  }
+
+  .play-btn,
+  .compra-btn {
+    font-size: 1.2rem;
+  }
+}

@@ -425,6 +425,7 @@
                             type="text"
                             class="sedes-step5__input"
                             formControlName="placa"
+                            placeholder="ABC123"
                           />
                           @if (step5Form.get('placa')?.touched && step5Form.get('placa')?.invalid) {
                             <span class="sedes-step5__error">La placa es obligatoria</span>
@@ -432,11 +433,12 @@
                         </div>
 
                         <div class="sedes-step5__field">
-                          <label class="sedes-step5__label">Nombre</label>
+                          <label class="sedes-step5__label">Nombre Completo</label>
                           <input
                             type="text"
                             class="sedes-step5__input"
                             formControlName="nombre"
+                            placeholder="Nombres y Apellidos"
                           />
                           @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
                             <span class="sedes-step5__error">El nombre es obligatorio</span>
@@ -446,12 +448,13 @@
 
                       <div class="sedes-step5__field-row">
                         <div class="sedes-step5__field">
-                          <label class="sedes-step5__label">Teléfono</label>
+                          <label class="sedes-step5__label">Teléfono Celular</label>
                           <input
                             type="tel"
                             class="sedes-step5__input"
                             formControlName="telefono"
                             inputmode="numeric"
+                            placeholder="321 123 3214"
                           />
                           @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
                             <span class="sedes-step5__error">Teléfono inválido (10 dígitos)</span>
@@ -474,7 +477,7 @@
 
                       <div class="sedes-step5__field-row">
                         <div class="sedes-step5__field">
-                          <label class="sedes-step5__label">Tipo de documento</label>
+                          <label class="sedes-step5__label">Tipo de documento del propietario</label>
                           <select class="sedes-step5__input" formControlName="tipoDocumento">
                             @for (t of docTypes; track t.value) {
                               <option [value]="t.value">{{ t.label }}</option>
@@ -483,11 +486,12 @@
                         </div>
 
                         <div class="sedes-step5__field">
-                          <label class="sedes-step5__label">Documento</label>
+                          <label class="sedes-step5__label">Documento del propietario</label>
                           <input
                             type="text"
                             class="sedes-step5__input"
                             formControlName="numeroDocumento"
+                            placeholder="Ej 1234567890"
                           />
                           @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
                             <span class="sedes-step5__error">Documento inválido</span>
@@ -590,6 +594,7 @@
                           type="text"
                           class="sedes-step5__input"
                           formControlName="placa"
+                          placeholder="ABC123"
                         />
                         @if (step5Form.get('placa')?.touched && step5Form.get('placa')?.invalid) {
                           <span class="sedes-step5__error">La placa es obligatoria</span>
@@ -602,6 +607,7 @@
                           type="text"
                           class="sedes-step5__input"
                           formControlName="nombre"
+                          placeholder="Nombre Completo"
                         />
                         @if (step5Form.get('nombre')?.touched && step5Form.get('nombre')?.invalid) {
                           <span class="sedes-step5__error">El nombre es obligatorio</span>
@@ -617,6 +623,7 @@
                           class="sedes-step5__input"
                           formControlName="telefono"
                           inputmode="numeric"
+                          placeholder="321 123 3214"
                         />
                         @if (step5Form.get('telefono')?.touched && step5Form.get('telefono')?.invalid) {
                           <span class="sedes-step5__error">Teléfono inválido (10 dígitos)</span>
@@ -639,7 +646,7 @@
 
                     <div class="sedes-step5__field-row">
                       <div class="sedes-step5__field">
-                        <label class="sedes-step5__label">Tipo de documento</label>
+                        <label class="sedes-step5__label">Tipo de documento del propietario</label>
                         <select class="sedes-step5__input" formControlName="tipoDocumento">
                           @for (t of docTypes; track t.value) {
                             <option [value]="t.value">{{ t.label }}</option>
@@ -648,11 +655,12 @@
                       </div>
 
                       <div class="sedes-step5__field">
-                        <label class="sedes-step5__label">Documento</label>
+                        <label class="sedes-step5__label">Número de Documento del propietario</label>
                         <input
                           type="text"
                           class="sedes-step5__input"
                           formControlName="numeroDocumento"
+                          placeholder="Ej 321 123 1234"
                         />
                         @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
                           <span class="sedes-step5__error">Documento inválido</span>

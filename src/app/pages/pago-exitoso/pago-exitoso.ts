@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+
+import { RtmApiService } from '../../core/services/rtm-api.service';
+import { PeritajeApiService } from '../../core/services/peritaje-api.service';
 
 interface DatosReserva {
   tipo?: 'rtm' | 'peritaje' | 'tramites';
@@ -14,6 +16,8 @@ interface DatosReserva {
   placa?: string;
 }
 
+const LS_TRAMITES_RESUMEN = 'tramites_resumen';
+
 @Component({
   selector: 'app-pago-exitoso',
   standalone: true,
@@ -24,10 +28,9 @@ interface DatosReserva {
 export class PagoExitosoComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private http = inject(HttpClient);
 
-  // URL del proxy
-  private readonly API_PROXY = '/api-proxy.php';
+  private rtmApi = inject(RtmApiService);
+  private peritajeApi = inject(PeritajeApiService);
 
   // Signals para datos reactivos
   codigoReserva = signal<string>('');
@@ -44,21 +47,21 @@ export class PagoExitosoComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('🎉 Página de pago exitoso cargada');
-    
-    // Obtener parámetros de la URL
-    this.route.queryParams.subscribe(params => {
+
+    this.route.queryParams.subscribe((params) => {
       console.log('📦 Query params recibidos:', params);
-      
-      const pagoId = params['payment_id'] || 
-                     params['pago_id'] || 
-                     params['external_reference'] || 
-                     params['collection_id'];
-      
+
+      const pagoId =
+        params['payment_id'] ||
+        params['pago_id'] ||
+        params['external_reference'] ||
+        params['collection_id'];
+
       if (pagoId && pagoId !== 'null') {
-        this.procesarPagoExitoso(pagoId);
+        this.procesarPagoExitoso(String(pagoId));
       } else {
         console.warn('⚠️ No se recibió payment_id');
-        this.cargarDatosReserva();
+        this.cargarDatosReserva(); // fallback
       }
     });
 
@@ -66,33 +69,91 @@ export class PagoExitosoComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * 🔎 Intenta recuperar la reserva:
+   * 1) ultima_reserva (como hoy)
+   * 2) tramites_resumen (nuevo fallback)
+   */
+  private getReservaFromStorage(pagoId: string): DatosReserva | null {
+    // 1) ultima_reserva (prioridad, no rompemos RTM/Peritaje)
+    try {
+      const reservaStr = localStorage.getItem('ultima_reserva');
+      if (reservaStr) {
+        const reserva = JSON.parse(reservaStr) as DatosReserva;
+        if (reserva && typeof reserva === 'object') return reserva;
+      }
+    } catch (e) {
+      console.warn('⚠️ ultima_reserva corrupta, se ignora', e);
+    }
+
+    // 2) fallback trámites
+    try {
+      const raw = localStorage.getItem(LS_TRAMITES_RESUMEN);
+      if (!raw) return null;
+
+      const data = JSON.parse(raw);
+      const invoiceIdRaw = data?.invoice_id ?? null;
+      const invoiceId = invoiceIdRaw !== null ? Number(invoiceIdRaw) : undefined;
+
+      const precioRaw = data?.precio ?? data?.valor ?? data?.total ?? null;
+      const monto = precioRaw !== null ? Number(precioRaw) : 0;
+
+      const fecha = (data?.fecha || '').toString().trim();
+      const franja = (data?.franja || '').toString().trim();
+      const fechaFormateada = fecha && franja ? `${fecha} - ${franja}` : (fecha || '');
+
+      const reservaTramites: DatosReserva = {
+        tipo: 'tramites',
+        invoiceId: Number.isFinite(invoiceId as number) ? (invoiceId as number) : undefined,
+        codeBooking: (data?.codeBooking || data?.agendamiento_id || '').toString(),
+        monto: Number.isFinite(monto) ? monto : 0,
+        nombreServicio: (data?.servicio_api || data?.tramite_ui || 'Trámite Vehicular').toString(),
+        sede: (data?.sede || '').toString(),
+        fecha: fechaFormateada,
+        placa: (data?.placa || '').toString(),
+      };
+
+      return reservaTramites;
+    } catch (e) {
+      console.warn('⚠️ tramites_resumen corrupto, se ignora', e);
+    }
+
+    return null;
+  }
+
+  /**
    * Procesar el pago exitoso y registrar en backend
    */
   private procesarPagoExitoso(pagoId: string): void {
     try {
-      const reservaStr = localStorage.getItem('ultima_reserva');
-      
-      if (!reservaStr) {
-        console.warn('⚠️ No hay datos de reserva en localStorage');
+      const reserva = this.getReservaFromStorage(pagoId);
+
+      if (!reserva) {
+        console.warn('⚠️ No hay datos de reserva en localStorage (ultima_reserva / tramites_resumen)');
         this.valoresPorDefecto(pagoId);
         return;
       }
 
-      const reserva: DatosReserva = JSON.parse(reservaStr);
       console.log('📄 Datos de la reserva:', reserva);
 
       // Detectar tipo de servicio
       this.tipoServicio = reserva.tipo || 'rtm';
-      
-      // Cargar datos comunes
-      this.precioServicio.set(reserva.monto || 0);
-      this.cantidadTotal.set(reserva.monto || 0);
+
+      // Montos
+      const monto = Number(reserva.monto || 0);
+
+      // Cargar datos UI
+      this.precioServicio.set(monto);
+      this.cantidadTotal.set(monto);
       this.cantidad.set(1);
+
+      // Código
       this.codigoReserva.set(reserva.codeBooking || pagoId.substring(0, 10).toUpperCase());
+
+      // Extras
       this.sedeNombre.set(reserva.sede || '');
       this.fechaCita.set(reserva.fecha || '');
 
-      // Nombre del servicio según tipo
+      // Nombre real del servicio (si viene desde el flow)
       this.nombreServicio.set(this.obtenerNombreServicio(reserva));
 
       console.log('✅ Tipo de servicio:', this.tipoServicio);
@@ -102,14 +163,13 @@ export class PagoExitosoComponent implements OnInit, OnDestroy {
         codigoReserva: this.codigoReserva()
       });
 
-      // Registrar pago en backend
+      // Registrar pago en backend (según tipo)
       const invoiceId = reserva.invoiceId;
       if (invoiceId) {
         this.registrarPagoEnBackend(invoiceId);
       } else {
-        console.warn('⚠️ No se encontró invoice_id para registrar el pago');
+        console.warn('⚠️ No se encontró invoiceId para registrar el pago');
       }
-
     } catch (error) {
       console.error('❌ Error al procesar pago:', error);
       this.valoresPorDefecto(pagoId);
@@ -120,8 +180,8 @@ export class PagoExitosoComponent implements OnInit, OnDestroy {
    * Obtener nombre del servicio según tipo
    */
   private obtenerNombreServicio(reserva: DatosReserva): string {
-    if (reserva.nombreServicio) {
-      return reserva.nombreServicio;
+    if (reserva.nombreServicio && reserva.nombreServicio.trim()) {
+      return reserva.nombreServicio.trim();
     }
 
     switch (this.tipoServicio) {
@@ -136,15 +196,19 @@ export class PagoExitosoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Registrar el pago en el backend
+   * Registrar el pago en el backend (elige API según tipo)
+   * ✅ Peritaje usa PeritajeApi
+   * ✅ RTM y Trámites usan RTM (transversal registrar_pago)
    */
   private registrarPagoEnBackend(invoiceId: number): void {
-    console.log('💳 Registrando pago para invoice_id:', invoiceId);
+    console.log('💳 Registrando pago para invoiceId:', invoiceId, 'tipo:', this.tipoServicio);
 
-    const body = { invoice_id: invoiceId };
-    const url = `${this.API_PROXY}?api=rtm&path=wh/transversal/ejecutar-accion/&accion=registrar_pago`;
+    const obs =
+      this.tipoServicio === 'peritaje'
+        ? this.peritajeApi.registrarPago(invoiceId)
+        : this.rtmApi.registrarPago(invoiceId);
 
-    this.http.post(url, body).subscribe({
+    obs.subscribe({
       next: (response) => {
         console.log('✅ Pago registrado exitosamente:', response);
       },
@@ -164,20 +228,28 @@ export class PagoExitosoComponent implements OnInit, OnDestroy {
     this.cantidad.set(1);
     this.codigoReserva.set(pagoId.substring(0, 10).toUpperCase());
     this.nombreServicio.set('Servicio');
+    this.sedeNombre.set('');
+    this.fechaCita.set('');
   }
 
   /**
-   * Cargar datos de la reserva desde localStorage
+   * Cargar datos de la reserva desde localStorage (fallback)
    */
   private cargarDatosReserva(): void {
     try {
-      const reservaStr = localStorage.getItem('ultima_reserva');
-      if (reservaStr) {
-        const reserva: DatosReserva = JSON.parse(reservaStr);
-        this.sedeNombre.set(reserva.sede || '');
-        this.fechaCita.set(reserva.fecha || '');
-        this.codigoReserva.set(reserva.codeBooking || '');
-      }
+      const reserva = this.getReservaFromStorage('');
+      if (!reserva) return;
+
+      this.tipoServicio = reserva.tipo || 'rtm';
+
+      const monto = Number(reserva.monto || 0);
+      this.precioServicio.set(monto);
+      this.cantidadTotal.set(monto);
+
+      this.sedeNombre.set(reserva.sede || '');
+      this.fechaCita.set(reserva.fecha || '');
+      this.codigoReserva.set(reserva.codeBooking || '');
+      this.nombreServicio.set(this.obtenerNombreServicio(reserva));
     } catch (error) {
       console.warn('⚠️ No se pudieron cargar datos de la reserva');
     }
@@ -190,43 +262,28 @@ export class PagoExitosoComponent implements OnInit, OnDestroy {
     this.intervalo = setInterval(() => {
       const segundos = this.segundosRestantes() - 1;
       this.segundosRestantes.set(segundos);
-      
+
       if (segundos <= 0) {
         this.volverAlSitio();
       }
     }, 1000);
   }
 
-  /**
-   * Volver al sitio web
-   */
   volverAlSitio(): void {
-    if (this.intervalo) {
-      clearInterval(this.intervalo);
-    }
+    if (this.intervalo) clearInterval(this.intervalo);
     this.router.navigate(['/']);
   }
 
-  /**
-   * Imprimir factura
-   */
   imprimirFactura(): void {
     window.print();
   }
 
-  /**
-   * Realizar otro agendamiento
-   */
   reservarOtraCita(): void {
-    if (this.intervalo) {
-      clearInterval(this.intervalo);
-    }
+    if (this.intervalo) clearInterval(this.intervalo);
     this.router.navigate(['/']);
   }
 
   ngOnDestroy(): void {
-    if (this.intervalo) {
-      clearInterval(this.intervalo);
-    }
+    if (this.intervalo) clearInterval(this.intervalo);
   }
 }
