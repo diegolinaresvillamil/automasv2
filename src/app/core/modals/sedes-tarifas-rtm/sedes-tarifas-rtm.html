@@ -132,16 +132,16 @@
               }
 
               <!-- BOTÓN CONTINUAR -->
-              <div class="sedes-step4__actions">
-                <button
-                  type="button"
-                  class="sedes-step4__btn-next"
-                  [disabled]="!canAdvanceStep4_1()"
-                  (click)="advanceToStep4_2()"
-                >
-                  Continuar
-                </button>
-              </div>
+<div class="sedes-step4__actions">
+  <button
+    type="button"
+    class="sedes-step4__btn-next"
+    [disabled]="!canAdvanceStep4_1() || isLoadingSedes"
+    (click)="advanceToStep4_2()"
+  >
+    {{ isLoadingSedes ? 'Cargando sedes...' : 'Continuar' }}
+  </button>
+</div>
 
               <button 
                 type="button" 
@@ -492,6 +492,7 @@
                             class="sedes-step5__input"
                             formControlName="numeroDocumento"
                             placeholder="Ej 1234567890"
+                            inputmode="numeric"
                           />
                           @if (step5Form.get('numeroDocumento')?.touched && step5Form.get('numeroDocumento')?.invalid) {
                             <span class="sedes-step5__error">Documento inválido</span>
@@ -768,7 +769,7 @@
                             Revisión Técnico-Mecánica
                           </div>
                           <div class="sedes-step6__service-detail">
-                            {{ selectedSede?.nombre }}
+                            {{ getServicioLabelPago() }}
                           </div>
                           <div class="sedes-step6__service-date">
                             {{ getFechaTransaccion() }}
@@ -888,7 +889,7 @@
                       Revisión Técnico-Mecánica
                     </div>
                     <div class="sedes-step6__service-detail">
-                      {{ selectedSede?.nombre }}
+                      {{ getServicioLabelPago() }}
                     </div>
                     <div class="sedes-step6__service-price">
                       ${{ precioReal | number:'1.0-0' }}

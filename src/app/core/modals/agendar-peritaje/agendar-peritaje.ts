@@ -35,10 +35,17 @@ interface DocType {
   label: string;
 }
 
+interface ComboAccordionItem {
+  titulo: string;
+  items: string[];
+}
+
+type ComboDetailItem = string | ComboAccordionItem;
+
 interface ComboDescription {
   titulo: string;
   descripcion: string;
-  items: string[];
+  items: ComboDetailItem[];
 }
 
 interface VehiculoData {
@@ -72,6 +79,7 @@ interface Sede {
   // ✅ extras para UI (NO afectan back)
   fotoUrl?: string;
   mapEmbedUrl?: string;
+  rawNombre?: string;
 }
 
 interface Servicio {
@@ -115,6 +123,12 @@ export class AgendarPeritajeComponent {
   step5SubStep = 1;
   step6SubStep = 1;
 
+  // ✅ acordeón combos
+  comboAccordionOpenKeys = new Set<string>();
+
+  // ✅ mapa label -> raw de horario
+  private horarioRawByLabel = new Map<string, string>();
+
   // =============================
   // ✅ FORMS
   // =============================
@@ -145,6 +159,7 @@ export class AgendarPeritajeComponent {
   ciudades: Ciudad[] = [];
   selectedCiudad: string = '';
   userLocation: { lat: number; lng: number } | null = null;
+  locationDetected = false;
 
   sedes: Sede[] = [];
   sedesPaginadas: Sede[] = [];
@@ -192,6 +207,7 @@ export class AgendarPeritajeComponent {
 
   selectTab(tab: ComboId): void {
     this.selectedTab = tab;
+    this.resetAccordionForCurrentCombo();
     console.log('🧭 [PERITAJE] Tab seleccionada:', tab, 'Precio:', this.getPrecioActual());
     this.cdr.markForCheck();
   }
@@ -243,6 +259,7 @@ export class AgendarPeritajeComponent {
   pagoId: string | null = null;
   paymentLink: string | null = null;
   paymentPreferenceId: string | null = null;
+  codeBooking = '';
 
   constructor() {
     this.form = this.fb.group({
@@ -268,7 +285,7 @@ export class AgendarPeritajeComponent {
       numeroDocumento: ['', Validators.required],
       correoResultado: ['', [Validators.required, Validators.email]],
       nombreResultado: ['', Validators.required],
-      direccionServicio: [''], // ✅ se vuelve required solo si es domicilio
+      direccionServicio: [''],
       aceptaTerminos: [false, Validators.requiredTrue],
     });
 
@@ -304,25 +321,131 @@ export class AgendarPeritajeComponent {
     return helpers[tipo] || '';
   }
 
-  /** ✅ Para pintar el nombre REAL del servicio (API) donde lo necesites */
   getNombreServicioSeleccionado(): string {
     return this.selectedService?.nombre || `Peritaje ${this.getComboNombre()}`;
   }
 
-  /** ✅ Para pintar un resumen completo tipo: "Servicio ... - Sede ... - dd/mm/yyyy - franja" */
-  getResumenServicioParaPago(): string {
-    const servicio = (this.selectedService?.nombre || '').trim();
-    const sede = (this.selectedSede?.nombre || '').trim();
-    const fecha = this.fechaAgenda
-      ? `${String(this.fechaAgenda.day).padStart(2, '0')}/${String(this.fechaAgenda.month).padStart(2, '0')}/${this.fechaAgenda.year}`
-      : '';
-    const franja = (this.step5Form?.value?.horaRevision || '').toString().trim();
+  // =============================
+  // ✅ NUEVO: helpers para enriquecer label con datos del RUNT
+  // =============================
+  private getTipoVehiculoRuntLabel(): string {
+    const categoria = this.determinarCategoriaVehiculo();
 
-    const parts = [servicio, sede, fecha, franja].filter((p) => !!p);
-    return parts.join(' - ');
+    if (categoria === 'ELECTRICOS O HIBRIDOS') {
+      const combustible = (this.vehiculoData.tipo_combustible || '').toUpperCase();
+      const hasGas = combustible.includes('GAS');
+      const hasElec = combustible.includes('ELEC') || combustible.includes('ELÉC');
+      const hasHibr = combustible.includes('HIBR') || combustible.includes('HÍBR');
+
+      if ((hasGas && hasElec) || hasHibr) return 'Liviano Híbrido';
+      if (hasElec) return 'Liviano Eléctrico';
+      return 'Eléctrico o Híbrido';
+    }
+
+    if (categoria === 'VEHICULOS PESADOS') return 'Vehículo Pesado';
+    if (categoria === 'MOTOCICLETAS SUPERBIKE') return 'Motocicleta Superbike';
+    if (categoria === 'MOTOCICLETAS URBANA') return 'Motocicleta Urbana';
+
+    return 'Vehículo Liviano';
   }
 
-  // ✅ NUEVO: fecha agendada + hora (para mostrar en el resumen de pago)
+  private getServicioTipoCombustibleLabel(): string {
+    return (this.vehiculoData.tipo_combustible || '').toString().trim();
+  }
+
+  private getServicioClaseVehiculoLabel(): string {
+    return (this.vehiculoData.clase_vehiculo || '').toString().trim();
+  }
+
+  private getServicioTipoServicioLabel(): string {
+    return (this.vehiculoData.tipo_servicio || '').toString().trim();
+  }
+
+  private getServicioModeloLabel(): string {
+    return (this.vehiculoData.modelo || '').toString().trim();
+  }
+
+  private getServicioLabelData(): any {
+    const direccion = (this.step5Form?.get('direccionServicio')?.value || '').toString().trim();
+
+    return {
+      ...(this.agendamientoResponse || {}),
+      servicio: this.getNombreServicioSeleccionado(),
+      sede: (this.selectedSede?.nombre || '').trim(),
+      placa: (this.vehiculoData.placa || '').trim(),
+      direccion,
+      ciudad: (this.selectedCiudad || '').trim(),
+      fecha: this.fechaAgenda
+        ? `${String(this.fechaAgenda.day).padStart(2, '0')}/${String(this.fechaAgenda.month).padStart(2, '0')}/${this.fechaAgenda.year}`
+        : '',
+      franja: (this.step5Form?.value?.horaRevision || '').toString().trim(),
+      tipoVehiculo: this.getTipoVehiculoRuntLabel(),
+      tipoCombustible: this.getServicioTipoCombustibleLabel(),
+      claseVehiculo: this.getServicioClaseVehiculoLabel(),
+      tipoServicio: this.getServicioTipoServicioLabel(),
+      modelo: this.getServicioModeloLabel(),
+      codeBooking: (
+        this.codeBooking ||
+        this.agendamientoResponse?.codeBooking ||
+        this.agendamientoResponse?.codigo_reserva ||
+        this.agendamientoResponse?.booking_code ||
+        this.agendamientoResponse?.data?.codeBooking ||
+        ''
+      )
+        .toString()
+        .trim(),
+    };
+  }
+
+  private construirServicioLabel(data: any): string {
+    const servicio = (data?.servicio || this.getNombreServicioSeleccionado() || '').toString().trim();
+    const sede = (data?.sede || '').toString().trim();
+    const placa = (data?.placa || '').toString().trim();
+    const direccion = (data?.direccion || '').toString().trim();
+    const ciudad = (data?.ciudad || '').toString().trim();
+    const fecha = (data?.fecha || '').toString().trim();
+    const franja = (data?.franja || '').toString().trim();
+    const tipoVehiculo = (data?.tipoVehiculo || '').toString().trim();
+    const tipoCombustible = (data?.tipoCombustible || '').toString().trim();
+    const tipoServicio = (data?.tipoServicio || '').toString().trim();
+    const modelo = (data?.modelo || '').toString().trim();
+    const codeBooking = (data?.codeBooking || this.codeBooking || '').toString().trim();
+
+    const parts: string[] = [servicio];
+
+    if (tipoVehiculo) parts.push(tipoVehiculo);
+    if (tipoServicio) parts.push(tipoServicio);
+    if (tipoCombustible) parts.push(tipoCombustible);
+    if (modelo) parts.push(modelo);
+
+    if (this.esServicioADomicilio) {
+      if (ciudad) parts.push(ciudad);
+      if (placa) parts.push(`placa ${placa}`);
+      if (direccion) parts.push(direccion);
+      if (fecha) parts.push(fecha);
+      if (franja) parts.push(franja);
+      if (codeBooking) parts.push(`(Reserva número ${codeBooking})`);
+    } else {
+      if (sede) parts.push(sede);
+      if (placa) parts.push(`placa ${placa}`);
+      if (fecha) parts.push(fecha);
+      if (franja) parts.push(franja);
+      if (codeBooking) parts.push(`(Reserva número ${codeBooking})`);
+    }
+
+    return parts.filter(Boolean).join(' ');
+  }
+
+  getResumenServicioParaPago(): string {
+    const data = this.getServicioLabelData();
+    return this.construirServicioLabel(data);
+  }
+
+  getServicioLabelPago(): string {
+    const data = this.getServicioLabelData();
+    return this.construirServicioLabel(data);
+  }
+
   getFechaAgendadaConHora(): string {
     const fecha = this.fechaAgenda
       ? `${String(this.fechaAgenda.day).padStart(2, '0')}/${String(this.fechaAgenda.month).padStart(2, '0')}/${this.fechaAgenda.year}`
@@ -371,7 +494,7 @@ export class AgendarPeritajeComponent {
   }
 
   // =============================
-  // ✅ NORMALIZADORES PARA API (CLAVE)
+  // ✅ NORMALIZADORES PARA API
   // =============================
   private getTipoCombustibleParaApi(): string {
     const raw = (this.vehiculoData.tipo_combustible || '').toString().trim().toUpperCase();
@@ -380,25 +503,32 @@ export class AgendarPeritajeComponent {
     const hasElec = raw.includes('ELEC') || raw.includes('ELÉC');
     const hasHibr = raw.includes('HIBR') || raw.includes('HÍBR');
 
-    // ✅ pedido: híbrido se manda como eléctrico
-    if ((hasGas && hasElec) || hasHibr) return 'ELECTRICO';
+    if ((hasGas && hasElec) || hasHibr) return 'HIBRIDO';
     if (hasElec) return 'ELECTRICO';
     if (raw.includes('DIE')) return 'DIESEL';
 
     return 'GASOLINA';
   }
 
-  /** ✅ Segmento SOLO UI para motos (imagen/copy), NO para API */
+  private esHibridoLiviano(): boolean {
+    const raw = (this.vehiculoData.tipo_combustible || '').toString().trim().toUpperCase();
+    const hasGas = raw.includes('GAS');
+    const hasElec = raw.includes('ELEC') || raw.includes('ELÉC');
+    const hasHibr = raw.includes('HIBR') || raw.includes('HÍBR');
+
+    return !this.esVehiculoPesado() && !this.esMoto() && ((hasGas && hasElec) || hasHibr);
+  }
+
+  private esMoto(): boolean {
+    const clase = (this.vehiculoData.clase_vehiculo || '').toString().trim().toUpperCase();
+    return clase.includes('MOTOCICLETA') || clase.includes('MOTO');
+  }
+
   private getMotoSegmentoUi(): 'URBANA' | 'SUPERBIKE' {
     const cil = Number(this.vehiculoData.cilindraje || 0);
     return cil >= 230 ? 'SUPERBIKE' : 'URBANA';
   }
 
-  /**
-   * ✅ API PRESENCIAL:
-   * - Motos SIEMPRE deben ir como "MOTOCICLETA" (no "MOTOCICLETA URBANA")
-   * - Lo demás se manda como clase normal
-   */
   private getClaseVehiculoParaApiPresencial(): string {
     const clase = (this.vehiculoData.clase_vehiculo || '').toString().trim().toUpperCase();
 
@@ -409,11 +539,6 @@ export class AgendarPeritajeComponent {
     return clase || 'VEHICULO';
   }
 
-  /**
-   * ✅ API DOMICILIO:
-   * - Primero intenta con "MOTOCICLETA"
-   * - Fallback a URBANA/SUPERBIKE por cilindraje
-   */
   private getClasesVehiculoParaApiDomicilioConFallback(): string[] {
     const clase = (this.vehiculoData.clase_vehiculo || '').toString().trim().toUpperCase();
 
@@ -427,9 +552,15 @@ export class AgendarPeritajeComponent {
   }
 
   private esVehiculoPesado(): boolean {
-    const clase = (this.vehiculoData.clase_vehiculo || '').toUpperCase();
+    const clase = (this.vehiculoData.clase_vehiculo || '').toUpperCase().trim();
+
+    if (clase.includes('CAMIONETA')) return false;
+    if (clase.includes('AUTOMOVIL') || clase.includes('AUTOMÓVIL')) return false;
+    if (clase.includes('CAMPERO')) return false;
+
     return (
-      clase.includes('CAMION') ||
+      clase === 'CAMION' ||
+      clase.includes('CAMIÓN') ||
       clase.includes('BUS') ||
       clase.includes('VOLQUETA') ||
       clase.includes('TRACTOCAMION') ||
@@ -456,17 +587,14 @@ export class AgendarPeritajeComponent {
     if (!descripcion) return '';
     const texto = this.stripHtml(descripcion);
 
-    // 1) si viene explícito como "Dirección:"
     const dirMatch = texto.match(/Direcci[oó]n\s*:\s*([^@]+?)(?=(\s*@|$))/i);
     if (dirMatch?.[1]) return dirMatch[1].trim();
 
-    // 2) regex de dirección colombiana común
     const regex =
       /(Calle|Carrera|Cll|Cra|Kr|Av|Avenida|Diagonal|Transversal|Dg|DG|Dgl)\s*\.?\s*[\w\d]+\s*(sur|norte)?\s*#\s*[\w\d]+\s*-\s*[\w\d]+/i;
     const match = texto.match(regex);
     if (match?.[0]) return match[0].trim();
 
-    // 3) formato tipo "Dg 13 # 69-16" sin calle/carrera detectada
     const alt = texto.match(/\b(Dg|DG|Diagonal)\s*\d+\s*#\s*\d+\s*-\s*\d+\b/i);
     if (alt?.[0]) return alt[0].trim();
 
@@ -477,11 +605,9 @@ export class AgendarPeritajeComponent {
     if (!descripcion) return '';
     const texto = this.stripHtml(descripcion);
 
-    // 1) "Horarios: .... @Dirección:"
     const match = texto.match(/Horarios?\s*:\s*([^@]+?)(?=(\s*@|$))/i);
     if (match?.[1]) return match[1].trim();
 
-    // 2) fallback si hay "Lunes..." etc
     const regexHorario = /(Lunes.*?)(?=(\s*@|$))/i;
     const m2 = texto.match(regexHorario);
     if (m2?.[1]) return m2[1].trim();
@@ -498,11 +624,11 @@ export class AgendarPeritajeComponent {
   }
 
   // =============================
-  // ✅ MAP URL (coords o dirección) + FALLBACK FOTO (PC)
+  // ✅ MAP URL
   // =============================
   private isValidCoord(v: any): boolean {
     const n = Number(v);
-    return Number.isFinite(n) && Math.abs(n) > 0.0001; // evita 0,0
+    return Number.isFinite(n) && Math.abs(n) > 0.0001;
   }
 
   getSedeMapEmbedUrl(sede: Sede): SafeResourceUrl | null {
@@ -514,12 +640,43 @@ export class AgendarPeritajeComponent {
       return this.sanitizeUrl(`https://www.google.com/maps?q=${q}&output=embed`);
     }
 
-    // ✅ fallback: buscar por dirección/nombre (para que NO se quede en blanco en PC)
     const base = (sede.direccion || '').trim() || (sede.nombre || '').trim();
     if (!base) return null;
 
     const q = encodeURIComponent(`${base}, ${this.selectedCiudad}, Colombia`);
     return this.sanitizeUrl(`https://www.google.com/maps?q=${q}&output=embed`);
+  }
+
+  // =============================
+  // ✅ ACORDEÓN
+  // =============================
+  isAccordionItem(item: ComboDetailItem): item is ComboAccordionItem {
+    return typeof item !== 'string' && !!item?.titulo && Array.isArray(item?.items);
+  }
+
+  getComboItemTrackKey(item: ComboDetailItem, index: number): string {
+    if (this.isAccordionItem(item)) return `${this.selectedTab}-acc-${item.titulo}-${index}`;
+    return `${this.selectedTab}-txt-${item}-${index}`;
+  }
+
+  toggleComboAccordion(item: ComboDetailItem, index: number): void {
+    if (!this.isAccordionItem(item)) return;
+
+    const key = this.getComboItemTrackKey(item, index);
+    if (this.comboAccordionOpenKeys.has(key)) {
+      this.comboAccordionOpenKeys.delete(key);
+    } else {
+      this.comboAccordionOpenKeys.add(key);
+    }
+  }
+
+  isComboAccordionOpen(item: ComboDetailItem, index: number): boolean {
+    if (!this.isAccordionItem(item)) return false;
+    return this.comboAccordionOpenKeys.has(this.getComboItemTrackKey(item, index));
+  }
+
+  private resetAccordionForCurrentCombo(): void {
+    this.comboAccordionOpenKeys.clear();
   }
 
   // =============================
@@ -600,8 +757,6 @@ export class AgendarPeritajeComponent {
       servicios_por_placa: true,
       placa: this.vehiculoData.placa,
       cliente: 'pagina_web',
-
-      // ✅ NORMALIZADOS
       tipo_combustible: this.getTipoCombustibleParaApi(),
       modelo: this.vehiculoData.modelo,
       tipo_servicio: this.vehiculoData.tipo_servicio,
@@ -628,6 +783,24 @@ export class AgendarPeritajeComponent {
       },
       error: (err) => {
         console.error('❌ Error al obtener servicios presenciales:', err);
+
+        if (this.esHibridoLiviano()) {
+          console.warn('⚠️ [PERITAJE] Aplicando fallback híbrido manual 490000.');
+
+          this.serviciosPresenciales = [
+            {
+              id: 8,
+              name: 'Combo Diamante Para Vehículo Híbrido Liviano',
+              price: 490000,
+              description: 'Combo Diamante Para Vehículo Híbrido Liviano',
+            },
+          ];
+
+          this.procesarTabsYPrecios();
+          this.consultarServiciosADomicilio();
+          return;
+        }
+
         this.isLoading = false;
         alert('Error al consultar servicios disponibles.');
       },
@@ -637,7 +810,17 @@ export class AgendarPeritajeComponent {
   private consultarServiciosADomicilio(): void {
     console.log('🏙️ [PERITAJE] Ciudad para domicilio:', this.selectedCiudad);
 
-    // ✅ Pesados NO tienen domicilio
+    if (this.esHibridoLiviano()) {
+      console.log('🚫 [PERITAJE] Vehículo híbrido liviano: se omite domicilio.');
+      this.precios.domicilio = 0;
+      this.serviciosADomicilio = [];
+      this.isLoading = false;
+      this.currentStep = 2;
+      this.step2SubStep = 1;
+      this.ensureSelectedTabValida();
+      return;
+    }
+
     if (this.esVehiculoPesado()) {
       console.log('🚫 [PERITAJE] Vehículo pesado: se omite domicilio.');
       this.precios.domicilio = 0;
@@ -649,7 +832,6 @@ export class AgendarPeritajeComponent {
       return;
     }
 
-    // ✅ Solo Bogotá y Cali
     if (this.selectedCiudad !== 'Bogotá' && this.selectedCiudad !== 'Cali') {
       console.log('🚫 [PERITAJE] Domicilio NO aplica para ciudad:', this.selectedCiudad);
       this.precios.domicilio = 0;
@@ -671,7 +853,6 @@ export class AgendarPeritajeComponent {
         servicios_por_placa: true,
         placa: this.vehiculoData.placa,
         cliente: 'pagina_web',
-
         tipo_combustible: this.getTipoCombustibleParaApi(),
         modelo: this.vehiculoData.modelo,
         tipo_servicio: this.vehiculoData.tipo_servicio,
@@ -693,7 +874,6 @@ export class AgendarPeritajeComponent {
             }))
           );
 
-          // Si vino vacío y hay fallback, probamos el siguiente
           if ((!data || !data.length) && idx + 1 < clasesTry.length) {
             return intentar(idx + 1);
           }
@@ -762,6 +942,7 @@ export class AgendarPeritajeComponent {
     if (!tabs.includes(this.selectedTab)) {
       this.selectedTab = tabs[0];
     }
+    this.resetAccordionForCurrentCombo();
     this.cdr.markForCheck();
   }
 
@@ -780,15 +961,11 @@ export class AgendarPeritajeComponent {
     return imgSet[key] || imgSet['plata'] || 'assets/peritaje-liviano-plata.png';
   }
 
-  // ✅ NUEVO: normaliza el nombre del servicio para que el HTML NO duplique "Peritaje"
   private normalizeComboLabelFromServiceName(nombreServicio: string): string {
     const raw = (nombreServicio || '').toString().trim();
     if (!raw) return '';
 
-    // Quita "Peritaje" al inicio si viene (case-insensitive)
     let cleaned = raw.replace(/^\s*peritaje\s*/i, '').trim();
-
-    // Quita separadores iniciales si quedaran
     cleaned = cleaned.replace(/^[-–—:|]+/g, '').trim();
 
     return cleaned;
@@ -808,58 +985,460 @@ export class AgendarPeritajeComponent {
   }
 
   getComboDescription(): ComboDescription {
-    if (this.selectedTab === 'domicilio') {
-      return {
-        titulo: 'Peritaje a domicilio incluye:',
-        descripcion: 'Realizamos el peritaje donde lo necesites (según cobertura).',
-        items: [
-          'Agendamiento y atención a domicilio',
-          'Inspección y verificación completa',
-          'Entrega de resultado según el servicio',
-        ],
-      };
-    }
+    const descriptions: Record<string, Record<ComboId, ComboDescription>> = {
+      'VEHICULOS LIVIANOS': {
+        diamante: {
+          titulo: 'Combo Diamante',
+          descripcion: 'El Combo Diamante para Vehículos Livianos a Gasolina incluye:',
+          items: [
+            {
+              titulo: 'Estructura y Carrocería',
+              items: [
+                'Verificación de chasis',
+                'Verificación de carrocería',
+                'Verificación de accesorios de confort',
+                'Partes bajas (frenos, dirección, transmisión, suspensión, escape)',
+                'Fugas mecánicas',
+                'Estado de tapicería',
+                'Estimación de vida útil de las llantas',
+              ],
+            },
+            {
+              titulo: 'Prueba de Motor',
+              items: [
+                'Medición del desgaste en el motor',
+                'Verificación de reparaciones',
+                'Análisis de emisiones de humo',
+                'Revisión de fluidos (aceite motor, refrigerante, hidráulico)',
+                'Verificación de componentes externos del motor (correa de accesorios, depósitos, tapas, carcasas)',
+                'Verificación visual del arnés eléctrico',
+                'Verificación adaptaciones no originales (adaptación a gas, headders, turbo, filtro de alto flujo)',
+                'Análisis de batería',
+              ],
+            },
+            {
+              titulo: 'Improntas y Antecedentes (LTA)',
+              items: [
+                'Toma improntas',
+                'Originalidad de sistemas de identificación (N motor, N chasis, N serie)',
+                'Antecedentes judiciales',
+                'Reporte de siniestros',
+              ],
+            },
+            {
+              titulo: 'CertiMás Basic',
+              items: [
+                'Verificación de datos del vehículo (N chasis, N motor, N serie, color, cilindraje, Regrabación de Sistemas de identificación autorizadas)',
+                'Limitaciones a la propiedad (reclamaciones. embargos, restricciones)',
+                'Prendas (pignoraciones)',
+                'Info SOAT',
+                'Histórico de propietarios',
+                'Info RTM',
+                'Solicitudes organismo de tránsito (traspasos, cambios de color, traslado de cuenta, cambio de tipo de servicio, etc)',
+              ],
+            },
+            {
+              titulo: 'Diagnóstico Scanner',
+              items: [
+                'Verificación de códigos de fallas (averías presentes actualmente en el funcionamiento del vehículo)',
+                'histórico de averías(averías anteriores en el funcionamiento del vehículo)',
+              ],
+            },
+            {
+              titulo: 'Prueba de Ruta',
+              items: [
+                'Verificación de funcionamiento de la caja de velocidades',
+                'Verificación de funcionamiento de tracción 4×4 (si aplica)',
+                'Verificación de funcionamiento sistema de dirección',
+                'Verificación de funcionamiento motor',
+                'Detección de ruidos anormales',
+                'Detección de vibraciones anormales',
+              ],
+            },
+          ],
+        },
+        oro: {
+          titulo: 'Combo Oro',
+          descripcion: 'El Combo Oro para Vehículos Livianos incluye:',
+          items: [
+            {
+              titulo: 'Estructura y Carrocería',
+              items: [
+                'Verificación de chasis',
+                'Verificación de carrocería',
+                'Verificación de accesorios de confort',
+                'Partes bajas (frenos, dirección, transmisión, suspensión, escape)',
+                'Fugas mecánicas',
+                'Estado de tapicería',
+                'Estimación de vida útil de las llantas',
+              ],
+            },
+            {
+              titulo: 'Prueba de Motor',
+              items: [
+                'Medición del desgaste en el motor',
+                'Verificación de reparaciones',
+                'Análisis de emisiones de humo',
+                'Revisión de fluidos (aceite motor, refrigerante, hidráulico)',
+                'Verificación de componentes externos del motor (correa de accesorios, depósitos, tapas, carcasas)',
+                'Verificación visual del arnés eléctrico',
+                'Verificación adaptaciones no originales (adaptación a gas, headders, turbo, filtro de alto flujo)',
+                'Análisis de batería',
+              ],
+            },
+            {
+              titulo: 'Improntas y Antecedentes',
+              items: [
+                'Toma improntas',
+                'Originalidad de sistemas de identificación (N motor, N chasis, N serie)',
+                'Antecedentes judiciales',
+                'Reporte de siniestros',
+              ],
+            },
+            {
+              titulo: 'CertiMás Basic',
+              items: [
+                'Verificación de datos del vehículo (N chasis, N motor, N serie, color, cilindraje, Regrabación de Sistemas de identificación autorizadas)',
+                'Limitaciones a la propiedad (reclamaciones. embargos, restricciones)',
+                'Prendas (pignoraciones)',
+                'Info SOAT',
+                'Histórico de propietarios',
+                'Info RTM',
+                'Solicitudes organismo de tránsito (traspasos, cambios de color, traslado de cuenta, cambio de tipo de servicio, etc)',
+              ],
+            },
+            {
+              titulo: 'Diagnóstico escáner',
+              items: [
+                'Verificación de códigos de fallas (averías presentes actualmente en el funcionamiento del vehículo)',
+                'histórico de averías(averías anteriores en el funcionamiento del vehículo)',
+              ],
+            },
+          ],
+        },
+        plata: {
+          titulo: 'Combo Plata',
+          descripcion: 'El Combo Plata para Vehículos Livianos incluye:',
+          items: [
+            {
+              titulo: 'Estructura y Carrocería',
+              items: [
+                'Verificación de chasis',
+                'Verificación de carrocería',
+                'Verificación de accesorios de confort',
+                'Partes bajas (frenos, dirección, transmisión, suspensión, escape)',
+                'Fugas mecánicas',
+                'Estado de tapicería',
+                'Estimación de vida útil de las llantas',
+              ],
+            },
+            {
+              titulo: 'Improntas y Antecedentes (LTA)',
+              items: [
+                'Toma y validación de improntas',
+                'Originalidad de sistemas de identificación (N motor, N chasis, N serie)',
+                'Antecedentes judiciales',
+                'Reporte de siniestros',
+              ],
+            },
+            {
+              titulo: 'CertiMás Basic',
+              items: [
+                'Verificación de datos del vehículo (N chasis, N motor, N serie, color, cilindraje, Regrabación de Sistemas de identificación autorizadas)',
+                'Limitaciones a la propiedad (reclamaciones. embargos, restricciones)',
+                'Prendas (pignoraciones)',
+                'Info SOAT',
+                'Histórico de propietarios',
+                'Info RTM',
+                'Solicitudes organismo de tránsito (traspasos, cambios de color, traslado de cuenta, cambio de tipo de servicio, etc)',
+              ],
+            },
+          ],
+        },
+        domicilio: {
+          titulo: 'Combo A Domicilio',
+          descripcion:
+            'El Peritaje a Domicilio para Vehículos Livianos (Gasolina y Diésel) incluye:',
+          items: [
+            {
+              titulo: 'Estructura y Carrocería',
+              items: [
+                'Verificación de chasis',
+                'Verificación de carrocería',
+                'Verificación de accesorios de confort',
+                'Partes bajas (frenos, dirección, transmisión, suspensión, escape)',
+                'Fugas mecánicas',
+                'Estado de tapicería',
+                'Estimación de vida útil de las llantas',
+              ],
+            },
+            {
+              titulo: 'Prueba de Motor',
+              items: [
+                'Medición del desgaste en el motor',
+                'Verificación de reparaciones',
+                'Análisis de emisiones de humo',
+                'Revisión de fluidos (aceite motor, refrigerante, hidráulico)',
+                'Verificación de componentes externos del motor (correa de accesorios, depósitos, tapas, carcasas)',
+                'Verificación visual del arnés eléctrico',
+                'Verificación adaptaciones no originales (adaptación a gas, headders, turbo, filtro de alto flujo)',
+                'Análisis de batería',
+              ],
+            },
+            {
+              titulo: 'Improntas y Antecedentes',
+              items: [
+                'Toma improntas',
+                'Originalidad de sistemas de identificación (N motor, N chasis, N serie)',
+                'Antecedentes judiciales',
+                'Reporte de siniestros',
+              ],
+            },
+            {
+              titulo: 'CertiMás Basic',
+              items: [
+                'Verificación de datos del vehículo (N chasis, N motor, N serie, color, cilindraje, Regrabación de Sistemas de identificación autorizadas)',
+                'Limitaciones a la propiedad (reclamaciones. embargos, restricciones)',
+                'Prendas (pignoraciones)',
+                'Info SOAT',
+                'Histórico de propietarios',
+                'Info RTM',
+                'Solicitudes organismo de tránsito (traspasos, cambios de color, traslado de cuenta, cambio de tipo de servicio, etc)',
+              ],
+            },
+            {
+              titulo: 'Diagnóstico escáner',
+              items: [
+                'Verificación de códigos de fallas (averías presentes actualmente en el funcionamiento del vehículo)',
+                'histórico de averías(averías anteriores en el funcionamiento del vehículo)',
+              ],
+            },
+          ],
+        },
+      },
 
-    const descriptions: Record<string, ComboDescription> = {
-      plata: {
-        titulo: 'El Combo Plata incluye:',
-        descripcion: 'Inspección básica y certificado de peritaje.',
-        items: ['Estructura y Carrocería', 'Improntas y Antecedentes (LTA)', 'Prueba de Motor', 'CertiMás Basic'],
+      'VEHICULOS PESADOS': {
+        diamante: {
+          titulo: 'Combo Diamante',
+          descripcion: '',
+          items: [],
+        },
+        oro: {
+          titulo: 'Combo Oro',
+          descripcion: 'El Combo Oro para Vehículo Pesado incluye:',
+          items: [
+            'Estructura y Chasis Vehículo Pesado',
+            'Improntas y Antecedentes (LTA)',
+            'CertiMás Basic',
+            'Valor Fasecolda',
+            'Prueba Turbo',
+            'Prueba de Batería',
+            'Consulta de siniestros',
+            'Valor Mercado',
+            'Prueba de Gases',
+            'Prueba de Motor',
+            'Adaptaciones Chasis',
+          ],
+        },
+        plata: {
+          titulo: 'Combo Plata',
+          descripcion: 'El Combo Plata para Vehículos Pesados incluye:',
+          items: ['Estructura y Chasis', 'Improntas y Antecedentes (LTA)', 'CertiMás Basic'],
+        },
+        domicilio: {
+          titulo: 'Combo A domicilio',
+          descripcion: '',
+          items: [],
+        },
       },
-      oro: {
-        titulo: 'El Combo Oro incluye:',
-        descripcion: 'Inspección completa con diagnóstico avanzado.',
-        items: [
-          'Estructura y Carrocería',
-          'Improntas y Antecedentes (LTA)',
-          'Prueba de Motor',
-          'CertiMás Basic',
-          'Diagnóstico Scanner',
-        ],
+
+      'MOTOCICLETAS URBANA': {
+        diamante: {
+          titulo: 'Combo Diamante',
+          descripcion: '',
+          items: [],
+        },
+        oro: {
+          titulo: 'Combo Oro',
+          descripcion:
+            'Combo Oro Motocicleta Urbana (Cilindraje inferior o igual a 229 C.C) incluye:',
+          items: [
+            'Estructura y Carrocería',
+            'Prueba de Motor',
+            'Improntas y Antecedentes (LTA)',
+            'CertiMás Basic',
+            'Histórico de propietarios',
+            'Comparendos e Impuestos',
+            'Análisis de gases',
+            'Prueba de luces',
+            'Prueba de frenos',
+          ],
+        },
+        plata: {
+          titulo: 'Combo Plata',
+          descripcion:
+            'Combo Plata Motocicleta Urbana (Cilindraje inferior o igual a 229 C.C) incluye:',
+          items: [
+            'Estructura y Carrocería',
+            'Improntas y Antecedentes (LTA)',
+            'CertiMás Basic',
+            'Histórico de Propietarios',
+            'Análisis Trámites',
+            'Histórico de Comparendos e impuestos',
+          ],
+        },
+        domicilio: {
+          titulo: 'Combo A domicilio',
+          descripcion: '',
+          items: [],
+        },
       },
-      diamante: {
-        titulo: 'El Combo Diamante incluye:',
-        descripcion: 'Inspección premium con todos los servicios.',
-        items: [
-          'Estructura y Carrocería',
-          'Improntas y Antecedentes (LTA)',
-          'Prueba de Motor',
-          'CertiMás Basic',
-          'Diagnóstico Scanner',
-          'CertiMás Premium',
-          'Informe detallado de valor comercial',
-        ],
+
+      'MOTOCICLETAS SUPERBIKE': {
+        diamante: {
+          titulo: 'Combo Diamante',
+          descripcion: '',
+          items: [],
+        },
+        oro: {
+          titulo: 'Combo Oro',
+          descripcion:
+            'Combo Oro Motocicleta Superbike (Cilindraje mayor o igual a 230 C.C) incluye:',
+          items: [
+            'Estructura y Carrocería',
+            'Prueba de Motor',
+            'Improntas y Antecedentes (LTA)',
+            'CertiMás Basic',
+            'Histórico de propietarios',
+            'Comparendos e Impuestos',
+            'Análisis de gases',
+            'Prueba de luces',
+            'Prueba de frenos',
+          ],
+        },
+        plata: {
+          titulo: 'Combo Plata',
+          descripcion:
+            'Combo Plata Motocicleta Superbike (Cilindraje mayor o igual a 230 C.C) incluye:',
+          items: [
+            'Estructura y Carrocería',
+            'Improntas y Antecedentes (LTA)',
+            'CertiMás Basic',
+            'Histórico de Propietarios',
+            'Análisis Trámites',
+            'Histórico de Comparendos e impuestos',
+          ],
+        },
+        domicilio: {
+          titulo: 'Combo A domicilio',
+          descripcion: '',
+          items: [],
+        },
+      },
+
+      'ELECTRICOS O HIBRIDOS': {
+       diamante: {
+          titulo: 'Combo Diamante',
+          descripcion: 'El Combo Diamante para Vehículos Livianos ELECTRICOS O HIBRIDOS incluye:',
+          items: [
+            {
+              titulo: 'Estructura y Carrocería',
+              items: [
+                'Verificación de chasis',
+                'Verificación de carrocería',
+                'Verificación de accesorios de confort',
+                'Partes bajas (frenos, dirección, transmisión, suspensión, escape)',
+                'Fugas mecánicas',
+                'Estado de tapicería',
+                'Estimación de vida útil de las llantas',
+              ],
+            },
+            {
+              titulo: 'Prueba de Motor',
+              items: [
+                'Medición del desgaste en el motor',
+                'Verificación de reparaciones',
+                'Análisis de emisiones de humo',
+                'Revisión de fluidos (aceite motor, refrigerante, hidráulico)',
+                'Verificación de componentes externos del motor (correa de accesorios, depósitos, tapas, carcasas)',
+                'Verificación visual del arnés eléctrico',
+                'Verificación adaptaciones no originales (adaptación a gas, headders, turbo, filtro de alto flujo)',
+                'Análisis de batería',
+              ],
+            },
+            {
+              titulo: 'Improntas y Antecedentes (LTA)',
+              items: [
+                'Toma improntas',
+                'Originalidad de sistemas de identificación (N motor, N chasis, N serie)',
+                'Antecedentes judiciales',
+                'Reporte de siniestros',
+              ],
+            },
+            {
+              titulo: 'CertiMás Basic',
+              items: [
+                'Verificación de datos del vehículo (N chasis, N motor, N serie, color, cilindraje, Regrabación de Sistemas de identificación autorizadas)',
+                'Limitaciones a la propiedad (reclamaciones. embargos, restricciones)',
+                'Prendas (pignoraciones)',
+                'Info SOAT',
+                'Histórico de propietarios',
+                'Info RTM',
+                'Solicitudes organismo de tránsito (traspasos, cambios de color, traslado de cuenta, cambio de tipo de servicio, etc)',
+              ],
+            },
+            {
+              titulo: 'Diagnóstico Scanner',
+              items: [
+                'Verificación de códigos de fallas (averías presentes actualmente en el funcionamiento del vehículo)',
+                'histórico de averías(averías anteriores en el funcionamiento del vehículo)',
+              ],
+            },
+            {
+              titulo: 'Prueba de Ruta',
+              items: [
+                'Verificación de funcionamiento de la caja de velocidades',
+                'Verificación de funcionamiento de tracción 4×4 (si aplica)',
+                'Verificación de funcionamiento sistema de dirección',
+                'Verificación de funcionamiento motor',
+                'Detección de ruidos anormales',
+                'Detección de vibraciones anormales',
+              ],
+            },
+          ],
+        },
+        oro: {
+          titulo: 'Combo Oro',
+          descripcion: '',
+          items: [],
+        },
+        plata: {
+          titulo: 'Combo Plata',
+          descripcion: '',
+          items: [],
+        },
+        domicilio: {
+          titulo: 'Combo A domicilio',
+          descripcion: '',
+          items: [],
+        },
       },
     };
 
-    return descriptions[this.selectedTab] || descriptions['plata'];
+    const categoria = this.determinarCategoriaVehiculo();
+    return (
+      descriptions[categoria]?.[this.selectedTab] || {
+        titulo: '',
+        descripcion: '',
+        items: [],
+      }
+    );
   }
 
-  private determinarCategoriaVehiculo(): string {
+  determinarCategoriaVehiculo(): string {
     const clase = (this.vehiculoData.clase_vehiculo || '').toUpperCase();
     const combustible = (this.vehiculoData.tipo_combustible || '').toUpperCase();
 
-    // eléctricos/híbridos (UI)
     if (
       clase.includes('ELECTR') ||
       clase.includes('HIBR') ||
@@ -895,7 +1474,6 @@ export class AgendarPeritajeComponent {
 
   agendarPeritaje(): void {
     const tab = this.selectedTab;
-
     let servicio: any = null;
 
     if (tab === 'domicilio') {
@@ -915,7 +1493,6 @@ export class AgendarPeritajeComponent {
     this.esServicioADomicilio =
       tab === 'domicilio' || (servicio?.name || '').toLowerCase().includes('domicilio');
 
-    // ✅ dirección requerida SOLO si domicilio
     const direccionControl = this.step5Form.get('direccionServicio');
     if (this.esServicioADomicilio) {
       direccionControl?.setValidators([Validators.required]);
@@ -932,6 +1509,7 @@ export class AgendarPeritajeComponent {
       descripcion: servicio.description,
     };
 
+    this.resetAccordionForCurrentCombo();
     this.currentStep = 3;
   }
 
@@ -965,6 +1543,7 @@ export class AgendarPeritajeComponent {
   private detectarUbicacion(): void {
     if (!navigator.geolocation) {
       this.selectedCiudad = 'Bogotá';
+      this.locationDetected = false;
       return;
     }
 
@@ -975,12 +1554,14 @@ export class AgendarPeritajeComponent {
           lng: position.coords.longitude,
         };
         this.detectarCiudadPorNombre(position);
+        this.locationDetected = true;
 
         console.log('📍 [PERITAJE] Ubicación detectada:', this.userLocation);
         console.log('🏙️ [PERITAJE] Ciudad detectada:', this.selectedCiudad);
       },
       () => {
         this.selectedCiudad = 'Bogotá';
+        this.locationDetected = false;
         console.warn('⚠️ [PERITAJE] No se pudo detectar ubicación. Fallback Bogotá.');
       }
     );
@@ -1015,7 +1596,7 @@ export class AgendarPeritajeComponent {
         };
 
         this.detectarCiudadPorNombre(position);
-
+        this.locationDetected = true;
         this.isActivatingLocation = false;
         this.currentStep = 4;
         this.step4SubStep = 1;
@@ -1023,17 +1604,107 @@ export class AgendarPeritajeComponent {
       (error) => {
         console.error('Error obteniendo ubicación:', error);
         alert('No se pudo obtener tu ubicación. Por favor selecciona manualmente.');
+        this.locationDetected = false;
         this.isActivatingLocation = false;
       }
     );
   }
 
   selectManually(): void {
+    this.locationDetected = false;
     this.currentStep = 4;
     this.step4SubStep = 1;
   }
 
+  private getDomicilioProveedorId(): number | null {
+    const c = (this.selectedCiudad || '').trim().toLowerCase();
+    if (c === 'bogotá' || c === 'bogota') return 47;
+    if (c === 'cali') return 39;
+    return null;
+  }
+
+  private autoSelectDomicilioSede(): void {
+    if (!this.selectedService) {
+      console.error('❌ [DOMICILIO] No hay servicio seleccionado');
+      return;
+    }
+
+    const proveedorId = this.getDomicilioProveedorId();
+    if (!proveedorId) {
+      alert('No hay proveedor configurado para la ciudad seleccionada en domicilio.');
+      return;
+    }
+
+    this.isLoadingSedes = true;
+
+    this.peritajeApi.obtenerProveedores(this.selectedCiudad, String(this.selectedService.id)).subscribe({
+      next: (response: any) => {
+        const raw = response?.data || [];
+        const match =
+          raw.find((x: any) => Number(x?.id ?? x?.pk ?? x?.provider_id) === Number(proveedorId)) ?? null;
+
+        const picked = match ?? raw[0] ?? null;
+
+        if (!picked) {
+          this.isLoadingSedes = false;
+          alert('No se encontraron proveedores para domicilio en esta ciudad.');
+          return;
+        }
+
+        const desc = picked.description || '';
+        const direccionExtraida =
+          this.extraerDireccionDeDescription(desc) ||
+          (picked.address || picked.direccion || '').toString().trim();
+
+        const horarioExtraido =
+          this.extraerHorario(desc) || (picked.schedule || picked.horario || '').toString().trim();
+
+        const telefonoExtraido =
+          (picked.phone || '').toString().trim() || this.extraerTelefonoDeDescription(desc);
+
+        const fotoUrl =
+          picked.photo || picked.foto || picked.image || picked.imagen || picked.picture || picked.logo || '';
+
+        const lat = (picked.lat ?? '').toString();
+        const lng = (picked.lng ?? '').toString();
+
+        const sedeMapped: Sede = {
+          id: picked.id,
+          nombre: picked.name || 'Sin nombre',
+          rawNombre: picked.name || 'Sin nombre',
+          direccion:
+            direccionExtraida && direccionExtraida.length > 2 ? direccionExtraida : 'Dirección no disponible',
+          telefono: telefonoExtraido || 'Sin teléfono',
+          horario:
+            horarioExtraido && horarioExtraido.length > 2 ? horarioExtraido : 'Horario no disponible',
+          lat: lat || '0',
+          lng: lng || '0',
+          fotoUrl: (fotoUrl || '').toString().trim() || undefined,
+        };
+
+        const embed = this.getSedeMapEmbedUrl(sedeMapped);
+        sedeMapped.mapEmbedUrl = embed ? (embed as any) : undefined;
+
+        this.selectedSede = sedeMapped;
+        this.isLoadingSedes = false;
+        this.currentStep = 5;
+        this.step5SubStep = 1;
+        this.inicializarStep5Form();
+      },
+      error: (err) => {
+        console.error('❌ [DOMICILIO] Error al cargar proveedor domicilio:', err);
+        this.isLoadingSedes = false;
+        alert('No fue posible obtener el proveedor para domicilio. Intenta nuevamente.');
+      },
+    });
+  }
+
   advanceToStep4_2(): void {
+    if (this.esServicioADomicilio) {
+      this.autoSelectDomicilioSede();
+      return;
+    }
+
     this.step4SubStep = 2;
     this.sedesCurrentPage = 1;
     this.isLoadingSedes = true;
@@ -1082,6 +1753,7 @@ export class AgendarPeritajeComponent {
           const sedeMapped: Sede = {
             id: sede.id,
             nombre: sede.name || 'Sin nombre',
+            rawNombre: sede.name || 'Sin nombre',
             direccion:
               direccionExtraida && direccionExtraida.length > 2 ? direccionExtraida : 'Dirección no disponible',
             telefono: telefonoExtraido || 'Sin teléfono',
@@ -1211,6 +1883,7 @@ export class AgendarPeritajeComponent {
     this.horariosDisponibles = [];
     this.mensajeHorarios = 'Selecciona una fecha para ver horarios disponibles';
     this.isLoadingHorarios = false;
+    this.horarioRawByLabel.clear();
 
     this.step5Form.patchValue({ horaRevision: '' }, { emitEvent: false });
   }
@@ -1221,6 +1894,7 @@ export class AgendarPeritajeComponent {
       this.horariosDisponibles = [];
       this.mensajeHorarios = 'Selecciona una fecha para ver horarios disponibles';
       this.step5Form.patchValue({ horaRevision: '' }, { emitEvent: false });
+      this.horarioRawByLabel.clear();
       return;
     }
 
@@ -1233,8 +1907,24 @@ export class AgendarPeritajeComponent {
     };
 
     this.step5Form.patchValue({ horaRevision: '' }, { emitEvent: false });
+    this.horarioRawByLabel.clear();
 
     this.cargarHorariosDisponibles();
+  }
+
+  private formatTimeIfNeeded(time: string): string {
+    if (/am|pm/i.test(time)) return time;
+
+    const m = time.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (!m) return time;
+
+    let hh = Number(m[1]);
+    const mm = m[2];
+    const suffix = hh >= 12 ? 'PM' : 'AM';
+    hh = hh % 12;
+    if (hh === 0) hh = 12;
+    const hhStr = String(hh).padStart(2, '0');
+    return `${hhStr}:${mm} ${suffix}`;
   }
 
   private normalizarSlots(raw: any): string[] {
@@ -1246,6 +1936,7 @@ export class AgendarPeritajeComponent {
 
     if (Array.isArray(raw) && raw.length && typeof raw[0] === 'object') {
       return raw
+        .filter((o: any) => (o?.available ?? o?.disponible ?? true) === true)
         .map((o: any) => {
           const v =
             o?.label ||
@@ -1277,9 +1968,10 @@ export class AgendarPeritajeComponent {
 
     this.isLoadingHorarios = true;
     this.mensajeHorarios = 'Cargando horarios...';
+    this.horarioRawByLabel.clear();
 
     const payload = {
-      sede: this.selectedSede.nombre,
+      sede: this.selectedSede.rawNombre || this.selectedSede.nombre,
       servicio: this.selectedService.nombre,
       fecha_agenda: this.fechaAgenda,
       from_flow: 'peritaje',
@@ -1304,7 +1996,11 @@ export class AgendarPeritajeComponent {
 
         const slots = this.normalizarSlots(candidate);
 
-        this.horariosDisponibles = slots || [];
+        this.horariosDisponibles = (slots || []).map((raw) => {
+          const label = this.formatTimeIfNeeded(raw);
+          this.horarioRawByLabel.set(label, raw);
+          return label;
+        });
 
         if (!this.horariosDisponibles.length) {
           this.mensajeHorarios = '⚠️ No hay horarios disponibles para esta fecha.';
@@ -1351,10 +2047,16 @@ export class AgendarPeritajeComponent {
   }
 
   goBackStep5(): void {
-    if (this.step5SubStep > 1) this.step5SubStep--;
-    else {
-      this.currentStep = 4;
-      this.step4SubStep = 2;
+    if (this.step5SubStep > 1) {
+      this.step5SubStep--;
+    } else {
+      if (this.esServicioADomicilio) {
+        this.currentStep = 4;
+        this.step4SubStep = 1;
+      } else {
+        this.currentStep = 4;
+        this.step4SubStep = 2;
+      }
     }
   }
 
@@ -1398,12 +2100,6 @@ export class AgendarPeritajeComponent {
     alert(`Código "${this.codigoPromocional}" aplicado (pendiente de lógica real).`);
   }
 
-  /**
-   * ✅ Flujo final:
-   * 1) Agenda el peritaje
-   * 2) Genera link MercadoPago
-   * 3) Redirige al link (MP manejará success/failure/pending a tus páginas)
-   */
   confirmarPago(): void {
     if (!this.aceptaCondicionesPago) {
       alert('Debes aceptar las condiciones del servicio');
@@ -1418,12 +2114,7 @@ export class AgendarPeritajeComponent {
       .pipe(
         tap((agRes) => {
           this.agendamientoResponse = agRes;
-
-          // ✅ FIX: guardar la reserva de PERITAJE para que /pago-exitoso NO lea RTM
-          const invoiceId =
-            Number(agRes?.invoice_id ?? agRes?.invoiceId ?? agRes?.data?.invoice_id ?? 0) || 0;
-
-          const codeBooking = (
+          this.codeBooking = (
             agRes?.codeBooking ??
             agRes?.codigo_reserva ??
             agRes?.booking_code ??
@@ -1431,20 +2122,31 @@ export class AgendarPeritajeComponent {
             ''
           ).toString();
 
+          const invoiceId =
+            Number(agRes?.invoice_id ?? agRes?.invoiceId ?? agRes?.data?.invoice_id ?? 0) || 0;
+
           const reservaPeritaje = {
             tipo: 'peritaje',
             invoiceId,
-            codeBooking,
+            codeBooking: this.codeBooking,
             monto: Number(this.getPrecioActual() || 0),
-            nombreServicio: this.getResumenServicioParaPago() || this.getNombreServicioSeleccionado(),
+            nombreServicio: this.getServicioLabelPago() || this.getNombreServicioSeleccionado(),
             placa: this.vehiculoData.placa,
             sede: this.selectedSede?.nombre || '',
             fecha: this.getFechaAgendadaConHora(),
+            direccion: this.esServicioADomicilio
+              ? (this.step5Form.get('direccionServicio')?.value || '').toString()
+              : '',
+            modelo: this.vehiculoData.modelo,
+            tipoCombustible: this.vehiculoData.tipo_combustible,
+            claseVehiculo: this.vehiculoData.clase_vehiculo,
+            tipoServicio: this.vehiculoData.tipo_servicio,
+            tipoVehiculo: this.getTipoVehiculoRuntLabel(),
           };
 
           console.log('💾 [PERITAJE] Guardando ultima_reserva (PERITAJE):', reservaPeritaje);
-localStorage.setItem('ultima_reserva', JSON.stringify(reservaPeritaje)); // ✅ CLAVE que lee pago-exitoso
-localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opcional) debug
+          localStorage.setItem('ultima_reserva', JSON.stringify(reservaPeritaje));
+          localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));
         }),
         switchMap(() => this.generarLinkMercadoPago$()),
         tap((pagoRes) => {
@@ -1481,13 +2183,16 @@ localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opc
         ? 'Cedula de Ciudadania'
         : this.form.value.tipoDocumento;
 
+    const franjaLabel = (this.step5Form.value.horaRevision || '').toString();
+    const franjaRaw = this.horarioRawByLabel.get(franjaLabel) || franjaLabel;
+
     const payload: any = {
       cliente: 'pagina_web',
       placa: this.vehiculoData.placa,
       fecha_agenda: this.fechaAgenda,
-      franja: this.step5Form.value.horaRevision,
+      franja: franjaRaw,
       ciudad: this.selectedCiudad,
-      sede: this.selectedSede.nombre,
+      sede: this.selectedSede.rawNombre || this.selectedSede.nombre,
       servicio: this.selectedService.nombre,
 
       tipo_identificacion: tipoIdent,
@@ -1498,35 +2203,42 @@ localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opc
       nombres: this.step5Form.value.nombre,
 
       from_flow: 'peritaje',
-
       recibir_resultado: 'true',
-
       correo_resultado: this.step5Form.value.correoResultado,
       nombre_resultado: this.step5Form.value.nombreResultado,
-
-      servicio_resumen: this.getResumenServicioParaPago(),
+      servicio_resumen: this.getServicioLabelPago(),
     };
 
     if (this.esServicioADomicilio) {
-      payload.direccion_servicio = this.step5Form.value.direccionServicio;
+      const dir = (this.step5Form.value.direccionServicio || '').toString().trim();
+      if (!dir) {
+        return throwError(() => new Error('Falta la dirección para el servicio a domicilio.'));
+      }
+
+      payload.direccion = dir;
+      payload.direccion_domicilio = dir;
+      payload.direccionServicio = dir;
+      payload.direccion_servicio = dir;
+
+      const provId = this.getDomicilioProveedorId();
+      if (provId) {
+        payload.proveedor_id = provId;
+        payload.provider_id = provId;
+        payload.id_proveedor = provId;
+      }
     }
 
     return this.peritajeApi.agendar(payload);
   }
 
-  /**
-   * ✅ FIX: NO consultar "proyecto" (evita 404).
-   * Genera link directo como tu RTM: pagos/generar-link/
-   */
   private generarLinkMercadoPago$(): Observable<GenerarLinkPagoResponse> {
     const urls = this.buildBackUrls();
+    const servicioLabel = this.getServicioLabelPago() || `Peritaje ${this.getComboNombre()}`;
 
-    // ✅ Payload estilo el que mostraste en la otra web
-    // (Aunque "proyecto" no sea obligatorio, lo dejamos en "pagina_web" porque es el que usas en RTM)
     const req: GenerarLinkPagoRequest = {
       proyecto: 'pagina_web' as any,
       medio_pago: 'mercadopago',
-      servicio_label: this.getResumenServicioParaPago() || `Peritaje ${this.getComboNombre()}`,
+      servicio_label: servicioLabel,
       valor: Number(this.getPrecioActual() || 0),
       placa_vehiculo: this.vehiculoData.placa,
       sede: null,
@@ -1541,7 +2253,6 @@ localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opc
   }
 
   private buildBackUrls(): { success: string; failure: string; pending: string } {
-    // ✅ Tus páginas ya existen
     const origin = window.location.origin;
     return {
       success: `${origin}/pago-exitoso`,
@@ -1569,8 +2280,13 @@ localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opc
       if (this.step4SubStep === 2) this.step4SubStep = 1;
       else this.currentStep = 3;
     } else if (this.currentStep === 5) {
-      this.currentStep = 4;
-      this.step4SubStep = 2;
+      if (this.esServicioADomicilio) {
+        this.currentStep = 4;
+        this.step4SubStep = 1;
+      } else {
+        this.currentStep = 4;
+        this.step4SubStep = 2;
+      }
     } else if (this.currentStep === 6) {
       if (this.step6SubStep > 1) this.step6SubStep--;
       else this.currentStep = 5;
@@ -1606,6 +2322,7 @@ localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opc
     this.horariosDisponibles = [];
     this.fechaAgenda = null;
     this.mensajeHorarios = '';
+    this.horarioRawByLabel.clear();
 
     this.selectedSede = null;
     this.selectedService = null;
@@ -1614,6 +2331,7 @@ localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opc
     this.precios = { plata: 0, oro: 0, diamante: 0, domicilio: 0 };
 
     this.esServicioADomicilio = false;
+    this.comboAccordionOpenKeys.clear();
 
     this.codigoPromocional = '';
     this.aceptaCondicionesPago = false;
@@ -1622,13 +2340,24 @@ localStorage.setItem('reserva_pago', JSON.stringify(reservaPeritaje));   // (opc
     this.pagoId = null;
     this.paymentLink = null;
     this.paymentPreferenceId = null;
+    this.codeBooking = '';
+
+    this.vehiculoData = {
+      marca: '',
+      linea: '',
+      modelo: '',
+      placa: '',
+      clase_vehiculo: '',
+      tipo_servicio: '',
+      tipo_combustible: '',
+      cilindraje: 0,
+    };
 
     this.form.reset({ tipoDocumento: 'CC', aceptaDatos: false });
     this.step5Form.reset({ tipoDocumento: 'CC', aceptaTerminos: false });
 
     this.step5Form.get('placa')?.disable({ emitEvent: false });
 
-    // limpia dirección domicilio
     const dir = this.step5Form.get('direccionServicio');
     dir?.clearValidators();
     dir?.setValue('', { emitEvent: false });

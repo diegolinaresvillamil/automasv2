@@ -129,10 +129,14 @@
                 <button
                   type="button"
                   class="sedes-step4__btn-next"
-                  [disabled]="!canAdvanceStep4_1()"
+                  [disabled]="!canAdvanceStep4_1() || isLoadingServicios"
                   (click)="advanceToStep4_2()"
                 >
-                  Continuar
+                  @if (isLoadingServicios) {
+                    Consultando precios...
+                  } @else {
+                    Continuar
+                  }
                 </button>
               </div>
 
@@ -188,11 +192,34 @@
 
                   <h4 class="sedes-step2__details-title">{{ getComboDescription().titulo }}</h4>
 
-                  <ul class="sedes-step2__details-list">
-                    @for (item of getComboDescription().items; track item) {
-                      <li>{{ item }}</li>
-                    }
-                  </ul>
+<div class="sedes-step2__details-list">
+  @for (item of getComboDescription().items; track getComboItemTrackKey(item, $index)) {
+    @if (isAccordionItem(item)) {
+      <div class="sedes-step2__accordion-item">
+        <button
+          type="button"
+          class="sedes-step2__accordion-trigger"
+          (click)="toggleComboAccordion(item, $index)"
+        >
+          <span>{{ item.titulo }}</span>
+          <span>{{ isComboAccordionOpen(item, $index) ? '▴' : '▾' }}</span>
+        </button>
+
+        @if (isComboAccordionOpen(item, $index)) {
+          <ul class="sedes-step2__accordion-content">
+            @for (subitem of item.items; track subitem) {
+              <li>{{ subitem }}</li>
+            }
+          </ul>
+        }
+      </div>
+    } @else {
+      <ul>
+        <li>{{ item }}</li>
+      </ul>
+    }
+  }
+</div>
 
                   <button
                     type="button"
@@ -253,11 +280,34 @@
 
                     <h4 class="sedes-step2__details-title">{{ getComboDescription().titulo }}</h4>
 
-                    <ul class="sedes-step2__details-list">
-                      @for (item of getComboDescription().items; track item) {
-                        <li>{{ item }}</li>
-                      }
-                    </ul>
+<div class="sedes-step2__details-list">
+  @for (item of getComboDescription().items; track getComboItemTrackKey(item, $index)) {
+    @if (isAccordionItem(item)) {
+      <div class="sedes-step2__accordion-item">
+        <button
+          type="button"
+          class="sedes-step2__accordion-trigger"
+          (click)="toggleComboAccordion(item, $index)"
+        >
+          <span>{{ item.titulo }}</span>
+          <span>{{ isComboAccordionOpen(item, $index) ? '▴' : '▾' }}</span>
+        </button>
+
+        @if (isComboAccordionOpen(item, $index)) {
+          <ul class="sedes-step2__accordion-content">
+            @for (subitem of item.items; track subitem) {
+              <li>{{ subitem }}</li>
+            }
+          </ul>
+        }
+      </div>
+    } @else {
+      <ul>
+        <li>{{ item }}</li>
+      </ul>
+    }
+  }
+</div>
 
                     <button
                       type="button"
@@ -281,7 +331,7 @@
             }
 
             <!-- SUB-PASO 3: SELECCIÓN DE SEDE -->
-            @if (step4SubStep === 3) {
+            @if (step4SubStep === 3 && selectedCombo !== 'domicilio') {
               <h2 class="sedes-step4__title">Selecciona una sede</h2>
 
               <p class="sedes-step4__location-info">
@@ -440,7 +490,6 @@
                           <select
                             class="sedes-step5__input"
                             formControlName="horaRevision"
-                            [disabled]="isLoadingHorarios"
                           >
                             <option value="">
                               @if (isLoadingHorarios) { Cargando horarios... } @else { Selecciona una hora }
@@ -458,6 +507,24 @@
                           }
                         </div>
                       </div>
+
+                      <!-- ✅ NUEVO: DIRECCIÓN (solo si A Domicilio) -->
+                      @if (selectedCombo === 'domicilio') {
+                        <div class="sedes-step5__field-row">
+                          <div class="sedes-step5__field">
+                            <label class="sedes-step5__label">Dirección para el servicio a domicilio</label>
+                            <input
+                              type="text"
+                              class="sedes-step5__input"
+                              formControlName="direccion"
+                              placeholder="Ej: Cra 10 # 20-30, Apto 401, Barrio..."
+                            />
+                            @if (step5Form.get('direccion')?.touched && step5Form.get('direccion')?.invalid) {
+                              <span class="sedes-step5__error">La dirección es obligatoria</span>
+                            }
+                          </div>
+                        </div>
+                      }
 
                       <button
                         type="button"
@@ -710,6 +777,24 @@
                       </div>
                     </div>
 
+                    <!-- ✅ NUEVO: DIRECCIÓN (solo si A Domicilio) -->
+                    @if (selectedCombo === 'domicilio') {
+                      <div class="sedes-step5__field-row">
+                        <div class="sedes-step5__field">
+                          <label class="sedes-step5__label">Dirección para el servicio a domicilio</label>
+                          <input
+                            type="text"
+                            class="sedes-step5__input"
+                            formControlName="direccion"
+                            placeholder="Ej: Cra 10 # 20-30, Apto 401, Barrio..."
+                          />
+                          @if (step5Form.get('direccion')?.touched && step5Form.get('direccion')?.invalid) {
+                            <span class="sedes-step5__error">La dirección es obligatoria</span>
+                          }
+                        </div>
+                      </div>
+                    }
+
                     <div class="sedes-step5__field-row">
                       <div class="sedes-step5__field">
                         <label class="sedes-step5__label">Número de placa</label>
@@ -916,8 +1001,8 @@
                       <tr>
                         <td>
                           <div class="sedes-step6__service-name">
-  {{ getNombreServicioCompleto() }}
-</div>
+                            {{ getServicioLabelPago() }}
+                          </div>
                           <div class="sedes-step6__service-detail">
                             {{ selectedSede?.nombre }}
                           </div>
@@ -1026,7 +1111,7 @@
                   </p>
                   <div class="sedes-step6__service-card">
                     <div class="sedes-step6__service-name">
-                      Peritaje {{ getComboNombre() }}
+                     {{ getServicioLabelPago() }}
                     </div>
                     <div class="sedes-step6__service-detail">
                       {{ selectedSede?.nombre }}
